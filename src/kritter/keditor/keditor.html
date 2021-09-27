@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+
+  .file-span {
+    padding: 0px 5px 0px 5px;
+    margin: 0px 0px 0px 5px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    white-space: pre;  
+  }
+
+  .sidebar-button {
+    padding: 0px 5px 0px 5px; 
+    margin: 0px;    
+  }
+
+  .toolbar-button {
+    cursor: pointer; 
+    margin: 0px; 
+    padding: 0px;  
+  }
+
+</style>
+<meta charset="utf-8">
+  <link rel="stylesheet" href="static/bootstrap.min.css">
+  <script src="static/jquery.min.js"></script>
+  <script src="static/popper.min.js"></script>
+  <script src="static/bootstrap.min.js"></script>
+  <script src="static/font-awesome.js"></script>
+  <script src="static/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="static/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+  <script src="static/ext-modelist.js"></script>
+</head>
+<body>
+<div style="background-color: #e8e8e8;">
+  <div id="sidebar" style="padding: 0px; position: absolute; display: none;">
+    <ul class="nav flex-column nav-pills" id="pills">
+      <li id="separator" style='margin: -8px;'>&nbsp;</li>
+      <li id="find" style="cursor: pointer;">
+        <span class='fa fa-search sidebar-button'></span><span style='user-select: none;'>Find</span>
+      </li>
+      <li id="replace" style="cursor: pointer;">
+        <span class='fa fa-search-plus sidebar-button'></span><span style='user-select: none;'>Find-replace</span>
+      </li>
+      <li id="goto-line" style="cursor: pointer;">
+        <span class='fa fa-sign-in sidebar-button'></span><span style='user-select: none;'>Go to line</span>
+      </li>
+      <li id="undo" style="cursor: pointer;">
+        <span class='fa fa-undo sidebar-button'></span><span style='user-select: none;'>Undo</span>
+      </li>
+      <li id="redo" style="cursor: pointer;">
+        <span class='fa fa-repeat sidebar-button'></span><span style='user-select: none;'>Redo</span>
+      </li>
+      <li id="config" style="cursor: pointer;">
+        <span class='fa fa-gear sidebar-button'></span><span style='user-select: none;'>Settings</span>
+      </li>
+    </ul>
+  </div>
+  <div id="main" style="position: relative; margin: 0px; padding: 0px; width: auto; background: rgba(255, 255, 255, 1.0);">
+    <div id="toolbar-header" style="margin: 0px; padding: 0px;">
+      <span id="toolbar" style="height: 24px; max-height: 24px; margin: 0px; padding: 0px 5px 0px 5px; user-select: none;">
+        <span id='navicon' class='fa fa-navicon toolbar-button' style='display: none;'></span>
+        <span id='arrow-down' class='fa fa-arrow-circle-down toolbar-button' style='display: none;'></span>
+        <span id='save' class='fa fa-save toolbar-button' style='display: none;'></span>
+        <span id='add-file' class='fa fa-plus-square toolbar-button'></span>
+        <input id='add-tab-input' type='text' style='width: 150px; height: 20px; padding: 0px; margin: 0px; display: none;'>
+      </span>
+      <span id="header" style="height: 24px; max-height: 24px; overflow-y: auto; margin: 0px; padding: 0px;"></span>    
+    </div>
+    <div id="editors"></div>
+  </div>
+</div>
+<script>
+
+const multiEditor = {
+  // constants
+  collapseTime: 0.3, // seconds
+
+  messageTime: 10.0, // seconds
+
+  collapseWidth: 150, 
+
+  title: "Editor",
+
+  // member variables
+  tabs: [],
+  
+  focusIndex: -1, 
+  
+  headerTimeout: null,
+
+  headerContents: "",
+
+  inputting: false, 
+
+  collapse: true, 
+
+  resizeCount: 0, 
+  
+  resizeInterval: null,
+
+  settings: null, 
+
+  numButtons: 0,
+
+  undoStack: 0,
+
+  init: function(files, focus) {
+    $("#navicon").click(function() {
+      multiEditor.collapse = !multiEditor.collapse;
+      if (multiEditor.collapse) {
+        $("#main").css("margin-left", "0px");
+      }
+      else {
+        $("#main").css("margin-left", multiEditor.collapseWidth.toString() + "px");
+      }
+      multiEditor.resizeCount = 0;
+      multiEditor.resizeInterval = setInterval(function() {
+        multiEditor.resize();
+        multiEditor.resizeCount++;
+        if (multiEditor.resizeCount===10)
+          clearInterval(multiEditor.resizeInterval);
+      }, 100);
+    });
+
+    $("#add-file").click(function() {
+      const ati = $("#add-tab-input");
+      $("#add-file").css("display", "none")
+      ati.css("display", "");
+      ati.focus();
+      multiEditor.inputting = true;
+      multiEditor.updateState();
+    });
+
+    $("#add-tab-input").keydown(multiEditor.keydown);
+
+    $("#arrow-down").click(function() {
+      multiEditor.rotateFocus();
+    });
+
+    $("#save").click(function() {
+      multiEditor.saveFile(multiEditor.tabs[multiEditor.focusIndex]);
+    });
+
+    $("#find").click(function() {
+      multiEditor.tabs[multiEditor.focusIndex].editor.execCommand("find");
+    });
+
+    $("#replace").click(function() {
+      multiEditor.tabs[multiEditor.focusIndex].editor.execCommand("replace");
+    });
+    
+    $("#goto-line").click(function() {
+      multiEditor.tabs[multiEditor.focusIndex].editor.execCommand("gotoline");
+    });
+    
+    $("#undo").click(function() {
+      multiEditor.tabs[multiEditor.focusIndex].editor.execCommand("undo");
+    });
+    
+    $("#redo").click(function() {
+      const tab = multiEditor.tabs[multiEditor.focusIndex];
+      tab.editor.execCommand("redo");
+      if (tab.editor.session.getUndoManager().hasRedo())
+        multiEditor.setModified(tab, true);
+    });
+    
+    $("#config").click(function() {
+      multiEditor.tabs[multiEditor.focusIndex].editor.execCommand("showSettingsMenu");
+    });
+
+    $("#main").css("transition", "margin-left " + multiEditor.collapseTime.toString() + "s");
+    $("#sidebar").css("width", multiEditor.collapseWidth.toString() + "px");
+
+    multiEditor.fetch("loadsettings", '')
+      .then(data => {
+        if (data!=="")
+          multiEditor.settings = data;
+        if (files!==null) {
+          for (var i=0; i<files.length; i++) {
+            multiEditor.addTab(files[i]);
+          }
+          if (focus!==null) 
+            multiEditor.focus(focus);
+        }
+        
+        multiEditor.updateState();
+      });
+  },
+  
+  applySettings: function() {
+    for (var i=0; i<multiEditor.tabs.length; i++) 
+      multiEditor.tabs[i].editor.setOptions(multiEditor.settings);  
+  },
+
+  updateState: function() {
+    // if no files just display plus
+    if (multiEditor.tabs.length===0) {
+      document.title = multiEditor.title;
+      $("#navicon").css("display", "none");
+      $("#main").css("margin-left", "0px");
+      $("#arrow-down").css("display", "none");
+      $("#sidebar").css("display", "none");
+      multiEditor.collapse = true;
+    }
+    else if (multiEditor.tabs.length===1) {
+      $("#navicon").css("display", "");
+      $("#arrow-down").css("display", "none");
+      $("#sidebar").css("display", "");
+    }
+    else if (multiEditor.tabs.length===2) 
+      $("#arrow-down").css("display", "");
+    
+    const modified = multiEditor.modified();
+    var text = "";
+    if (multiEditor.focusIndex>=0 && multiEditor.tabs[multiEditor.focusIndex].modified)
+      $("#save").css("display", "");
+    else
+      $("#save").css("display", "none");
+ 
+    if (multiEditor.inputting)
+      text = 'Use &lt;tab&gt; or &lt;space&gt; to auto-complete, &lt;Enter&gt; to load existing file or create a new file.';
+    else if (multiEditor.focusIndex>=0) 
+      text = multiEditor.tabs[multiEditor.focusIndex].fullpath;
+
+    multiEditor.setHeader(text, true);
+  },
+
+  resetHeaderTimer: function() {
+    if (multiEditor.headerTimeout!==null) {
+      clearTimeout(multiEditor.headerTimeout);
+      multiEditor.headerTimeout = null;
+    }
+  },
+
+  setHeader: function(text, persist=false) {
+    text = "<i>" + text + "</i>";
+    if (!persist) {
+      $("#header").html(text);
+      multiEditor.resetHeaderTimer();
+      multiEditor.headerTimeout = setTimeout(function() {
+        multiEditor.headerTimeout = null;
+        multiEditor.updateState();
+      }, multiEditor.messageTime*1000);          
+    }
+    if (multiEditor.headerTimeout===null) 
+      $("#header").html(text);
+    multiEditor.resize();
+  },
+
+  fileButton: function(button) {
+    const path = $("#add-tab-input").val();
+    // This is a special case... one button, we don't need to add button
+    // because it's already been added. 
+    if (multiEditor.numButtons===1 && button.endsWith("/"))
+      button = path.substring(0, path.lastIndexOf("/")+1);
+    // Otherwise, go to last / and add button
+    else if (path.includes("/"))
+      button = path.substring(0, path.lastIndexOf("/")+1) + button;
+    if (button.endsWith("/")) {
+      multiEditor.fetch("query", button)
+        .then(data => multiEditor.handleQuery(data));      
+    }
+    else 
+      multiEditor.newFile(button);
+  },
+
+  makeButtons: function(array) {
+    var text = "";
+    for (var i=0; i<array.length; i++) {
+      text += '<span class="file-span" onclick="multiEditor.fileButton(\'' + array[i] + '\')">' + array[i] + '</span> ';
+    }
+    multiEditor.numButtons = array.length;
+    return text;
+  },
+
+  handleQuery: function(data) {
+    const ati = $("#add-tab-input");
+    old_val = ati.val();
+    ati.val(data.path);
+    ati[0].scrollLeft = ati[0].scrollWidth;
+    if (data.files.length===0)
+        multiEditor.setHeader('No files begin with "' + old_val + '". Press &lt;Enter&gt; to create file.');
+    else
+        multiEditor.setHeader(multiEditor.makeButtons(data.files));
+  },
+
+  newFile: function(file) {
+    const ati = $("#add-tab-input");
+    $("#add-file").css("display", "")
+    ati.val("");
+    ati.css("display", "none");
+    multiEditor.inputting = false;
+    if (file!=="")
+      multiEditor.addTab(file);
+    multiEditor.resetHeaderTimer();
+    multiEditor.updateState();
+  },
+
+  keydown: function(e) {
+    const code = (e.keyCode ? e.keyCode : e.which);
+    const ati = $("#add-tab-input");
+    if (code===13) {
+      const file = ati.val().trim();
+      multiEditor.fetch("query", file)
+        .then(data => {
+          // If it's a directory, the server will have already listed files,
+          // so call handleQuery with data
+          if (data.path.endsWith("/"))
+            multiEditor.handleQuery(data);
+          // Otherwise, if we check if file is a directory, if so traverse
+          else if (data.files.find(e => e===file + "/")) {
+            multiEditor.fetch("query", file + "/")
+              .then(data => multiEditor.handleQuery(data));            
+          }
+          // If it's not a directory, create or load file.
+          else
+            multiEditor.newFile(file);
+        });      
+    }
+    // tab
+    else if (code===9) { 
+      multiEditor.fetch("query", ati.val())
+        .then(data => multiEditor.handleQuery(data));
+      e.preventDefault();
+    }
+    // space
+    else if (code===32) {
+      multiEditor.fetch("query", ati.val() + ' ')
+        .then(data => multiEditor.handleQuery(data));
+    }
+  },
+  
+  saveFile: function(tab) {
+    message = {path: tab.name, data: tab.editor.session.getValue()};
+    multiEditor.fetch("write", message)
+      .then(data => {
+        multiEditor.setModified(tab, data!=="");
+        if (data==="")
+          // Set undo stack size.  This is where we're saved, no changes.   
+          multiEditor.undoStack = tab.editor.session.getUndoManager().$undoStack.length;
+        else // display error
+          multiEditor.setHeader(data);
+        multiEditor.updateState();
+      });   
+  },
+
+  newTab: function(name) {
+    const tab = {};
+    tab.name = name;
+    tab.modified = false;
+    tab.clickState = 0;
+    d = new Date();
+    tab.div = $("<div id=" + d.getTime().toString() + " style='position: relative;'></div>");
+    $("#editors").append(tab.div);
+    tab.editor = ace.edit(tab.div.attr('id'));
+    const modelist = ace.require("ace/ext/modelist");
+    const mode = modelist.getModeForPath(name).mode;
+    tab.editor.session.setMode(mode);
+    tab.editor.setTheme("ace/theme/monokai");
+    //tab.editor.setOption("showInvisibles", true);
+    if (multiEditor.settings===null) {
+      tab.editor.setOptions({
+        enableBasicAutocompletion: true, 
+        enableSnippets: true, 
+        enableLiveAutocompletion: true,
+        fontSize: 16,
+        //showInvisibles: true,
+      });
+    } else
+      tab.editor.setOptions(multiEditor.settings);
+    tab.editor.commands.addCommand({
+      name: 'save',
+      bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
+      exec: function() {
+        multiEditor.saveFile(tab);
+      }
+    });
+    return tab;
+  },
+
+  setModified: function(tab, state) {
+    if (state===tab.modified)
+      return
+    if (state) {
+      tab.save.css("display", "")
+      tab.close.popover('enable'); 
+    }
+    else {
+      tab.save.css("display", "none")
+      tab.close.popover('disable'); 
+    }
+    tab.modified = state;
+    multiEditor.updateState()
+  },
+
+  modified: function() {
+    for (var i=0; i<multiEditor.tabs.length; i++) {
+        if (multiEditor.tabs[i].modified)
+            return true;
+    }
+    return false;
+  },
+
+  setEditorContent: function(tab, content) {
+    tab.editor.session.setValue(content);
+    tab.editor.on('change', function(e) {
+      const ql = tab.editor.session.getUndoManager().$undoStack.length;
+      multiEditor.setModified(tab, ql!==multiEditor.undoStack);
+    });
+    tab.editor.on('focus', function(e) {
+      const settings = multiEditor.tabs[multiEditor.focusIndex].editor.getOptions();
+      // mode is specific for a given buffer.
+      delete settings.mode;
+      multiEditor.settings = settings;
+      multiEditor.applySettings();
+      // Save settings  
+      multiEditor.fetch("savesettings", settings);
+    });
+  },
+
+  addTab: function(name) {
+    if (multiEditor.findTab(name)>=0) {
+        multiEditor.focus(name);
+      return;
+    }
+    const li = $("<li class='nav-item' style='cursor: pointer;'></li>");
+    const close = $("<span class='fa fa-close' data-container='body' data-toggle='popover' data-trigger='focus' data-placement='right' data-content='Lose your changes? Click again to confirm.' style='padding: 0px 5px 0px 5px; margin: 0px;'></span>");
+    const anchor = $("<a class='nav-link' data-toggle='tab' style='padding: 0px; margin: 0px;'></a>");
+    const text = $("<span style='padding: 0px; margin: 0px 0px -6px 0px; display: inline-block; width: " + (multiEditor.collapseWidth - 50).toString() + "px; overflow: hidden; white-space: pre;'><i>" + name.split("/").pop() + "</i></span>");
+    const save = $("<span class='fa fa-save' style='padding: 0px 0px 0px 5px; margin: 0px; display: none;'></span>");
+    anchor.append(close, text, save);
+    li.append(anchor);
+    li.click(function(){
+        multiEditor.focus(name);
+    });
+    li.insertBefore("#separator");
+    const tab = multiEditor.newTab(name);
+    tab.li = li;
+    tab.anchor = anchor;
+    tab.close = close;
+    tab.save = save;
+    tab.fullpath = "Loading...";
+    multiEditor.tabs.push(tab);
+    multiEditor.focus(name);
+
+    close.click(function(){
+      if (tab.modified && tab.clickState==0) {
+        tab.close.popover('show');
+        tab.clickState++;
+        setTimeout(function() {
+          tab.close.popover('hide');
+          tab.clickState = 0;
+        }, 3000);          
+      }
+      else {
+        tab.close.popover('hide');
+        multiEditor.deleteTab(tab);
+        multiEditor.updateState();
+      }
+    });
+    save.click(function() {
+      multiEditor.saveFile(tab);
+    });
+    multiEditor.fetch("read", name)
+      .then(data => {
+        // With the full pathname of the file, go through tabs and 
+        // make sure that there are no equivalent tabs.  Delete them. 
+        for (var i=0; i<multiEditor.tabs.length; i++) {
+          if (multiEditor.tabs[i].fullpath===data.path)
+            multiEditor.deleteTab(multiEditor.tabs[i])
+        } 
+        tab.fullpath = data.path;
+        multiEditor.setEditorContent(tab, data.data);
+        multiEditor.focus(name);
+      });   
+  },
+  
+  fetch: function(path, body) {
+    return fetch(path, {
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify(body),
+    }).then(response => response.json());
+  },
+
+  deleteTab: function(tab) {
+    tab.li.remove();
+    tab.div.remove();
+    i = multiEditor.findTab(tab.name);
+    multiEditor.tabs.splice(i, 1);
+    if (i===multiEditor.focusIndex) {
+      if (i>0)
+        i--;
+      if (multiEditor.tabs.length>0)
+        multiEditor.focus(multiEditor.tabs[i].name);
+      else
+        multiEditor.focusIndex = -1;
+    } else if (i<multiEditor.focusIndex)
+      multiEditor.focusIndex--;
+    multiEditor.updateState();
+  },
+  
+  findTab: function(tab) {
+    for (var i=0; i<multiEditor.tabs.length; i++) {
+      if (multiEditor.tabs[i].name===tab) 
+        return i;
+    }
+    return -1; 
+  },
+  
+  focus: function(name) {
+    if (multiEditor.findTab(name)>=0) {
+      for (var i=0; i<multiEditor.tabs.length; i++) {
+        if (multiEditor.tabs[i].name===name) {
+          multiEditor.tabs[i].anchor.addClass('active');
+          multiEditor.tabs[i].div.css("display", "block");
+          multiEditor.focusIndex = i;
+          document.title = multiEditor.title + ": " + name.split("/").pop();
+        }
+        else {
+          multiEditor.tabs[i].anchor.removeClass('active');
+          multiEditor.tabs[i].div.css("display", "none");
+        }
+      }
+    }
+    multiEditor.updateState();
+  },
+
+  rotateFocus(){
+    var i = multiEditor.focusIndex + 1;
+    if (i>=multiEditor.tabs.length)
+      i = 0;
+    multiEditor.focus(multiEditor.tabs[i].name); 
+  },
+
+  resize: function() {
+    if (multiEditor.focusIndex<0)
+        return;
+    const trect = $("#toolbar-header")[0].getBoundingClientRect();
+    const srect = $("#sidebar")[0].getBoundingClientRect();
+    var height = window.innerHeight-trect.height;
+    if (srect.height>window.innerHeight)
+      height = srect.height-trect.height;
+    multiEditor.tabs[multiEditor.focusIndex].div.css("height", height.toString() + "px");
+    var width = multiEditor.collapse ? 0 : multiEditor.collapseWidth; 
+    multiEditor.tabs[multiEditor.focusIndex].div.css("width", (window.innerWidth-width).toString() + "px");
+    multiEditor.tabs[multiEditor.focusIndex].editor.resize();
+  },
+};
+
+var pathname = "" 
+const parts = document.location.pathname.split("/");
+const indexOfInit = parts.indexOf("init")
+if (indexOfInit>=0 && parts.length>indexOfInit+1)
+  pathname = parts[indexOfInit+1];
+
+const args = new URLSearchParams(pathname);
+
+multiEditor.init(args.getAll('files'), args.get('focus'));
+
+window.onresize = function resize() {
+  multiEditor.resize();
+}
+
+window.onbeforeunload = function beforeUnload()
+{
+  if (multiEditor.modified())
+    return "?";
+}
+
+</script>
+</body>
+</html>

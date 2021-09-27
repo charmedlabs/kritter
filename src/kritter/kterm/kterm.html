@@ -1,0 +1,91 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>kterm</title>
+  <link rel="stylesheet" href="static/xterm.css" />
+  <script src="static/xterm.js"></script>
+  <script src="static/xterm-addon-fit.js"></script>
+  <script src="static/xterm-addon-web-links.js"></script>
+</head>
+<body bgcolor="#000000">
+<div style="width: 100%; height: 100%;" id="terminal"></div>
+<script>
+  var term = null;
+  var socket = null;
+  const fitAddon = new FitAddon.FitAddon();
+  const relPath = document.location.pathname.split("/").slice(0, -1).join("/")
+  const url = 'ws://' + document.location.host + relPath + '/_kterm';
+
+  function newSocket() {
+    socket = new WebSocket(url);
+    socket.onmessage = recvSocket;
+    socket.onclose = closeSocket;
+    socket.onopen = openSocket;
+  }  
+
+  function openSocket() {
+    term = new Terminal({
+      cursorBlink: true,
+      cursorStyle: "bar",
+      macOptionIsMeta: true,
+      scrollback: 1000,
+      fontFamily: "monospace",
+    });    
+    term.loadAddon(fitAddon);
+    term.loadAddon(new WebLinksAddon.WebLinksAddon());
+    term.open(document.getElementById('terminal'));
+    term.onData(function(key) {
+      socket.send(JSON.stringify({id: "input", data: key}));
+    });
+    fitToScreen();   
+  }
+
+  function closeSocket() {
+    if (term!==null) {
+      term.dispose();
+      term = null;
+    }
+    // Delay a bit to give server some time to disconnect websocket
+    setTimeout(newSocket, 500);
+  }
+
+  function recvSocket(event) {
+    event = event || window.event;
+    const obj = JSON.parse(event.data);
+    if (obj.id==="output")
+      term.write(obj.data);
+    else if (obj.id==="title")
+      document.title = obj.data;
+  }
+   
+  function fitToScreen(){
+    if (term!==null && socket!==null)
+    {
+      fitAddon.fit();
+      data = {id: 'resize', data: {rows: term.rows, cols: term.cols}};
+      socket.send(JSON.stringify(data));
+    }
+  }
+
+  function debounce(func, wait_ms) {
+    let timeout;
+    return function(...args) {
+      const context = this;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), wait_ms);
+    }
+  }
+
+  window.onresize = debounce(fitToScreen, 50);
+
+  window.onload = function() {
+    newSocket();
+  }
+
+  window.onunload = function() {
+    socket.close();
+  }
+
+</script>
+</body>
+</html>

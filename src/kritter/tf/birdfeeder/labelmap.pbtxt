@@ -1,0 +1,150 @@
+item {
+  id: 1
+  name: 'Common Pigeon'
+}
+
+item {
+  id: 2
+  name: 'Baltimore Oriole'
+}
+
+item {
+  id: 3
+  name: 'Eastern Bluebird'
+}
+
+item {
+  id: 4
+  name: 'Red-Bellied Woodpecker'
+}
+
+item {
+  id: 5
+  name: 'White-breasted Nuthatch'
+}
+
+item {
+  id: 6
+  name: 'Northern Mockingbird'
+}
+
+item {
+  id: 7
+  name: 'Downy Woodpecker'
+}
+
+item {
+  id: 8
+  name: 'Tufted Titmouse'
+}
+
+item {
+  id: 9
+  name: 'Black-capped Chickadee'
+}
+
+item {
+  id: 10
+  name: 'Song Sparrow'
+}
+
+item {
+  id: 11
+  name: 'Northern Cardinal'
+}
+
+item {
+  id: 12
+  name: 'Ruby-throated Hummingbird'
+}
+
+item {
+  id: 13
+  name: 'American Robin'
+}
+
+item {
+  id: 14
+  name: 'Blue Jay'
+}
+
+item {
+  id: 15
+  name: 'Mourning Dove'
+}
+
+item {
+  id: 16
+  name: 'American Goldfinch'
+}
+
+item {
+  id: 17
+  name: 'Red-winged Blackbird'
+}
+
+item {
+  id: 18
+  name: 'Common Grackle'
+}
+
+item {
+  id: 19
+  name: 'American Crow'
+}
+
+item {
+  id: 20
+  name: 'Cedar Waxwing'
+}
+
+item {
+  id: 21
+  name: 'Virginia Opossum'
+}
+
+item {
+  id: 22
+  name: 'Eastern Cottontail'
+}
+
+item {
+  id: 23
+  name: 'Eastern Gray Squirrel'
+}
+
+item {
+  id: 24
+  name: 'Western Gray Squirrel'
+}
+
+item {
+  id: 25
+  name: 'Fox Squirrel'
+}
+
+item {
+  id: 26
+  name: 'White Tailed Deer'
+}
+
+item {
+  id: 27
+  name: 'Raccoon'
+}
+
+item {
+  id: 28
+  name: 'Black Rat'
+}
+
+item {
+  id: 29
+  name: 'Brown Rat'
+}
+
+item {
+  id: 30
+  name: 'Cat'
+}
+
