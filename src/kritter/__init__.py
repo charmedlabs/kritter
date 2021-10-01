@@ -25,6 +25,8 @@ from .kradio import Kradio
 from .klogin import Klogin, PMASK_MAX, PMASK_MIN
 from .execterm import ExecTerm
 from .kimagedetector import KimageDetected, KimageDetector, render_detected
+from .gcloud import Gcloud
+from .gpstoremedia import GPstoreMedia
 
 _comp_filepath = os.path.abspath(os.path.join(_basepath, 'kvideocomp', 'package-info.json'))
 with open(_comp_filepath) as f:
