@@ -1,5 +1,6 @@
 import os
 import pickle
+import requests
 from .kstoremedia import KstoreMedia
 from googleapiclient.discovery import build
 from kritter import Gcloud
@@ -11,7 +12,7 @@ class GPstoreMedia(KstoreMedia):
         super().__init__()
         self.gcloud = gcloud
 
-    def _post_gphoto(filename):
+    def _post_gphoto(self, filename):
         f = open(filename, 'rb').read();
 
         url = 'https://photoslibrary.googleapis.com/v1/uploads'
@@ -27,7 +28,6 @@ class GPstoreMedia(KstoreMedia):
 
 
     def save(self, filename, album=""):
-        self.connect()
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
 
         album_id = None

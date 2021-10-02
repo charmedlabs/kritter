@@ -28,12 +28,12 @@ class Gcloud:
             return True
 
         try:
-            with open(auth_file, 'rb') as token:
+            with open(self.auth_file, 'rb') as token:
                 self._creds = pickle.load(token)
         except:
             return False
 
-        if (not self._creds.valid or self._creds.expired) and _creds.refresh_token:
+        if (not self._creds.valid or self._creds.expired) and self._creds.refresh_token:
             self._creds.refresh(Request())
             self._save_creds()
 
