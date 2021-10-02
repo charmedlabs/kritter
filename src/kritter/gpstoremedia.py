@@ -70,10 +70,7 @@ class GPstoreMedia(KstoreMedia):
             body.pop('album_id')
 
         results = service.mediaItems().batchCreate(body=body).execute()
-        result = results['newMediaItemResults'][0]['status']['message']
-
-
-        success = result=='Success' or result=='OK'
-        if not success:
-            print('*** Error:', result)
-        return success
+        try:        
+            return results['newMediaItemResults'][0]['mediaItem']['productUrl']
+        except:
+            return None
