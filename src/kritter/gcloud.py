@@ -23,6 +23,10 @@ class Gcloud:
             return None
         return self._creds  
 
+    def remove_creds(self):
+        os.system(f"rm {self.auth_file}")
+        self._creds = None
+
     def connect(self):
         if self._creds and self._creds.valid:
             return True
