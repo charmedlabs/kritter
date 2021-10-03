@@ -32,18 +32,17 @@ class GPstoreMedia(KstoreMedia):
 
         album_id = None
         if album!="":
-            if False: # shared album -- not sure if this is really needed...
-                albums = service.sharedAlbums().list().execute()
-                albums = albums['sharedAlbums']
-                for a in albums:
-                    if a['title']==album:
-                        album_id = a['id']
-                        break
-            else: # try to find in list of albums
+            albums = service.sharedAlbums().list().execute()
+            albums = albums['sharedAlbums']
+            for a in albums:
+                if 'title' in a and a['title']==album:
+                    album_id = a['id']
+                    break
+            if album_id is None:
                 albums = service.albums().list().execute()
                 albums = albums['albums']
                 for a in albums:
-                    if a['title']==album:
+                    if 'title' in a and a['title']==album:
                         album_id = a['id']
                         break
             # new album
@@ -57,7 +56,6 @@ class GPstoreMedia(KstoreMedia):
                     'album_id': album_id, 
                     'newMediaItems': [
                         {
-                            #"description": "test video",
                             "simpleMediaItem": 
                             {
                                 "uploadToken": upload_token.decode('UTF-8')
@@ -69,8 +67,8 @@ class GPstoreMedia(KstoreMedia):
         if album_id==None:
             body.pop('album_id')
 
-        results = service.mediaItems().batchCreate(body=body).execute()
         try:        
+            results = service.mediaItems().batchCreate(body=body).execute()
             return results['newMediaItemResults'][0]['mediaItem']['productUrl']
         except:
             return None
