@@ -27,11 +27,11 @@ class GPstoreMedia(KstoreMedia):
         return r.content
 
 
-    def save(self, filename, album=""):
+    def store_image_file(self, filename, album="", description=""):
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
 
         album_id = None
-        if album!="":
+        if album:
             albums = service.sharedAlbums().list().execute()
             albums = albums['sharedAlbums']
             for a in albums:
@@ -53,16 +53,17 @@ class GPstoreMedia(KstoreMedia):
         # Call the Drive v3 API
         upload_token = self._post_gphoto(filename)
         body = {
-                    'album_id': album_id, 
-                    'newMediaItems': [
-                        {
-                            "simpleMediaItem": 
-                            {
-                                "uploadToken": upload_token.decode('UTF-8')
-                            }
-                        }
-                    ]
+            'album_id': album_id, 
+            'newMediaItems': [
+                {
+                    "description": description,
+                    "simpleMediaItem": 
+                    {
+                        "uploadToken": upload_token.decode('UTF-8')
+                    }
                 }
+            ]
+        }
         # remove entry if no album
         if album_id==None:
             body.pop('album_id')

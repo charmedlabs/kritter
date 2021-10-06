@@ -1,4 +1,4 @@
-from dash_devices.dependencies import Input, Output
+from dash_devices.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from .kcomponent import Kcomponent
 

@@ -27,6 +27,7 @@ from .execterm import ExecTerm
 from .kimagedetector import KimageDetected, KimageDetector, render_detected
 from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
+from .savemediaqueue import SaveMediaQueue
 
 _comp_filepath = os.path.abspath(os.path.join(_basepath, 'kvideocomp', 'package-info.json'))
 with open(_comp_filepath) as f:

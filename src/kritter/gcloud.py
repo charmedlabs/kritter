@@ -5,14 +5,15 @@ import google_auth_oauthlib.flow
 from google.auth.transport.requests import Request
 from .kritter import BASE_DIR
 
+AUTH_FILE = "gcloud.auth"
 SCOPES = ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing']
 CLIENT_SECRET = os.path.join(BASE_DIR, "client_secret.json")
 
 class Gcloud:
 
-    def __init__(self, auth_file):
+    def __init__(self, etcdir):
         self._creds = None
-        self.auth_file = auth_file 
+        self.auth_file = os.path.join(etcdir, AUTH_FILE) 
 
     def _save_creds(self):
         with open(self.auth_file, 'wb') as token:
