@@ -1,5 +1,6 @@
 import time
 import numpy
+import cv2
 from kritter.kvideocomp import KvideoComp
 from .streamer import Streamer
 from .kcomponent import Kcomponent
@@ -103,6 +104,8 @@ class Kvideo(Kcomponent):
             # and toss the timestamp and index.
             if isinstance(frame, tuple):
                 frame = frame[0]
+            if frame.shape[0]!=self.height or frame.shape[1]!=self.width:
+                frame = cv2.resize(frame, (self.width, self.height))
             self.streamer.push_frame(frame)
             if self.hist.is_open:
                 # Update histogram width if needed

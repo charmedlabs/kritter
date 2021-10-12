@@ -37,12 +37,11 @@ class Kcomponent:
         self.id_col = self.id + '-col'
         self.id_row = self.id + '-row'
         self.id_label = self.id + '-label'
-        self.label = dbc.Col(html.B(self.name), id=self.id_label, width=self.style['label_width'], className="text-right _nopadding")
+        self.label = dbc.Col(html.B(self.name), id=self.id_label, width=self.style['label_width'], className="text-right", style=self.col_style)
 
         if self.spinner:
             self.id_spinner = self.id + '-spinner'
             self.comp_spinner = html.Span(dbc.Spinner(color=self.style['color'], size='sm'), id=self.id_spinner, style={'display': 'none'})
-
 
     def set_layout(self, control, cols=None):
         self.control = control
@@ -52,14 +51,20 @@ class Kcomponent:
             pass
         self.cols = cols
         if self.cols is None:
-            self.cols = [self.label, dbc.Col(self.control, width=self.style['control_width'], id=self.id_col)]
-        self.row = dbc.Row(self.cols, align='center', style=self.row_style, id=self.id_row)
+            self.cols = [self.label, dbc.Col(self.control, width=self.style['control_width'], id=self.id_col, style=self.col_style)]
+        self.row = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)
         style = {'display': 'block'} if self.disp else {'display': 'none'}
         self.layout = html.Div([self.row], id=self.id_div, style=style)
 
     def append(self, component):
         from kritter import Kritter
-        self.cols.append(Kritter.unwrap(component))
+        try:
+            self.cols.append(component.cols)
+        except AttributeError:
+            self.cols = [self.cols, component.cols]
+            self.row.children = self.cols
+        if isinstance(component, Kcomponent):
+            component.row_style["padding-top"] = component.row_style["padding-bottom"] = 0 # We will go with the vertical padding of the leftmost control.
 
     def out_spinner_disp(self, state, left_margin=5):
         if state:

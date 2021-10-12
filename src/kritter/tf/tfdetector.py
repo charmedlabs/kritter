@@ -1,4 +1,4 @@
-from kritter import KimageDetector, KimageDetected
+from kritter import KimageDetector, KimageDetected, non_max_suppression
 from threading import Thread, Condition
 import numpy as np
 import tensorflow as tf
@@ -9,6 +9,7 @@ from .label_map_util import load_labelmap, convert_label_map_to_categories, crea
 class TFDetector(KimageDetector):
 
     def __init__(self, path, min_threshold=0.5):
+        self.index = 0
         self.path = path
         self.min_threshold = min_threshold
         self.thread = None
@@ -99,7 +100,7 @@ class TFDetector(KimageDetector):
     def run_detect(self, image):
         width = image.shape[1]
         height = image.shape[0]
-        image = cv2.resize(image, (300, 300))
+        image = cv2.resize(image, (320, 320))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = np.expand_dims(image, axis=0)
         boxes, scores, classes, num = self.sess.run(
@@ -110,10 +111,16 @@ class TFDetector(KimageDetector):
 
     def threshold(self, width, height, scores, boxes, classes):
         items = []
-        for i, s in enumerate(scores):
-            if s>=self.min_threshold:
-                items.append(KimageDetected(classes[i], self.category_index[classes[i]]['name'], scores[i], [int(boxes[i][1]*width), int(boxes[i][0]*height), 
-                    int(boxes[i][3]*width), int(boxes[i][2]*height)]))
+        mask = scores>=self.min_threshold
+        boxes = boxes[mask]
+        scores = scores[mask]
+        classes = classes[mask]
+        indices = non_max_suppression(boxes)
+        boxes = boxes[indices]
+        scores = scores[indices]
+        for i in range(len(boxes)):
+            items.append(KimageDetected(classes[i], self.category_index[classes[i]]['name'], scores[i], [int(boxes[i][1]*width), int(boxes[i][0]*height), 
+                int(boxes[i][3]*width), int(boxes[i][2]*height)]))
         return items    
 
     def run(self):

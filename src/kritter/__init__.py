@@ -24,7 +24,7 @@ from .ktextbox import KtextBox
 from .kradio import Kradio
 from .klogin import Klogin, PMASK_MAX, PMASK_MIN
 from .execterm import ExecTerm
-from .kimagedetector import KimageDetected, KimageDetector, render_detected
+from .kimagedetector import KimageDetected, KimageDetector, render_detected, non_max_suppression
 from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue

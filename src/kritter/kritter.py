@@ -115,7 +115,10 @@ class Kritter(Dash):
 
     @classproperty 
     def kapp(cls):
-        return cls._kapp_var.get()
+        try:
+            return cls._kapp_var.get()
+        except:
+            return None 
 
     @classmethod
     def new_context(cls, func):
@@ -204,7 +207,7 @@ class Kritter(Dash):
         if hasattr(layout, "children"):
             layout.children = Kritter.unwrap(layout.children)
         if isinstance(layout, (Kcomponent, Kdialog)):
-            layout = layout.layout
+            layout = layout.layout = Kritter.unwrap(layout.layout)
         elif isinstance(layout, (list, tuple)):
             if isinstance(layout, tuple):
                 layout = list(layout)

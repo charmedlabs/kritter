@@ -1,4 +1,5 @@
 import dash_devices
+import dash_html_components as html
 from dash_devices.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 from .kcomponent import Kcomponent
@@ -12,7 +13,7 @@ class Kbutton(Kcomponent):
 
         button = dbc.Button([self.name],  disabled=disabled)
 
-        self.set_layout(button, button)
+        self.set_layout(button, html.Div(button, style=self.col_style))
 
         if self.spinner:
             button.children.append(self.comp_spinner)
