@@ -155,4 +155,4 @@ class KsideMenuItem:
                 [Input(self.layout.id, "n_clicks")], service=self.dialog.service)
             def func(clicks):
                 if clicks is not None:
-                    return Output(action_object.id, "is_open", True)
+                    return action_object.out_open(True)
