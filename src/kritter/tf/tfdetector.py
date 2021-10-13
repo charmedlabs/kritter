@@ -8,15 +8,18 @@ from .label_map_util import load_labelmap, convert_label_map_to_categories, crea
 
 class TFDetector(KimageDetector):
 
-    def __init__(self, path, min_threshold=0.5):
+    def __init__(self, path, threshold=0.5):
         self.index = 0
         self.path = path
-        self.min_threshold = min_threshold
+        self.threshold = threshold
         self.thread = None
         self.result = None
         self.image = None
         self.image_cond = Condition()
         self.result_cond = Condition()
+
+    def set_threshold(self, val):
+        self.threshold = val  
 
     def open(self):
         label_map_path = os.path.join(self.path, "labelmap.pbtxt")
@@ -106,12 +109,12 @@ class TFDetector(KimageDetector):
         boxes, scores, classes, num = self.sess.run(
             [self.detection_boxes, self.detection_scores, self.detection_classes, self.num_detections],
             feed_dict={self.image_tensor: image})
-        items = self.threshold(width, height, np.squeeze(scores), np.squeeze(boxes), np.squeeze(classes).astype(np.int32))
+        items = self._threshold(width, height, np.squeeze(scores), np.squeeze(boxes), np.squeeze(classes).astype(np.int32))
         return items
 
-    def threshold(self, width, height, scores, boxes, classes):
+    def _threshold(self, width, height, scores, boxes, classes):
         items = []
-        mask = scores>=self.min_threshold
+        mask = scores>=self.threshold
         boxes = boxes[mask]
         scores = scores[mask]
         classes = classes[mask]

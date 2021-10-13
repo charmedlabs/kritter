@@ -8,9 +8,9 @@ from tflite_runtime.interpreter import Interpreter
 
 class TFliteDetector(KimageDetector):
 
-    def __init__(self, path, min_threshold=0.5):
+    def __init__(self, path, threshold=0.5):
         self.path = path
-        self.min_threshold = min_threshold
+        self.threshold = threshold
         self.thread = None
         self.thread_enable = False
         self.result = None
@@ -48,6 +48,9 @@ class TFliteDetector(KimageDetector):
         tensor = np.squeeze(self.interpreter.get_tensor(output_details['index']))
         return tensor 
 
+    def set_threshold(self, val):
+        self.threshold = val  
+        
     def detect(self, image, block=True):
         if block:
             return self.run_detect(image)
@@ -89,7 +92,7 @@ class TFliteDetector(KimageDetector):
 
         result = []
         for i in range(count):
-            if scores[i] >= self.min_threshold:
+            if scores[i] >= self.threshold:
                 ymin, xmin, ymax, xmax = boxes[i]
                 xmin = max(1, int(xmin*width))
                 xmax = max(1, int(xmax*width))
