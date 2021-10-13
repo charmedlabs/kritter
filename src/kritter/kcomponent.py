@@ -20,6 +20,7 @@ class Kcomponent:
     def __init__(self, label, **kwargs):
         from .kritter import Kritter
         self.kapp = kwargs['kapp'] if 'kapp' in kwargs else Kritter.kapp
+        self.grid = kwargs['grid'] if 'grid' in kwargs else True
         self.layout = kwargs['layout'] if 'layout' in kwargs else None
         self.name = kwargs['name'] if 'name' in kwargs else ''
         self.spinner = kwargs['spinner'] if 'spinner' in kwargs else False
@@ -37,7 +38,11 @@ class Kcomponent:
         self.id_col = self.id + '-col'
         self.id_row = self.id + '-row'
         self.id_label = self.id + '-label'
-        self.label = dbc.Col(html.B(self.name), id=self.id_label, width=self.style['label_width'], className="text-right", style=self.col_style)
+        if self.grid:
+            self.label = dbc.Col(html.B(self.name), id=self.id_label, width=self.style['label_width'], className="text-right", style=self.col_style)
+        else:
+            self.label = html.Div(html.B(self.name), id=self.id_label, style=self.col_style)
+
 
         if self.spinner:
             self.id_spinner = self.id + '-spinner'
@@ -51,18 +56,21 @@ class Kcomponent:
             pass
         self.cols = cols
         if self.cols is None:
-            self.cols = [self.label, dbc.Col(self.control, width=self.style['control_width'], id=self.id_col, style=self.col_style)]
+            if self.grid:
+                self.cols = [self.label, dbc.Col(self.control, width=self.style['control_width'], id=self.id_col, style=self.col_style)]
+            else:
+                self.cols = [self.label, html.Div(self.control, id=self.id_col, style=self.col_style)]
         self.row = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)
+
         style = {'display': 'block'} if self.disp else {'display': 'none'}
         self.layout = html.Div([self.row], id=self.id_div, style=style)
 
     def append(self, component):
         from kritter import Kritter
-        try:
-            self.cols.append(component.cols)
-        except AttributeError:
-            self.cols = [self.cols, component.cols]
-            self.row.children = self.cols
+        scols = self.cols if isinstance(self.cols, list) else [self.cols]
+        ccols = component.cols if isinstance(component.cols, list) else [component.cols]
+        self.cols = scols + ccols
+        self.row.children = self.cols
         if isinstance(component, Kcomponent):
             component.row_style["padding-top"] = component.row_style["padding-bottom"] = 0 # We will go with the vertical padding of the leftmost control.
 

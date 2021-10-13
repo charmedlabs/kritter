@@ -11,7 +11,8 @@ class Kbutton(Kcomponent):
 
         disabled = kwargs['disabled'] if 'disabled' in kwargs else False
 
-        button = dbc.Button([self.name],  disabled=disabled)
+        body = self.name if isinstance(self.name, list) else [self.name]
+        button = dbc.Button(body,  disabled=disabled)
 
         self.set_layout(button, html.Div(button, style=self.col_style))
 
