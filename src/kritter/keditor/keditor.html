@@ -551,15 +551,13 @@ const multiEditor = {
   },
 };
 
-var pathname = "" 
 const parts = document.location.pathname.split("/");
-const indexOfInit = parts.indexOf("init")
-if (indexOfInit>=0 && parts.length>indexOfInit+1)
-  pathname = parts[indexOfInit+1];
-
-const args = new URLSearchParams(pathname);
-
-multiEditor.init(args.getAll('files'), args.get('focus'));
+const part = parts[parts.length-1]
+if (part.startsWith("load")) {
+  const args = new URLSearchParams(part.substring(4));
+  multiEditor.init(args.getAll('files'), args.get('focus'));
+} else
+  multiEditor.init([], null);
 
 window.onresize = function resize() {
   multiEditor.resize();

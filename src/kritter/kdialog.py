@@ -23,7 +23,7 @@ class Kdialog:
         # The displaying of dialogs is probably more natural if it's not shared.   
         self.service = dash_devices.Services.SHARED if shared else None
         self.id = kwargs['id'] if 'id' in kwargs else Kritter.new_id('dialog')
-        close_button = dbc.Button("Close", id=self.id+"-cb", className="ml-auto")
+        close_button = dbc.Button([Kritter.icon("close"), "Close"], id=self.id+"-cb", className="ml-auto")
         fc = [html.Div(close_button)]
         if 'close_button' in kwargs:
             if kwargs['close_button']==False:

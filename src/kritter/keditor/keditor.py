@@ -60,7 +60,7 @@ class Keditor:
         async def index():
             return await render_template("keditor.html")
 
-        @self.server.route("/init/<path:subpath>")
+        @self.server.route("/load<path:subpath>")
         @self.protect
         async def index2(subpath):
             args = urllib.parse.parse_qs(subpath)
@@ -70,7 +70,7 @@ class Keditor:
                     listdir(self.path)
                 except FileNotFoundError:
                     self.path = os.getcwd()
-            return await render_template("index.html")
+            return await render_template("keditor.html")
 
         @self.server.route('/favicon.ico')
         async def favicon():
