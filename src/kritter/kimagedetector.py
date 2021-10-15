@@ -26,11 +26,7 @@ class KimageDetected:
         self.box = box
 
 
-def render_detected(image, detected, disp_confidence=True):
-    line_thickness = 3
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_size = 1.0
-    font_width = 2
+def render_detected(image, detected, disp_confidence=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=2, line_thickness=3):
 
     for i in detected:
         if disp_confidence:
@@ -38,9 +34,9 @@ def render_detected(image, detected, disp_confidence=True):
         else:
             txt = i.label
         color = get_bgr_color(i.index)
-        cv2.rectangle(image, (i.box[0], i.box[1]), (i.box[2], i.box[3]), color, line_thickness)
+        cv2.rectangle(image, (i.box[0]+x_offset, i.box[1]+y_offset), (i.box[2]+x_offset, i.box[3]+y_offset), color, line_thickness)
         w, h = cv2.getTextSize(txt, font, font_size, font_width)[0]
-        cv2.putText(image, txt, (int((i.box[0]+i.box[2])/2-w/2), int((i.box[1]+i.box[3])/2+h/4)), font, font_size, color, font_width)
+        cv2.putText(image, txt, (int((i.box[0]+x_offset+i.box[2]+x_offset)/2-w/2), int((i.box[1]+y_offset+i.box[3]+y_offset)/2+h/4)), font, font_size, color, font_width)
 
 
 # Malisiewicz et al., adapted from pyimagesearch.com
