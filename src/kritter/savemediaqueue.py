@@ -70,9 +70,9 @@ class SaveMediaQueue(KstoreMedia):
                                 os.rename(file, new_filename)
                                 print('Done uploading ', file)
                             else:
-                                print('Error uploading', file)
+                                print(f"Error uploading {file} to {metadata['album']}, {metadata['desc']}")
                         except:
-                            print('Error uploading', file)
+                            print('Exception uploading', file)
             # clean up files
             if len(uploaded)>self.keep:
                 uploaded = sorted(uploaded)
