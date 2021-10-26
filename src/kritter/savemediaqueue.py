@@ -7,9 +7,7 @@ import datetime
 from .kstoremedia import KstoreMedia
 
 UPLOADED = "U"
-TEMP_FILENAME = "remove_me"
 KEEP = 100
-JPG_QUALITY = 100
 
 def extension(filename):
     return filename.split(".")[-1].lower()
@@ -21,9 +19,12 @@ def valid_image(filename):
     ext = extension(filename)
     return ext=="jpg" or ext=="png"
 
-def valid_media(filename):
+def valid_video(filename):
     ext = extension(filename)
-    return ext=="jpg" or ext=="png" or ext=="mp4"
+    return ext=="mp4"
+
+def valid_media(filename):
+    valid_image(filename) or valid_video(filename)
 
 class SaveMediaQueue(KstoreMedia):
 
@@ -48,7 +49,7 @@ class SaveMediaQueue(KstoreMedia):
             files = os.listdir(self.path)
             files = sorted(files)
             for file in files:
-                if not valid_media(file) or file.startswith(TEMP_FILENAME):
+                if not valid_media(file):
                     continue
                 if not self.run_thread:
                     break
@@ -70,9 +71,9 @@ class SaveMediaQueue(KstoreMedia):
                                 os.rename(file, new_filename)
                                 print('Done uploading ', file)
                             else:
-                                print(f"Error uploading {file} to {metadata['album']}, {metadata['desc']}")
-                        except:
-                            print('Exception uploading', file)
+                                print(f"Error uploading {file} to {metadata['album']}")
+                        except Exception as e:
+                            print('Exception uploading', file, e)
             # clean up files
             if len(uploaded)>self.keep:
                 uploaded = sorted(uploaded)
@@ -98,11 +99,6 @@ class SaveMediaQueue(KstoreMedia):
         with open(f'{basename(filename)}.json') as file:
             return json.load(file)   
 
-    def store_image_array(self, array, album="", desc=""):
-        filename = os.path.join(self.path, TEMP_FILENAME+".jpg")
-        cv2.imwrite(filename, array, [cv2.IMWRITE_JPEG_QUALITY, JPG_QUALITY])
-        return self.store_image_file(filename, album, desc)
-
     def store_image_file(self, filename, album="", description=""):
         if not valid_image(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
@@ -111,8 +107,10 @@ class SaveMediaQueue(KstoreMedia):
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
-    def store_video_stream(self, stream, fps=30, album="", desc=""):
-        pass
-
     def store_video_file(self, filename, fps=30, album="", desc=""):
-        pass
+        if not valid_video(filename):
+            raise RuntimeError(f"File {filename} isn't correct media type.")
+        new_filename = self._get_filename(extension(filename))
+        self._save_metadata(new_filename, album, description)
+        # perform rename so we don't accidentally try to upload a half-written file
+        os.rename(filename, new_filename)

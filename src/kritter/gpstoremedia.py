@@ -32,23 +32,32 @@ class GPstoreMedia(KstoreMedia):
 
         album_id = None
         if album:
-            albums = service.sharedAlbums().list().execute()
-            albums = albums['sharedAlbums']
-            for a in albums:
-                if 'title' in a and a['title']==album:
-                    album_id = a['id']
-                    break
-            if album_id is None:
-                albums = service.albums().list().execute()
-                albums = albums['albums']
+            try:
+                albums = service.sharedAlbums().list().execute()
+                albums = albums['sharedAlbums']
                 for a in albums:
                     if 'title' in a and a['title']==album:
                         album_id = a['id']
                         break
+            except:
+                pass
+            if album_id is None:
+                try:
+                    albums = service.albums().list().execute()
+                    albums = albums['albums']
+                    for a in albums:
+                        if 'title' in a and a['title']==album:
+                            album_id = a['id']
+                            break
+                except:
+                    pass
             # new album
             if album_id==None:
-                response = service.albums().create(body={'album': {'title': album}}).execute()
-                album_id = response['id']
+                try:
+                    response = service.albums().create(body={'album': {'title': album}}).execute()
+                    album_id = response['id']
+                except:
+                    pass
 
         # Call the Drive v3 API
         upload_token = self._post_gphoto(filename)
@@ -73,3 +82,7 @@ class GPstoreMedia(KstoreMedia):
             return results['newMediaItemResults'][0]['mediaItem']['productUrl']
         except:
             return None
+
+    def store_video_file(self, filename, album="", desc=""):
+        # Google Photos accepts videos through the same API path as images.
+        return self.store_image_file(filename, album, desc)
