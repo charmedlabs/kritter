@@ -24,11 +24,12 @@ def valid_video(filename):
     return ext=="mp4"
 
 def valid_media(filename):
-    valid_image(filename) or valid_video(filename)
+    return valid_image(filename) or valid_video(filename)
 
 class SaveMediaQueue(KstoreMedia):
 
     def __init__(self, store_media, path="", keep=KEEP):
+        super().__init__()
         self.store_media = store_media
         self.path = path
         self.keep = keep
@@ -99,18 +100,18 @@ class SaveMediaQueue(KstoreMedia):
         with open(f'{basename(filename)}.json') as file:
             return json.load(file)   
 
-    def store_image_file(self, filename, album="", description=""):
+    def store_image_file(self, filename, album="", desc=""):
         if not valid_image(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(extension(filename))
-        self._save_metadata(new_filename, album, description)
+        self._save_metadata(new_filename, album, desc)
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
-    def store_video_file(self, filename, fps=30, album="", desc=""):
+    def store_video_file(self, filename, album="", desc=""):
         if not valid_video(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(extension(filename))
-        self._save_metadata(new_filename, album, description)
+        self._save_metadata(new_filename, album, desc)
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)

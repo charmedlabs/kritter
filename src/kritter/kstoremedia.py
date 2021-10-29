@@ -24,10 +24,13 @@ class KstoreMedia:
             return
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         writer = cv2.VideoWriter(self.tempvideo, fourcc, fps, (frame[0].shape[1], frame[0].shape[0]))
+        i=1
         while frame:
             writer.write(frame[0])
             frame = stream.frame()
-        writer.release()    
+            i += 1
+        writer.release()
+        print(f"Wrote {i} frames") # Note, can't just print the stream.len() because it may not be ready yet.   
         return self.store_video_file(self.tempvideo, album, desc)
 
     def store_video_file(self, filename, album="", desc=""):

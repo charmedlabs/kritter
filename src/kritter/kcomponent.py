@@ -74,11 +74,11 @@ class Kcomponent:
         if isinstance(component, Kcomponent):
             component.row_style["padding-top"] = component.row_style["padding-bottom"] = 0 # We will go with the vertical padding of the leftmost control.
 
-    def out_spinner_disp(self, state, left_margin=5):
+    def out_spinner_disp(self, state, left_margin=5, disable=None):
         if state:
-            return [Output(self.id_spinner, 'style', {'display': 'inline', 'margin-left': f'{left_margin}px'})] + self.out_disabled(True)
+            return [Output(self.id_spinner, 'style', {'display': 'inline', 'margin-left': f'{left_margin}px'})] + self.out_disabled(disable if disable is not None else True)
         else:
-            return [Output(self.id_spinner, 'style', {'display': 'none'})] + self.out_disabled(False) 
+            return [Output(self.id_spinner, 'style', {'display': 'none'})] + self.out_disabled(disable if disable is not None else False) 
 
     def out_disp(self, state):
         if state:

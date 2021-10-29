@@ -19,6 +19,10 @@ class Kbutton(Kcomponent):
         if self.spinner:
             button.children.append(self.comp_spinner)
 
+    def out_name(self, name):
+        children = [name, self.comp_spinner] if self.spinner else name
+        return [Output(self.id, "children", children)]
+
     def callback(self, state=()):
         def wrap_func(func):
             @wraps(func)

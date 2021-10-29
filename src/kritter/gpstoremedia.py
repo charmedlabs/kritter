@@ -27,7 +27,7 @@ class GPstoreMedia(KstoreMedia):
         return r.content
 
 
-    def store_image_file(self, filename, album="", description=""):
+    def store_image_file(self, filename, album="", desc=""):
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
 
         album_id = None
@@ -65,7 +65,7 @@ class GPstoreMedia(KstoreMedia):
             'album_id': album_id, 
             'newMediaItems': [
                 {
-                    "description": description,
+                    "description": desc,
                     "simpleMediaItem": 
                     {
                         "uploadToken": upload_token.decode('UTF-8')

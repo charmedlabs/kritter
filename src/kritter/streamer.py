@@ -190,6 +190,8 @@ class Encoder(aiortc.codecs.base.Encoder):
         return ([], self.timestamp(stream.pts))
 
     def push_frame(self, frame):
+        if frame is None:
+            return
         self.mr_frame = frame
 
     def update_actual_bitrate(self, data):

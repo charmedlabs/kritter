@@ -97,6 +97,8 @@ class Kvideo(Kcomponent):
             pass
 
     def push_frame(self, frame, format="BGR24"):
+        if frame is None: # kcamera can return None if it can't allocate memory
+            return
         # No sense in sending updates to clients if there are none. 
         # (And in fact, it will block if there are no clients.)
         if self.kapp.clients:
