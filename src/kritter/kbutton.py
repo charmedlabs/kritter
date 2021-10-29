@@ -20,7 +20,10 @@ class Kbutton(Kcomponent):
             button.children.append(self.comp_spinner)
 
     def out_name(self, name):
-        children = [name, self.comp_spinner] if self.spinner else name
+        if isinstance(name, list):
+            children = name + [self.comp_spinner] if self.spinner else name
+        else:
+            children = [name, self.comp_spinner] if self.spinner else name
         return [Output(self.id, "children", children)]
 
     def callback(self, state=()):
