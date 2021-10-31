@@ -26,7 +26,43 @@ class KimageDetected:
         self.box = box
 
 
-def render_detected(image, detected, disp_confidence=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=2, line_thickness=3):
+def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
+
+    if font_width==0:
+        font_width = int(font_size*2 + 0.5)
+    if line_width==0:
+        line_width = int(font_size*2 + 0.5)
+    if padding==0:
+        padding = int(font_size*10 + 0.5)
+    nudge = int(line_width/2+0.5) 
+
+    w, h = cv2.getTextSize(label, font, font_size, font_width)[0]
+    if bg_3d:
+        bg_outline = 2
+    if bg:
+        bg_3d = int(line_width*1.5) if bg_3d else 0
+        cv2.rectangle(image, (box[0]+x_offset+bg_3d, box[1]+y_offset+bg_3d), (box[2]+x_offset+bg_3d, box[3]+y_offset+bg_3d), bg_color, line_width*bg_outline)
+        if not center:
+            cv2.rectangle(image, (box[0]+x_offset-bg_outline+bg_3d, box[1]+y_offset-bg_outline-nudge+bg_3d), (box[0]+x_offset+w+2*padding+bg_outline+bg_3d, box[1]+y_offset+h+2*padding+bg_outline+bg_3d), bg_color, -1)
+
+    cv2.rectangle(image, (box[0]+x_offset, box[1]+y_offset), (box[2]+x_offset, box[3]+y_offset), color, line_width)
+    if not center:
+        cv2.rectangle(image, (box[0]+x_offset, box[1]+y_offset-nudge), (box[0]+x_offset+w+2*padding, box[1]+y_offset+h+2*padding), color, -1)
+
+    if bg:
+        bg_3d = int(font_width*1.5) if bg_3d else 0
+    if center:
+        if bg:
+            cv2.putText(image, label, (int((box[0]+x_offset+box[2]+x_offset)/2-w/2+bg_3d), int((box[1]+y_offset+box[3]+y_offset)/2+h/4+bg_3d)), font, font_size, bg_color, font_width*bg_outline)
+
+        cv2.putText(image, label, (int((box[0]+x_offset+box[2]+x_offset)/2-w/2), int((box[1]+y_offset+box[3]+y_offset)/2+h/4)), font, font_size, color, font_width)
+    else:
+        if bg:
+            cv2.putText(image, label, (box[0]+x_offset+padding+bg_3d, box[1]+y_offset+padding+h+bg_3d), font, font_size, bg_color, font_width*bg_outline)
+        cv2.putText(image, label, (int(box[0]+x_offset+padding), int(box[1]+y_offset+padding+h)), font, font_size, (255, 255, 255), font_width)
+
+
+def render_detected(image, detected, disp_confidence=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
 
     for i in detected:
         if disp_confidence:
@@ -34,9 +70,7 @@ def render_detected(image, detected, disp_confidence=True, x_offset=0, y_offset=
         else:
             txt = i.label
         color = get_bgr_color(i.index)
-        cv2.rectangle(image, (i.box[0]+x_offset, i.box[1]+y_offset), (i.box[2]+x_offset, i.box[3]+y_offset), color, line_thickness)
-        w, h = cv2.getTextSize(txt, font, font_size, font_width)[0]
-        cv2.putText(image, txt, (int((i.box[0]+x_offset+i.box[2]+x_offset)/2-w/2), int((i.box[1]+y_offset+i.box[3]+y_offset)/2+h/4)), font, font_size, color, font_width)
+        render_detected_box(image, color, txt, i.box, x_offset, y_offset, font, font_size, font_width, line_width, padding, center, bg, bg_outline, bg_color, bg_3d)
 
 
 # Malisiewicz et al., adapted from pyimagesearch.com
