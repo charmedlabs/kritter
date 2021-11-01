@@ -124,7 +124,9 @@ class Kvideo(Kcomponent):
         return [Output(self.hist_id, 'is_open', value)]
 
     def out_height(self, value):
+        self.height = value
         return [Output(self.id, 'height', value)]
 
     def out_width(self, value):
+        self.width = value
         return [Output(self.id, 'width', value)]

@@ -100,7 +100,7 @@ class TFDetector(KimageDetector):
                 else:
                     return None
 
-    def run_detect(self, image):
+    def run_detect(self, image, nms=False):
         width = image.shape[1]
         height = image.shape[0]
         image = cv2.resize(image, (320, 320))
@@ -109,18 +109,19 @@ class TFDetector(KimageDetector):
         boxes, scores, classes, num = self.sess.run(
             [self.detection_boxes, self.detection_scores, self.detection_classes, self.num_detections],
             feed_dict={self.image_tensor: image})
-        items = self._threshold(width, height, np.squeeze(scores), np.squeeze(boxes), np.squeeze(classes).astype(np.int32))
+        items = self._threshold(width, height, np.squeeze(scores), np.squeeze(boxes), np.squeeze(classes).astype(np.int32), nms)
         return items
 
-    def _threshold(self, width, height, scores, boxes, classes):
+    def _threshold(self, width, height, scores, boxes, classes, nms):
         items = []
         mask = scores>=self.threshold
         boxes = boxes[mask]
         scores = scores[mask]
         classes = classes[mask]
-        indices = non_max_suppression(boxes)
-        boxes = boxes[indices]
-        scores = scores[indices]
+        if nms:
+            indices = non_max_suppression(boxes)
+            boxes = boxes[indices]
+            scores = scores[indices]
         for i in range(len(boxes)):
             items.append(KimageDetected(classes[i], self.category_index[classes[i]]['name'], scores[i], [int(boxes[i][1]*width), int(boxes[i][0]*height), 
                 int(boxes[i][3]*width), int(boxes[i][2]*height)]))
