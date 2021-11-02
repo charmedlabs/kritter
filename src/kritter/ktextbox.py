@@ -16,3 +16,5 @@ class KtextBox(Kcomponent):
         textbox = dbc.Input(placeholder=placeholder, type=_type, value=value, minLength=min_length, maxLength=max_length)
         self.set_layout(textbox)
 
+    def out_type(self, _type):
+        return [Output(self.id, "type", _type)]
