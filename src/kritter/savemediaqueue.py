@@ -5,26 +5,13 @@ from threading import Thread
 import cv2
 import datetime
 from .kstoremedia import KstoreMedia
+from .util import file_extension, valid_image_name, valid_video_name, valid_media_name
 
 UPLOADED = "U"
 KEEP = 100
 
-def extension(filename):
-    return filename.split(".")[-1].lower()
-
 def basename(filename):
     return filename.split(".")[0]
-
-def valid_image(filename):
-    ext = extension(filename)
-    return ext=="jpg" or ext=="png"
-
-def valid_video(filename):
-    ext = extension(filename)
-    return ext=="mp4"
-
-def valid_media(filename):
-    return valid_image(filename) or valid_video(filename)
 
 class SaveMediaQueue(KstoreMedia):
 
@@ -50,7 +37,7 @@ class SaveMediaQueue(KstoreMedia):
             files = os.listdir(self.path)
             files = sorted(files)
             for file in files:
-                if not valid_media(file):
+                if not valid_media_name(file):
                     continue
                 if not self.run_thread:
                     break
@@ -101,17 +88,17 @@ class SaveMediaQueue(KstoreMedia):
             return json.load(file)   
 
     def store_image_file(self, filename, album="", desc=""):
-        if not valid_image(filename):
+        if not valid_image_name(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
-        new_filename = self._get_filename(extension(filename))
+        new_filename = self._get_filename(file_extension(filename))
         self._save_metadata(new_filename, album, desc)
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
     def store_video_file(self, filename, album="", desc=""):
-        if not valid_video(filename):
+        if not valid_video_name(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
-        new_filename = self._get_filename(extension(filename))
+        new_filename = self._get_filename(file_extension(filename))
         self._save_metadata(new_filename, album, desc)
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)

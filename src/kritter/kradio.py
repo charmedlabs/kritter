@@ -19,8 +19,8 @@ class Kradio(Kcomponent):
             value=value,
         )
         
-        cols = [self.label,
-            dbc.Col(radio, width=self.style['control_width'], className="radio-group", id=self.id_col)]
+        cols = [self.label, 
+            dbc.Col(radio, width=self.style['control_width'], className="radio-group", id=self.id_col, style=self.col_style)]
         self.set_layout(radio, cols)
 
     def out_options(self, options):

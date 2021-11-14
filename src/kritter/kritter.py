@@ -52,7 +52,7 @@ KRITTER_STYLE = '''
 ._nopadding {
     padding: 0px !important;   
     margin: 0px !important; 
-}  
+} 
 '''
 
 def index_string(style):

@@ -35,3 +35,17 @@ def get_bgr_color(index=-1):
     color[0] = color[2]
     color[2] = red
     return color
+
+def file_extension(filename):
+    return filename.split(".")[-1].lower()
+
+def valid_image_name(filename):
+    ext = file_extension(filename)
+    return ext=="jpg" or ext=="png" or ext=="gif"
+
+def valid_video_name(filename):
+    ext = file_extension(filename)
+    return ext=="mp4"
+
+def valid_media_name(filename):
+    return valid_image_name(filename) or valid_video_name(filename)
