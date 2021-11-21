@@ -143,3 +143,6 @@ class KsideMenuItem:
             def func(clicks):
                 if clicks is not None:
                     return action_object.out_open(True)
+
+    def out_url(self, url):
+        return [Output(self.layout.id, "href", url)]
