@@ -10,9 +10,12 @@ class Kbutton(Kcomponent):
         super().__init__('kbutton', **kwargs)
 
         disabled = kwargs['disabled'] if 'disabled' in kwargs else False
+        href = kwargs['href'] if 'href' in kwargs else None
+        target = kwargs['target'] if 'target' in kwargs else None
+        external_link = kwargs['external_link'] if 'external_link' in kwargs else None
 
         body = self.name if isinstance(self.name, list) else [self.name]
-        button = dbc.Button(body,  disabled=disabled)
+        button = dbc.Button(body,  disabled=disabled, href=href, target=target, external_link=external_link)
 
         self.set_layout(button, html.Div(button, style=self.col_style))
 
@@ -20,12 +23,16 @@ class Kbutton(Kcomponent):
             button.children.append(self.comp_spinner)
 
     def out_name(self, name):
+        self.name = name
         if isinstance(name, list):
             children = name + [self.comp_spinner] if self.spinner else name
         else:
             children = [name, self.comp_spinner] if self.spinner else name
         return [Output(self.id, "children", children)]
 
+    def out_url(self, url):
+        return [Output(self.id, "href", url)]
+        
     def callback(self, state=()):
         def wrap_func(func):
             @wraps(func)

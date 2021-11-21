@@ -131,25 +131,12 @@ class KsideMenuItem:
         if icon is not None:
             children.insert(0, Kritter.icon(icon))
         self.dialog = None
-        self.layout = dbc.DropdownMenuItem(children, 
-            id=Kritter.new_id(), className="_k-menu-button-item")
         if isinstance(action_object, str):
-            if target is None:
-                script = f"""
-                function(value) {{
-                    window.location.href = "{action_object}"; 
-                }}
-                """
-            else:
-                script = f"""
-                function(value) {{
-                    window.open("{action_object}", "{target}");
-                }}
-                """
-            kapp.clientside_callback(script,
-                Output("_none", Kritter.new_id()), [Input(self.layout.id, 'n_clicks')]
-            )
+            self.layout = dbc.DropdownMenuItem(children, 
+                id=Kritter.new_id(), href=action_object, target=target, external_link=True, className="_k-menu-button-item")
         elif isinstance(action_object, Kdialog):
+            self.layout = dbc.DropdownMenuItem(children, 
+                id=Kritter.new_id(), className="_k-menu-button-item")
             self.dialog = action_object
             @kapp.callback(None, 
                 [Input(self.layout.id, "n_clicks")], service=self.dialog.service)
