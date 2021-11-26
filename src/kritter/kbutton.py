@@ -9,13 +9,12 @@ class Kbutton(Kcomponent):
     def __init__(self, **kwargs):
         super().__init__('kbutton', **kwargs)
 
-        disabled = kwargs['disabled'] if 'disabled' in kwargs else False
         href = kwargs['href'] if 'href' in kwargs else None
         target = kwargs['target'] if 'target' in kwargs else None
         external_link = kwargs['external_link'] if 'external_link' in kwargs else None
 
         body = self.name if isinstance(self.name, list) else [self.name]
-        button = dbc.Button(body,  disabled=disabled, href=href, target=target, external_link=external_link)
+        button = dbc.Button(body,  disabled=self.disabled, href=href, target=target, external_link=external_link)
 
         self.set_layout(button, html.Div(button, style=self.col_style))
 

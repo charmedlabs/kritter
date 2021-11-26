@@ -15,7 +15,8 @@ from .kcomponent import Kcomponent, default_style
 from .kvideo import Kvideo
 from .kritter import Kritter, run_kterm, PORT, BASE_DIR, MEDIA_DIR
 from .kcheckbox import Kcheckbox 
-from .kdropdown import Kdropdown  
+from .kdropdown import Kdropdown 
+from .kdropdownmenu import KdropdownMenu 
 from .kslider import Kslider  
 from .kbutton import Kbutton
 from .kdialog import Kdialog, KyesNoDialog, KokDialog, KsideMenuItem

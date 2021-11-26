@@ -25,6 +25,7 @@ class Kcomponent:
         self.name = kwargs['name'] if 'name' in kwargs else None
         self.spinner = kwargs['spinner'] if 'spinner' in kwargs else False
         self.service = kwargs['service'] if 'service' in kwargs else dash_devices.Services.SHARED
+        self.disabled = kwargs['disabled'] if 'disabled' in kwargs else False
         self.style = default_style.copy()
         self.disp = kwargs['disp'] if 'disp' in kwargs else True
         if 'style' in kwargs:
@@ -61,7 +62,7 @@ class Kcomponent:
             else:
                 self.cols = [self.label, html.Div(self.control, id=self.id_col, style=self.col_style)]
         if self.name is None:
-            self.cols = self.cols[1]
+            self.cols = self.cols[1:]
 
         self.row = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)
 
