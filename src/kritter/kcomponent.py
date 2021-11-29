@@ -26,8 +26,8 @@ class Kcomponent:
         self.spinner = kwargs['spinner'] if 'spinner' in kwargs else False
         self.service = kwargs['service'] if 'service' in kwargs else dash_devices.Services.SHARED
         self.disabled = kwargs['disabled'] if 'disabled' in kwargs else False
-        self.style = default_style.copy()
         self.disp = kwargs['disp'] if 'disp' in kwargs else True
+        self.style = default_style.copy()
         if 'style' in kwargs:
             self.style.update(kwargs['style']) 
 
