@@ -16,7 +16,8 @@ class Kslider(Kcomponent):
         self.updatemode = kwargs['updatemode'] if 'updatemode' in kwargs else "drag"
         self.updatetext = kwargs['updatetext'] if 'updatetext' in kwargs else True
         self.range_ = kwargs['range'] if 'range' in kwargs else False
-        self.updateperiod = 1/kwargs['updaterate'] if 'updaterate' in kwargs else 1/UPDATE_RATE
+        updaterate = kwargs['updaterate'] if 'updaterate' in kwargs else UPDATE_RATE
+        self.updateperiod = 0 if updaterate==0 else 1/updaterate
         # Use SHARED_MOST_RECENT because we're a slider and only the most recent values are needed
         self.service = kwargs['service'] if 'service' in kwargs else Services.SHARED_MOST_RECENT
 
