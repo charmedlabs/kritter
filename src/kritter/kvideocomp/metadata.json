@@ -1,64 +1,71 @@
 {
   "src/lib/components/KvideoComp.react.js": {
-    "description": "ExampleComponent is an example component.\nIt takes a property, `label`, and\ndisplays it.\nIt renders an input with the property `value`\nwhich is editable by the user.", 
-    "displayName": "KvideoComp", 
+    "description": "ExampleComponent is an example component.\nIt takes a property, `label`, and\ndisplays it.\nIt renders an input with the property `value`\nwhich is editable by the user.",
+    "displayName": "KvideoComp",
     "methods": [
       {
-        "name": "negotiate", 
-        "docblock": null, 
-        "modifiers": [], 
-        "params": [], 
+        "name": "negotiate",
+        "docblock": null,
+        "modifiers": [],
+        "params": [],
         "returns": null
-      }, 
+      },
       {
-        "name": "start", 
-        "docblock": null, 
-        "modifiers": [], 
-        "params": [], 
+        "name": "start",
+        "docblock": null,
+        "modifiers": [],
+        "params": [],
         "returns": null
-      }, 
+      },
       {
-        "name": "stop", 
-        "docblock": null, 
-        "modifiers": [], 
-        "params": [], 
+        "name": "stop",
+        "docblock": null,
+        "modifiers": [],
+        "params": [],
         "returns": null
       }
-    ], 
+    ],
     "props": {
-      "image": {
-        "type": {
-          "name": "array"
-        }, 
-        "required": false, 
-        "description": "Image"
-      }, 
       "id": {
         "type": {
           "name": "string"
-        }, 
-        "required": false, 
+        },
+        "required": false,
         "description": "The ID used to identify this component in Dash callbacks."
-      }, 
+      },
+      "overlay_id": {
+        "type": {
+          "name": "string"
+        },
+        "required": false,
+        "description": "The ID used to identify an overlay component that we register mouse events."
+      },
+      "click_data": {
+        "type": {
+          "name": "array"
+        },
+        "required": false,
+        "description": "click_data"
+      },
       "width": {
         "type": {
           "name": "number"
-        }, 
-        "required": false, 
+        },
+        "required": false,
         "description": "The width used to specify width of video window"
-      }, 
+      },
       "height": {
         "type": {
           "name": "number"
-        }, 
-        "required": false, 
+        },
+        "required": false,
         "description": "The height used to specify height of video window"
-      }, 
+      },
       "setProps": {
         "type": {
           "name": "func"
-        }, 
-        "required": false, 
+        },
+        "required": false,
         "description": "Dash-assigned callback that should be called to report property changes\nto Dash, to make them available for callbacks."
       }
     }

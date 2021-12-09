@@ -23,11 +23,14 @@ class Kslider(Kcomponent):
 
         if 'format' in kwargs:
             self.format = kwargs['format'] 
-        else: 
-            if self.range_:
-                self.format = lambda val : f'{val[0]}'
+        else:
+            if self.updatetext: 
+                if self.range_:
+                    self.format = lambda val : f'{val[0]}'
+                else:
+                    self.format = lambda val : f'{val}'
             else:
-                self.format = lambda val : f'{val}'
+                self.format = lambda val : ''
         self.id_text = self.id + '-text'
 
         component = dcc.RangeSlider if self.range_ else dcc.Slider
