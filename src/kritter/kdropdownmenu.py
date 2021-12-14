@@ -4,7 +4,7 @@ from dash_devices.dependencies import Input, Output, ALL
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 from functools import wraps
-
+import json
 
 class KdropdownMenu(Kcomponent):
 
@@ -12,12 +12,16 @@ class KdropdownMenu(Kcomponent):
         super().__init__('kdropdown', **kwargs)
         self.options = kwargs['options'] if 'options' in kwargs else []
         clearable = kwargs['clearable'] if 'clearable' in kwargs else False
+        nav = kwargs['nav'] if 'nav' in kwargs else False
         value = kwargs['value'] if 'value' in kwargs else self.options[0] if len(self.options) else None
         options = [dbc.DropdownMenuItem(option, id={'type': "dd", 'index': i}) for i, option in enumerate(self.options)]
 
-        dropdown = dbc.DropdownMenu(label=self.name, children=options)
+        self.dropdown = dbc.DropdownMenu(label=self.name, children=options)
+        if nav:
+            self.dropdown.nav = True
+            self.dropdown.in_navbar = True
 
-        self.set_layout(dropdown, html.Div(dropdown, style=self.col_style))
+        self.set_layout(self.dropdown, html.Div(self.dropdown, style=self.col_style))
 
     def out_options(self, options):
         self.options = options
