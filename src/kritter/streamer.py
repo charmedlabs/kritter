@@ -189,6 +189,9 @@ class Encoder(aiortc.codecs.base.Encoder):
                 break
         return ([], self.timestamp(stream.pts))
 
+    def send_keyframe(self):
+        self.force_keyframe = True
+
     def push_frame(self, frame):
         if frame is None:
             return
@@ -410,6 +413,9 @@ class Streamer:
     def run(self, host='0.0.0.0', port=5000):
         self.server.run(host=host, port=port, debug=False, use_reloader=False)
         logger.debug("server exitted")
+
+    def send_keyframe(self):
+        Streamer.encoder.send_keyframe()
 
     def push_frame(self, frame):
         # If we get a tuple, assume that it's a (frame, timestamp, index) tuple

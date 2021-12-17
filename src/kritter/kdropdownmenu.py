@@ -10,24 +10,36 @@ class KdropdownMenu(Kcomponent):
 
     def __init__(self, **kwargs):
         super().__init__('kdropdown', **kwargs)
-        self.options = kwargs['options'] if 'options' in kwargs else []
+        options = kwargs['options'] if 'options' in kwargs else []
         clearable = kwargs['clearable'] if 'clearable' in kwargs else False
         nav = kwargs['nav'] if 'nav' in kwargs else False
-        value = kwargs['value'] if 'value' in kwargs else self.options[0] if len(self.options) else None
-        options = [dbc.DropdownMenuItem(option, id={'type': "dd", 'index': i}) for i, option in enumerate(self.options)]
-
-        self.dropdown = dbc.DropdownMenu(label=self.name, children=options)
+        value = kwargs['value'] if 'value' in kwargs else 0 if len(options) else None
+        self.create_items(options)
+        dropdown = dbc.DropdownMenu(label=self.name, children=self.items, disabled=self.disabled, style={"display": "inline-block"})
         if nav:
-            self.dropdown.nav = True
-            self.dropdown.in_navbar = True
+            dropdown.nav = True
+            dropdown.in_navbar = True
 
-        self.set_layout(self.dropdown, html.Div(self.dropdown, style=self.col_style))
+        children = [dropdown, self.comp_spinner] if self.spinner else dropdown
+        self.set_layout(dropdown, html.Div(children, style=self.col_style))
+
+    def create_items(self, options):
+        self.items = []
+        for i, option in enumerate(options):
+            id_ = {'type': "dd", 'index': i}
+            if isinstance(option, dbc.DropdownMenuItem):
+                option.id = id_
+                self.items.append(option) 
+            else:
+                self.items.append(dbc.DropdownMenuItem(option, id=id_))
 
     def out_options(self, options):
-        self.options = options
-        options = [dbc.DropdownMenuItem(option, id={'type': "dd", 'index': i}) for i, option in enumerate(self.options)]
-        return [Output(self.id, "children", options)]
-
+        self.create_items(options)
+        return [Output(self.id, "children", self.items)]
+    
+    # This won't work because we push_mods doesn't currently swork with pattern matching callbacks 
+    #def out_option_disabled(self, index, disabled):
+    #    return [Output(self.items[index].id, "disabled", disabled)]
 
     def callback(self, state=()):
         def wrap_func(func):
@@ -37,7 +49,7 @@ class KdropdownMenu(Kcomponent):
             def _func(*args):
                 index = json.loads(callback_context.triggered[0]['prop_id'].split('.')[0])['index']
                 # Toss out n_clicks argument, add option to beginning
-                args = [self.options[index]] + list(args[1:])
+                args = [index] + list(args[1:])
                 return func(*args)
         return wrap_func
 

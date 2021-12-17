@@ -19,7 +19,7 @@ from .kdropdown import Kdropdown
 from .kdropdownmenu import KdropdownMenu 
 from .kslider import Kslider  
 from .kbutton import Kbutton
-from .kdialog import Kdialog, KyesNoDialog, KokDialog, KsideMenuItem
+from .kdialog import Kdialog, KyesNoDialog, KokDialog, KprogressDialog, KsideMenuItem
 from .ktext import Ktext
 from .ktextbox import KtextBox
 from .kradio import Kradio

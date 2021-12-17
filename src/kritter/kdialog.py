@@ -30,6 +30,7 @@ class Kdialog:
                 close_button = None
                 fc = []
             else:
+                # Specify contents of close button
                 close_button.children = kwargs['close_button']
         if right_footer:
             fc.insert(0, html.Div(right_footer, className="ml-auto"))             
@@ -121,6 +122,15 @@ class KokDialog(Kdialog):
         def _func(ok):
             if ok is not None:
                 return False
+
+class KprogressDialog(Kdialog):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, close_button=False, backdrop=False, size="sm")
+        self.progress = dbc.Progress(id=Kritter.new_id())
+        self.main.children.append(self.progress)
+
+    def out_progress(self, val):
+        return [Output(self.progress.id, "value", val)]
 
 class KsideMenuItem:
     def __init__(self, name, action_object, icon=None, target=None, kapp=None):

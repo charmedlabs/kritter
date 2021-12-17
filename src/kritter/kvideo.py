@@ -158,6 +158,9 @@ class Kvideo(Kcomponent):
                 return func(*args)
         return wrap_func
  
+    def send_keyframe(self):
+        self.streamer.send_keyframe()
+
     def push_frame(self, frame, format="BGR24"):
         if frame is None: # kcamera can return None if it can't allocate memory
             return
