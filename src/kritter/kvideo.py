@@ -33,6 +33,8 @@ class Kvideo(Kcomponent):
 
         self.width = kwargs['width'] if 'width' in kwargs else 640
         self.height = kwargs['height'] if 'height' in kwargs else 480
+        self.source_width = kwargs['source_width'] if 'source_width' in kwargs else self.width
+        self.source_height = kwargs['source_height'] if 'source_height' in kwargs else self.height
         self.hist_update_period = kwargs['hist_update_period'] if 'hist_update_period' in kwargs else 0.25
         self.hist_update_time = 0
         self.streamer = Streamer(server=self.kapp.server, html=None, js=None)
@@ -58,10 +60,12 @@ class Kvideo(Kcomponent):
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     margin=dict(l=0, b=0, t=0, r=0),  
+                    yaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.source_height-1, 0]),
+                    xaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[0, self.source_width-1])
                 )
             )
             self._update_overlay_figure()
-            self.overlay = dcc.Graph(id=self.overlay_id, figure=self.overlay_figure, config={'displayModeBar': False}, style={"padding": "0px", "margin": "0px", "z-index": "1000", "position": "absolute", "top": "0px", "left": "0px"})
+            self.overlay = dcc.Graph(id=self.overlay_id, figure=self.overlay_figure, config={'displayModeBar': False}, style={"padding": "0px", "margin": "0px", "position": "absolute", "top": "0px", "left": "0px"})
             vdiv = html.Div([self.video, self.overlay], style={"position": "relative"})
             self.layout = html.Div([vdiv, self.hist], id=self.id_div)
         else:
@@ -115,8 +119,6 @@ class Kvideo(Kcomponent):
 
 
     def _update_overlay_figure(self):
-        self.overlay_figure['layout']['yaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.height-1, 0])
-        self.overlay_figure['layout']['xaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[0, self.width-1])
         self.overlay_figure['layout']['width'] = self.width 
         self.overlay_figure['layout']['height'] = self.height 
 

@@ -18,12 +18,19 @@ def file_in_path(path, file):
             return filepath
     return None
 
-def get_rgb_color(index=-1):
+def get_rgb_color(index=-1, html=False, alpha=None):
     if index==-1:
         index = get_rgb_color.index
         get_rgb_color.index += 1
     index = index % len(get_rgb_color.colors)
-    return get_rgb_color.colors[index]
+    color = get_rgb_color.colors[index]
+    if html:
+        if alpha:
+            return f"rgba({color[0]}, {color[1]}, {color[2]}, {alpha})"
+        else:
+            return f"rgb({color[0]}, {color[1]}, {color[2]})"
+    else:
+        return color
 
 get_rgb_color.index = 0
 get_rgb_color.colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 128), 
