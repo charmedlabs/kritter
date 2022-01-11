@@ -27,3 +27,6 @@ class Kcheckbox(Kcomponent):
                 args[0] = bool(args[0]) # Convert to proper boolean values
                 return func(*args)
         return wrap_func
+
+    def out_value(self, value):
+        return [Output(self.id, "value", ['True'] if value else [])]
