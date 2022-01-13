@@ -22,7 +22,7 @@ class Kcomponent:
         self.kapp = kwargs['kapp'] if 'kapp' in kwargs else Kritter.kapp
         self.grid = kwargs['grid'] if 'grid' in kwargs else True
         self.layout = kwargs['layout'] if 'layout' in kwargs else None
-        self.name = kwargs['name'] if 'name' in kwargs else None
+        self.name = kwargs['name'] if 'name' in kwargs else ""
         self.spinner = kwargs['spinner'] if 'spinner' in kwargs else False
         self.service = kwargs['service'] if 'service' in kwargs else dash_devices.Services.SHARED
         self.disabled = kwargs['disabled'] if 'disabled' in kwargs else False
@@ -61,7 +61,7 @@ class Kcomponent:
                 self.cols = [self.label, dbc.Col(self.control, width=self.style['control_width'], id=self.id_col, style=self.col_style)]
             else:
                 self.cols = [self.label, html.Div(self.control, id=self.id_col, style=self.col_style)]
-        if self.name is None:
+        if not self.name and isinstance(self.cols, list) and len(self.cols)>=2:
             self.cols = self.cols[1:]
 
         self.row = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)

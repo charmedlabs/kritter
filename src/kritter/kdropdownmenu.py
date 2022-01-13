@@ -14,6 +14,7 @@ class KdropdownMenu(Kcomponent):
         clearable = kwargs['clearable'] if 'clearable' in kwargs else False
         nav = kwargs['nav'] if 'nav' in kwargs else False
         value = kwargs['value'] if 'value' in kwargs else 0 if len(options) else None
+        self.id_items = self.id + '-i'
         self.create_items(options)
         dropdown = dbc.DropdownMenu(label=self.name, children=self.items, disabled=self.disabled, style={"display": "inline-block"})
         if nav:
@@ -26,7 +27,7 @@ class KdropdownMenu(Kcomponent):
     def create_items(self, options):
         self.items = []
         for i, option in enumerate(options):
-            id_ = {'type': "dd", 'index': i}
+            id_ = {'type': self.id_items, 'index': i}
             if isinstance(option, dbc.DropdownMenuItem):
                 option.id = id_
                 self.items.append(option) 
@@ -45,7 +46,7 @@ class KdropdownMenu(Kcomponent):
         def wrap_func(func):
             @wraps(func)
             @self.kapp.callback(None,
-                [Input({"type": "dd", 'index': ALL}, "n_clicks")], state, self.service)
+                [Input({"type": self.id_items, 'index': ALL}, "n_clicks")], state, self.service)
             def _func(*args):
                 index = json.loads(callback_context.triggered[0]['prop_id'].split('.')[0])['index']
                 # Toss out n_clicks argument, add option to beginning
