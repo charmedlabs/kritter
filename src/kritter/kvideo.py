@@ -55,6 +55,7 @@ class Kvideo(Kcomponent):
                     shapes=self.overlay_shapes,
                     annotations=self.overlay_annotations,
                     showlegend=False,
+                    hovermode='closest',
                     xpad=0,
                     ypad=0,
                     plot_bgcolor="rgba(0,0,0,0)",
@@ -66,7 +67,8 @@ class Kvideo(Kcomponent):
             )
             self._update_overlay_figure()
             self.overlay = dcc.Graph(id=self.overlay_id, figure=self.overlay_figure, config={'displayModeBar': False}, style={"padding": "0px", "margin": "0px", "position": "absolute", "top": "0px", "left": "0px"})
-            vdiv = html.Div([self.video, self.overlay], style={"position": "relative"})
+            self.overlay_div = html.Div(self.overlay, id=self.id + '-od')
+            vdiv = html.Div([self.video, self.overlay_div], style={"position": "relative"})
             self.layout = html.Div([vdiv, self.hist], id=self.id_div)
         else:
             self.overlay = None
@@ -147,6 +149,17 @@ class Kvideo(Kcomponent):
             @wraps(func)
             @self.kapp.callback(None,
                 [Input(self.overlay_id, "relayoutData")], state, self.service)
+            def _func(*args):
+                return func(*args)
+        return wrap_func
+
+    @_needs_overlay
+    def callback_hover(self, state=(), unhover=True):
+        self.overlay.clear_on_unhover = unhover
+        def wrap_func(func):
+            @wraps(func)
+            @self.kapp.callback(None,
+                [Input(self.overlay_id, "hoverData")], state, self.service)
             def _func(*args):
                 return func(*args)
         return wrap_func
@@ -243,8 +256,19 @@ class Kvideo(Kcomponent):
         self.overlay_annotations.clear()
 
     @_needs_overlay
+    def draw_graph_data(self, data):
+        self.overlay_figure['data'] = data
+
+    @_needs_overlay
     def out_draw_overlay(self):
         return [Output(self.overlay_id, "figure", self.overlay_figure)]  
+
+    @_needs_overlay
+    def out_overlay_disp(self, disp):
+        if disp:
+            return [Output(self.overlay_div.id, "style", {"display": "block"})]
+        else:
+            return [Output(self.overlay_div.id, "style", {"display": "none"})]
 
     def out_hist_enable(self, value):
         return [Output(self.hist_id, 'is_open', value)]
