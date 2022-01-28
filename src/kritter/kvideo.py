@@ -247,7 +247,10 @@ class Kvideo(Kcomponent):
     # rect, line, circle, openpath, closedpath
     @_needs_overlay
     def draw_user(self, shape, fillcolor="gray", line=None):
-        self.overlay_figure['layout']['dragmode'] = f"draw{shape}" 
+        if not shape:
+            self.overlay_figure['layout']['dragmode'] = None
+        else: 
+            self.overlay_figure['layout']['dragmode'] = f"draw{shape}" 
         self.overlay_figure['layout']['newshape'] = dict(line=line, fillcolor=fillcolor)
 
     @_needs_overlay
