@@ -143,6 +143,7 @@ class Encoder(aiortc.codecs.base.Encoder):
         self.force_keyframe = False
         self.encoder = H264Encoder(bitrate=DEFAULT_BITRATE)
         self.frameperiod = 1/framerate;
+        self.pts_timer = 0
         self.current_frameperiod = self.frameperiod
         self.target_bitrate_t0 = None
         self._target_bitrate = None
@@ -192,9 +193,18 @@ class Encoder(aiortc.codecs.base.Encoder):
     def send_keyframe(self):
         self.force_keyframe = True
 
-    def push_frame(self, frame):
+    def push_frame(self, frame, frameperiod=0):
         if frame is None:
             return
+        # If frameperiod is not zero, deliver frame at even intervals
+        if frameperiod:
+            t = time.time()
+            self.pts_timer += frameperiod 
+            sleep = self.pts_timer - t
+            if sleep>0:
+                time.sleep(sleep)
+            else: # We're late: update immediately, bring pts_timer up to date.
+                self.pts_timer = t    
         self.mr_frame = frame
 
     def update_actual_bitrate(self, data):
@@ -417,16 +427,18 @@ class Streamer:
     def send_keyframe(self):
         Streamer.encoder.send_keyframe()
 
-    def push_frame(self, frame):
+    def push_frame(self, frame, frameperiod=0):
         # If we get a tuple, assume that it's a (frame, timestamp, index) tuple
         # and toss the timestamp and index.
         if isinstance(frame, tuple):
             frame = frame[0]
+        if frame.dtype!="uint8":
+            frame = frame.astype("uint8")
         if len(frame.shape)==2:
             frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
         if len(frame.shape)!=3 and frame.shape[2]!=3:
             raise RuntimeError("Frames need to be 3 dimensions -- width x height x 3 channels")   
-        Streamer.encoder.push_frame(frame)
+        Streamer.encoder.push_frame(frame, frameperiod)
 
     def register_encoder(self):
         def _get_encoder(codec):

@@ -47,6 +47,20 @@
         "required": false,
         "description": "click_data"
       },
+      "source_width": {
+        "type": {
+          "name": "number"
+        },
+        "required": false,
+        "description": "source width, hint for click callback."
+      },
+      "source_height": {
+        "type": {
+          "name": "number"
+        },
+        "required": false,
+        "description": "source height, hint for click callback."
+      },
       "style": {
         "type": {
           "name": "string"

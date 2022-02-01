@@ -6,13 +6,13 @@ from .streamer import Streamer
 from .kcomponent import Kcomponent
 from dash_devices.dependencies import Input, Output
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 import dash_html_components as html
 import plotly.graph_objs as go
 from functools import wraps
 
 # Maximum encoding area.  Not all browsers can accept full HD video.  
-# This keeps the encoding resolution reasonably low.
+# This keeps the encoding resolution reasonably low, but can be increased with 
+# max_area parameter passed into Kvideo. 
 MAX_AREA = 640*480
 HIST_HEIGHT = 100
 
@@ -165,10 +165,15 @@ class Kvideo(Kcomponent):
             self.source_height = height
             # Take source_width/height and calc enc_width/height
             self._calc_enc_resolution()
+            # Let video component know the source resolution so it can send the 
+            # correct click coordinates.
+            mods = [Output(self.id, "source_width", self.source_width), Output(self.id, "source_height", self.source_height)]
+            # Update overlay domain, range to correspond to source resolution.
             if self.overlay is not None:
                 self.overlay_figure['layout']['yaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.source_height-1, 0])
                 self.overlay_figure['layout']['xaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[0, self.source_width-1])
-                self.kapp.push_mods(self.out_draw_overlay())
+                mods += self.out_draw_overlay()
+            self.kapp.push_mods(mods)
 
     def _update_histogram(self, frame):
         # Create histograms for the 3 color channels, RGB.
@@ -220,7 +225,7 @@ class Kvideo(Kcomponent):
     def send_keyframe(self):
         self.streamer.send_keyframe()
 
-    def push_frame(self, frame, format="BGR24"):
+    def push_frame(self, frame, frameperiod=0, format="BGR24"):
         if frame is None: # kcamera can return None if it can't allocate memory
             return
         # No sense in sending updates to clients if there are none. 
@@ -233,7 +238,7 @@ class Kvideo(Kcomponent):
             self._update_source_resolution(frame.shape[1], frame.shape[0])
             if frame.shape[0]!=self.enc_height or frame.shape[1]!=self.enc_width:
                 frame = cv2.resize(frame, (self.enc_width, self.enc_height))
-            self.streamer.push_frame(frame)
+            self.streamer.push_frame(frame, frameperiod)
             if self.hist_disp:
                 t = time.time()
                 # The update rate is intended to be lower than the framerate.
@@ -323,9 +328,9 @@ class Kvideo(Kcomponent):
         return [Output(self.hist_id, 'style', {"display": "block" if value else "none"})]
 
     def out_width_height(self, width=False, height=False):
-        if width!=False:
+        if width!=False: # you can set width to None
             self.width = width
-        if height!=False:
+        if height!=False: # you can set height to None
             self.height = height
         mods = [Output(self.id, "style", self._video_style()), Output(self.hist_graph_id, "style", self._hist_style())]
         if self.overlay is not None:
