@@ -47,19 +47,12 @@
         "required": false,
         "description": "click_data"
       },
-      "width": {
+      "style": {
         "type": {
-          "name": "number"
+          "name": "string"
         },
         "required": false,
-        "description": "The width used to specify width of video window"
-      },
-      "height": {
-        "type": {
-          "name": "number"
-        },
-        "required": false,
-        "description": "The height used to specify height of video window"
+        "description": "style is used to pass style parameters to video component."
       },
       "setProps": {
         "type": {

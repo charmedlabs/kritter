@@ -11,6 +11,10 @@ import dash_html_components as html
 import plotly.graph_objs as go
 from functools import wraps
 
+# Maximum encoding area.  Not all browsers can accept full HD video.  
+# This keeps the encoding resolution reasonably low.
+MAX_AREA = 640*480
+HIST_HEIGHT = 100
 
 def _needs_overlay(func):
     @wraps(func)
@@ -20,31 +24,39 @@ def _needs_overlay(func):
         return func(self, *args, **kwargs)
     return wrap_func
 
+def make_divisible(val, d):
+    # find closest integer that's divisible by d
+    mod = val%d
+    if mod < d/2:
+        val -= mod
+    else:
+        val += d-mod
+    return val 
+
 class Kvideo(Kcomponent):
 
     def __init__(self, **kwargs): 
         super().__init__('kvideo', **kwargs)
-        hist_disp = kwargs['hist_disp'] if 'hist_disp' in kwargs else False
+        self.hist_disp = kwargs['hist_disp'] if 'hist_disp' in kwargs else False
         overlay = kwargs['overlay'] if 'overlay' in kwargs else False
         
         self.id_div = self.id + '-div'
         self.hist_graph_id = self.id + "-hist"
         self.hist_id = self.id + "-hist-cont"
 
-        self.width = kwargs['width'] if 'width' in kwargs else 640
-        self.height = kwargs['height'] if 'height' in kwargs else 480
-        self.source_width = kwargs['source_width'] if 'source_width' in kwargs else self.width
-        self.source_height = kwargs['source_height'] if 'source_height' in kwargs else self.height
+        self.width = kwargs['width'] if 'width' in kwargs else None
+        self.height = kwargs['height'] if 'height' in kwargs else None
+        self.max_area = kwargs['max_area'] if 'max_area' in kwargs else MAX_AREA
+        self.hist_height = kwargs['hist_height'] if 'hist_height' in kwargs else HIST_HEIGHT
+        self.source_width = self.source_height = None
+
         self.hist_update_period = kwargs['hist_update_period'] if 'hist_update_period' in kwargs else 0.25
         self.hist_update_time = 0
         self.streamer = Streamer(server=self.kapp.server, html=None, js=None)
 
-        self.hist = dbc.Collapse(
-            dcc.Graph(id=self.hist_graph_id, style={"padding": "0px", "margin": "0px"}, config={'displayModeBar': False}),
-            is_open=hist_disp, id=self.hist_id, style={"margin": f"{-self.style['vertical_padding']-1}px 0px {self.style['vertical_padding']+1}px 0px"}
-        )
+        self.hist = html.Div(dcc.Graph(id=self.hist_graph_id, style=self._hist_style(), config={'displayModeBar': False}), id=self.hist_id, style={"display": "block" if self.hist_disp else "none"})
  
-        self.video = KvideoComp(id=self.id, width=self.width, height=self.height)
+        self.video = KvideoComp(id=self.id, style=self._video_style())
         if overlay:
             self.overlay_id = self.id + "-overlay"
             self.video.overlay_id = self.overlay_id
@@ -61,12 +73,9 @@ class Kvideo(Kcomponent):
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     margin=dict(l=0, b=0, t=0, r=0),  
-                    yaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.source_height-1, 0]),
-                    xaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[0, self.source_width-1])
                 )
             )
-            self._update_overlay_figure()
-            self.overlay = dcc.Graph(id=self.overlay_id, figure=self.overlay_figure, config={'displayModeBar': False}, style={"padding": "0px", "margin": "0px", "position": "absolute", "top": "0px", "left": "0px"})
+            self.overlay = dcc.Graph(id=self.overlay_id, figure=self.overlay_figure, config={'displayModeBar': False}, style=self._overlay_style())
             self.overlay_div = html.Div(self.overlay, id=self.id + '-od')
             vdiv = html.Div([self.video, self.overlay_div], style={"position": "relative"})
             self.layout = html.Div([vdiv, self.hist], id=self.id_div)
@@ -110,8 +119,6 @@ class Kvideo(Kcomponent):
                 yaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False),
                 xaxis=dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False),
                 showlegend=False,
-                width=self.width, 
-                height=100, 
                 xpad=0,
                 ypad=0,
                 plot_bgcolor="black",
@@ -120,11 +127,48 @@ class Kvideo(Kcomponent):
         )
 
 
-    def _update_overlay_figure(self):
-        self.overlay_figure['layout']['width'] = self.width 
-        self.overlay_figure['layout']['height'] = self.height 
+    def _hist_style(self):
+        style = {"padding": "0", "margin": "0", "width": "100%", "height": f"{self.hist_height}px"} 
+        if self.width:
+            style["max-width"] = f"{self.width}px"
+        return style       
 
+    def _video_style(self):
+        style = {"padding": "0", "margin": "0", "display": "block", "width": "100%", "height": "100%"}
+        if self.width:
+            style["max-width"] = f"{self.width}px"
+        if self.height:
+            style["max-height"] = f"{self.height}px"
+        return style
 
+    def _overlay_style(self):
+        style = {"position": "absolute", "top": "0px", "left": "0px"}
+        style.update(self._video_style())
+        return style
+
+    def _calc_enc_resolution(self):
+        if self.source_width*self.source_height>self.max_area:
+            ar = self.source_width/self.source_height 
+            self.enc_height = int((self.max_area/ar)**0.5)
+            # Encoder needs width and height to be evenly divisible by 16.
+            # This will find the closest values.
+            self.enc_height = make_divisible(self.enc_height, 16)
+            self.enc_width = int(self.enc_height * ar) 
+            self.enc_width = make_divisible(self.enc_width, 16) 
+        else:
+            self.enc_width = self.source_width
+            self.enc_height = self.source_height
+
+    def _update_source_resolution(self, width, height):
+        if self.source_width!=width or self.source_height!=height:
+            self.source_width = width
+            self.source_height = height
+            # Take source_width/height and calc enc_width/height
+            self._calc_enc_resolution()
+            if self.overlay is not None:
+                self.overlay_figure['layout']['yaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.source_height-1, 0])
+                self.overlay_figure['layout']['xaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[0, self.source_width-1])
+                self.kapp.push_mods(self.out_draw_overlay())
 
     def _update_histogram(self, frame):
         # Create histograms for the 3 color channels, RGB.
@@ -186,10 +230,11 @@ class Kvideo(Kcomponent):
             # and toss the timestamp and index.
             if isinstance(frame, tuple):
                 frame = frame[0]
-            if frame.shape[0]!=self.height or frame.shape[1]!=self.width:
-                frame = cv2.resize(frame, (self.width, self.height))
+            self._update_source_resolution(frame.shape[1], frame.shape[0])
+            if frame.shape[0]!=self.enc_height or frame.shape[1]!=self.enc_width:
+                frame = cv2.resize(frame, (self.enc_width, self.enc_height))
             self.streamer.push_frame(frame)
-            if self.hist.is_open:
+            if self.hist_disp:
                 t = time.time()
                 # The update rate is intended to be lower than the framerate.
                 # It takes about 10ms to create the complete histogram on a
@@ -274,21 +319,21 @@ class Kvideo(Kcomponent):
             return [Output(self.overlay_div.id, "style", {"display": "none"})]
 
     def out_hist_enable(self, value):
-        return [Output(self.hist_id, 'is_open', value)]
+        self.hist_disp = value
+        return [Output(self.hist_id, 'style', {"display": "block" if value else "none"})]
+
+    def out_width_height(self, width=False, height=False):
+        if width!=False:
+            self.width = width
+        if height!=False:
+            self.height = height
+        mods = [Output(self.id, "style", self._video_style()), Output(self.hist_graph_id, "style", self._hist_style())]
+        if self.overlay is not None:
+            mods += [Output(self.overlay_id, "style", self._overlay_style())]
+        return mods
 
     def out_height(self, value):
-        mods = []
-        self.height = value
-        if self.overlay is not None:
-            self._update_overlay_figure()
-            mods += self.out_draw_overlay()
-        return mods + [Output(self.id, 'height', value)]
+        return self.out_width_height(height=value)
 
     def out_width(self, value):
-        mods = []
-        self.width = value
-        self.hist_figure["layout"]["width"] = self.width
-        if self.overlay is not None:
-            self._update_overlay_figure()
-            mods += self.out_draw_overlay()
-        return mods + [Output(self.id, 'width', value)]
+        return self.out_width_height(width=value)

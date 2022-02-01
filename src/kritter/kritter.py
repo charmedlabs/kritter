@@ -62,6 +62,7 @@ def index_string(style):
     <head>
         <meta http-equiv="Cache-control" content="no-cache, no-store, must-revalidate">
         <meta http-equiv="Pragma" content="no-cache">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         {%metas%}
         <title>{%title%}</title>
         {%css%}

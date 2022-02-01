@@ -19,22 +19,19 @@ Keyword arguments:
 - click_data (list; optional):
     click_data.
 
-- height (number; optional):
-    The height used to specify height of video window.
-
 - overlay_id (string; optional):
     The ID used to identify an overlay component that we register
     mouse events.
 
-- width (number; optional):
-    The width used to specify width of video window."""
+- style (string; optional):
+    style is used to pass style parameters to video component."""
     @_explicitize_args
-    def __init__(self, id=Component.UNDEFINED, overlay_id=Component.UNDEFINED, click_data=Component.UNDEFINED, width=Component.UNDEFINED, height=Component.UNDEFINED, **kwargs):
-        self._prop_names = ['id', 'click_data', 'height', 'overlay_id', 'width']
+    def __init__(self, id=Component.UNDEFINED, overlay_id=Component.UNDEFINED, click_data=Component.UNDEFINED, style=Component.UNDEFINED, **kwargs):
+        self._prop_names = ['id', 'click_data', 'overlay_id', 'style']
         self._type = 'KvideoComp'
         self._namespace = 'kvideocomp'
         self._valid_wildcard_attributes =            []
-        self.available_properties = ['id', 'click_data', 'height', 'overlay_id', 'width']
+        self.available_properties = ['id', 'click_data', 'overlay_id', 'style']
         self.available_wildcard_properties =            []
         _explicit_args = kwargs.pop('_explicit_args')
         _locals = locals()
