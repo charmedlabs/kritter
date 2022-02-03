@@ -12,8 +12,8 @@ from .util import set_logger_level
 set_logger_level(logger, logging.DEBUG)
 
 MAX_BITRATE = 3000000  # 3 Mbps
-DEFAULT_BITRATE = MAX_BITRATE  # 1 Mbps
-MIN_BITRATE = 100000  # 500 kbps
+DEFAULT_BITRATE = MAX_BITRATE 
+MIN_BITRATE = 100000  
 DEFAULT_RESOLUTION = (640, 480)
 
 PACKET_MAX = 1300
