@@ -9,6 +9,7 @@ from hypercorn.config import Config
 from hypercorn.asyncio import serve
 import urllib.parse
 import os
+import asyncio
 import contextvars
 import subprocess
 import time
@@ -236,6 +237,6 @@ class Kritter(Dash):
         self.enable_dev_tools(debug=False, dev_tools_client_reload=True)
         config = Config()
         config.bind = [f"0.0.0.0:{port}"]
-        self.loop.run_until_complete(serve(self.server, config))
+        asyncio.get_event_loop().run_until_complete(serve(self.server, config))
         #self.run_server(debug=False, use_reloader=False, dev_tools_client_reload=True, host='0.0.0.0', port=port)
 
