@@ -19,11 +19,15 @@ MAX_TIMEOUTS = 3
 BITRATE_WINDOW = 2 # seconds
 MIN_FRAMERATE = 1 # frames/sec
 DEFAULT_BITRATE = 3000000 # Mbps
+MAX_BITRATE = DEFAULT_BITRATE*2
 # Frameperiod adjustment rate -- lower means slower
 FRAMEPERIOD_ADJ_RATE = 0.5
+PADDING_ADJ_RATE = 0.8
 QUEUE_TIMEOUT = 1 # seconds
-
-MIN_FRAMEPERIOD = 1/MIN_FRAMERATE # Change MIN_FRAMERATE instead
+PADDING = 8000
+MIN_PADDING = 500
+PADDING_PACKET = 1300
+MAX_FRAMEPERIOD = 1/MIN_FRAMERATE # Change MIN_FRAMERATE instead
 
 logger = logging.getLogger(__name__)
 from .util import set_logger_level
@@ -145,10 +149,12 @@ class Encoder(aiortc.codecs.base.Encoder):
         self.frameperiod = 1/framerate;
         self.pts_timer = 0
         self.current_frameperiod = self.frameperiod
-        self.target_bitrate_t0 = None
-        self._target_bitrate = None
+        self.current_padding = MIN_PADDING
+        self.target_bitrate_t0 = 0
+        self._min_target_bitrate = MAX_BITRATE
+        self._target_bitrate = None 
         self.bitrate_t0 = None
-        self.bitrate_n = None
+        self.bitrate_n = 0
         self.actual_bitrate = None
         self.thread = None
         self.slock = Lock()
@@ -176,6 +182,7 @@ class Encoder(aiortc.codecs.base.Encoder):
     def encode(self, stream, force_keyframe):
         self.flock.acquire()
         if (force_keyframe):
+            self.current_padding = MIN_PADDING
             self.force_keyframe = True
         self.flock.release()
         # Note, we might get a stop on the stream while we're waiting on the queue. 
@@ -222,6 +229,18 @@ class Encoder(aiortc.codecs.base.Encoder):
             self.bitrate_t0 = t
             self.bitrate_n = 0
 
+    def pad(self, data):
+        n = 0
+        for p in data:
+            n += len(p)
+        diff = int(self.current_padding)-n
+        if diff>0:
+            for i in range(diff//PADDING_PACKET):
+                data.append(bytearray(PADDING_PACKET))
+            mod = diff%PADDING_PACKET
+            if mod:
+                data.append(bytearray(mod))
+
     @property
     def target_bitrate(self):
         return self._target_bitrate
@@ -237,21 +256,32 @@ class Encoder(aiortc.codecs.base.Encoder):
         # for all clients because we only have one encoder. But we
         # can accomodate the client with the lowest bandwidth/bitrate
         # abilities, which is why we're interested in the minimum.
-        if self.target_bitrate_t0 is None or \
-            t-self.target_bitrate_t0>BITRATE_WINDOW or \
-            val<self._target_bitrate:
-            self.target_bitrate_t0 = t
+        if val<self._min_target_bitrate:
             self._target_bitrate = val
+            self._min_target_bitrate = val
+        if t-self.target_bitrate_t0>BITRATE_WINDOW:
+            self.target_bitrate_t0 = t
 
             if self.actual_bitrate is not None:
                 # Calculate frameperiod based on target_bitrate and actual_bitrate. 
-                self.current_frameperiod *= 1 - FRAMEPERIOD_ADJ_RATE + FRAMEPERIOD_ADJ_RATE*self.actual_bitrate/self._target_bitrate
-                if self.current_frameperiod<self.frameperiod:
-                    self.current_frameperiod = self.frameperiod
-                elif self.current_frameperiod>MIN_FRAMEPERIOD:
-                    self.current_frameperiod = MIN_FRAMEPERIOD 
-                logger.debug("framerate {} {} {} {}".format(1/self.current_frameperiod, 
-                    1 - FRAMEPERIOD_ADJ_RATE + FRAMEPERIOD_ADJ_RATE*self.actual_bitrate/self._target_bitrate, self.actual_bitrate, self._target_bitrate))           
+                cf = pf = self.current_frameperiod
+                cf *= 1 - FRAMEPERIOD_ADJ_RATE + FRAMEPERIOD_ADJ_RATE*self.actual_bitrate/self._min_target_bitrate
+                if cf<self.frameperiod:
+                    cf = self.frameperiod
+                elif cf>MAX_FRAMEPERIOD:
+                    cf = MAX_FRAMEPERIOD 
+                # Avoid race conditions with other threads that use current_frameperiod. 
+                self.current_frameperiod = cf  
+                cp = pp = self.current_padding 
+                cp *= 1 - PADDING_ADJ_RATE + PADDING_ADJ_RATE*self._min_target_bitrate/self.actual_bitrate
+                if cp<MIN_PADDING:
+                    cp = MIN_PADDING
+                elif cp>PADDING:
+                    cp = PADDING 
+                self.current_padding = cp
+                logger.debug(f"prev padding: {pp:.2f} padding: {self.current_padding:.2f} prev framerate: {1/pf:.2f} current framerate: {1/self.current_frameperiod:.2f} actual bitrate: {self.actual_bitrate:.2f} min target bitrate: {self._min_target_bitrate}")
+
+            self._min_target_bitrate = MAX_BITRATE # reset to some maximum value           
     
     def encode_and_send(self, frame):
         self.flock.acquire()
@@ -260,6 +290,7 @@ class Encoder(aiortc.codecs.base.Encoder):
             self.force_keyframe = False
         self.flock.release()
         data = self.encoder.encode(frame, keyframe) 
+        self.pad(data)
         self.update_actual_bitrate(data)
         self.slock.acquire()
         for s in reversed(self.streams):
@@ -298,8 +329,9 @@ class Encoder(aiortc.codecs.base.Encoder):
                 # Give ourselves a break if we're behind
                 tn = t 
         logger.debug("encoder thread done")
-        self.thread = self.bitrate_t0 = self.target_bitrate_t0 = self._target_bitrate = None
-        self.current_frameperiod = self.frameperiod
+        self.thread = self.actual_bitrate = self.bitrate_t0 = None
+        self.current_padding = MIN_PADDING
+        self.target_bitrate_t0 = self.bitrate_n = 0 
 
 
 class StreamTrack(MediaStreamTrack):
