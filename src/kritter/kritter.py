@@ -160,7 +160,7 @@ class Kritter(Dash):
             if filepath:
                 return await send_file(filepath, mimetype='image/x-icon')
 
-        layout = html.Div([self.main_div])
+        layout = self.main_div
         # Trigger setting of Dash.index_string
         self.style = ''
 
@@ -223,7 +223,7 @@ class Kritter(Dash):
 
     @layout.setter
     def layout(self, layout):
-        self.main_div.children = Kritter.unwrap(layout)
+        self.push_mods(Output(self.main_div.id, "children", Kritter.unwrap(layout)))
 
     def get_media_url(self, filename):
         return os.path.join(MEDIA_URL_PATH, filename)
