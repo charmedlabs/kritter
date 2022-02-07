@@ -63,6 +63,8 @@ class Kdialog:
         def func(open_):
             pass
 
+    def out_title(self, title):
+        return [Output(self.header.id, "children", title)]
 
     def callback_view(self, state=()):
         def wrap_func(func):
@@ -137,15 +139,16 @@ class KsideMenuItem:
 
         if kapp is None:
             kapp = Kritter.kapp
-        children = [name]
-        if icon is not None:
-            children.insert(0, Kritter.icon(icon))
+        self.icon = icon
+        name = [name]
+        if self.icon is not None:
+            name.insert(0, Kritter.icon(self.icon))
         self.dialog = None
         if isinstance(action_object, str):
-            self.layout = dbc.DropdownMenuItem(children, 
+            self.layout = dbc.DropdownMenuItem(name, 
                 id=Kritter.new_id(), href=action_object, target=target, external_link=True, className="_k-menu-button-item")
         elif isinstance(action_object, Kdialog):
-            self.layout = dbc.DropdownMenuItem(children, 
+            self.layout = dbc.DropdownMenuItem(name, 
                 id=Kritter.new_id(), className="_k-menu-button-item")
             self.dialog = action_object
             @kapp.callback(None, 
@@ -156,3 +159,11 @@ class KsideMenuItem:
 
     def out_url(self, url):
         return [Output(self.layout.id, "href", url)]
+
+    def out_name(self, name):
+        name = [name]
+        if self.icon is not None:
+            name.insert(0, Kritter.icon(self.icon))
+        return [Output(self.layout.id, "children", name)]
+
+
