@@ -31,11 +31,10 @@ class Kcomponent:
         if 'style' in kwargs:
             self.style.update(kwargs['style']) 
 
-        self.row_style = {"padding-top": str(self.style['vertical_padding'])+'px', "padding-bottom": str(self.style['vertical_padding'])+'px', 'max-width': str(self.style['max_width'])+'px', "margin": "0px"}
-        self.col_style = {"padding-left": str(self.style['horizontal_padding'])+'px', "padding-right": str(self.style['horizontal_padding'])+'px'}
+        self.row_style = {"padding": "0", "margin": "0", 'max-width': str(self.style['max_width'])+'px', }
+        self.col_style = {"padding": f"{self.style['vertical_padding']}px {self.style['horizontal_padding']}px {self.style['vertical_padding']}px {self.style['horizontal_padding']}px"}
 
-        self.id = kwargs['id'] if 'id' in kwargs else Kritter.new_id(label)
-        self.id_div = self.id + '-div'
+        self.id = kwargs['id'] if 'id' in kwargs else self.kapp.new_id(label)
         self.id_col = self.id + '-col'
         self.id_row = self.id + '-row'
         self.id_label = self.id + '-label'
@@ -43,7 +42,6 @@ class Kcomponent:
             self.label = dbc.Col(html.B(self.name), id=self.id_label, width=self.style['label_width'], className="text-right", style=self.col_style)
         else:
             self.label = html.Div(html.B(self.name), id=self.id_label, style=self.col_style)
-
 
         if self.spinner:
             self.id_spinner = self.id + '-spinner'
@@ -64,19 +62,26 @@ class Kcomponent:
         if not self.name and isinstance(self.cols, list) and len(self.cols)>=2:
             self.cols = self.cols[1:]
 
-        self.row = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)
+        self.layout = dbc.Row(self.cols, align='center', justify='start', style=self.row_style, id=self.id_row)
 
-        style = {'display': 'block'} if self.disp else {'display': 'none'}
-        self.layout = html.Div([self.row], id=self.id_div, style=style)
+        # Make sure we can call out_disp on this component and set display to none
+        # for each sub-component.
+        cols = self.cols if isinstance(self.cols, list) else [self.cols]
+        for c in cols:
+            if not hasattr(c, "id"):
+                c.id = self.kapp.new_id()
+            if not hasattr(c, "style"):
+                c.style = {}
+            c.style.update({'display': 'block'} if self.disp else {'display': 'none'})
+
 
     def append(self, component):
-        from kritter import Kritter
+        if not isinstance(component, Kcomponent):
+            raise Exception("Cannot append components that are not Kcomponents.")
         scols = self.cols if isinstance(self.cols, list) else [self.cols]
         ccols = component.cols if isinstance(component.cols, list) else [component.cols]
         self.cols = scols + ccols
-        self.row.children = self.cols
-        if isinstance(component, Kcomponent):
-            component.row_style["padding-top"] = component.row_style["padding-bottom"] = 0 # We will go with the vertical padding of the leftmost control.
+        self.layout.children = self.cols
 
     def out_spinner_disp(self, state, left_margin=5, disable=None):
         if state:
@@ -85,10 +90,12 @@ class Kcomponent:
             return [Output(self.id_spinner, 'style', {'display': 'none'})] + self.out_disabled(disable if disable is not None else False) 
 
     def out_disp(self, state):
-        if state:
-            return [Output(self.id_div, 'style', {'display': 'block'})]
-        else:
-            return [Output(self.id_div, 'style', {'display': 'none'})]
+        mods = []
+        cols = self.cols if isinstance(self.cols, list) else [self.cols]
+        for c in cols:
+            c.style.update({'display': 'block'} if state else {'display': 'none'})
+            mods += [Output(c.id, 'style', c.style)]
+        return mods
 
     def out_disabled(self, disabled):
         return [Output(self.id, "disabled", disabled)]
