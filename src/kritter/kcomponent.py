@@ -67,12 +67,14 @@ class Kcomponent:
         # Make sure we can call out_disp on this component and set display to none
         # for each sub-component.
         cols = self.cols if isinstance(self.cols, list) else [self.cols]
+        self.col_info = []
         for c in cols:
             if not hasattr(c, "id"):
                 c.id = self.kapp.new_id()
             if not hasattr(c, "style"):
                 c.style = {}
             c.style.update({'display': 'block'} if self.disp else {'display': 'none'})
+            self.col_info.append({"id": c.id, "style": c.style})
 
 
     def append(self, component):
@@ -91,10 +93,9 @@ class Kcomponent:
 
     def out_disp(self, state):
         mods = []
-        cols = self.cols if isinstance(self.cols, list) else [self.cols]
-        for c in cols:
-            c.style.update({'display': 'block'} if state else {'display': 'none'})
-            mods += [Output(c.id, 'style', c.style)]
+        for i in self.col_info:
+            i['style'].update({'display': 'block'} if state else {'display': 'none'})
+            mods += [Output(i['id'], 'style', i['style'])]
         return mods
 
     def out_disabled(self, disabled):
