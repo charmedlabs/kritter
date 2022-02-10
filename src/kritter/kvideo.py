@@ -46,6 +46,9 @@ class Kvideo(Kcomponent):
 
         self.width = kwargs['width'] if 'width' in kwargs else None
         self.height = kwargs['height'] if 'height' in kwargs else None
+        self.video_style = kwargs['video_style'] if 'video_style' in kwargs else {}
+        self.hist_style = kwargs['hist_style'] if 'hist_style' in kwargs else self.video_style
+        self.overlay_style = kwargs['overlay_style'] if 'overlay_style' in kwargs else self.video_style
         self.max_area = kwargs['max_area'] if 'max_area' in kwargs else MAX_AREA
         self.hist_height = kwargs['hist_height'] if 'hist_height' in kwargs else HIST_HEIGHT
         self.source_width = self.source_height = None
@@ -131,6 +134,8 @@ class Kvideo(Kcomponent):
         style = {"padding": "0", "margin": "0", "width": "100%", "height": f"{self.hist_height}px"} 
         if self.width:
             style["max-width"] = f"{self.width}px"
+        if self.hist_style:
+            style.update(self.hist_style)
         return style       
 
     def _video_style(self):
@@ -139,11 +144,15 @@ class Kvideo(Kcomponent):
             style["max-width"] = f"{self.width}px"
         if self.height:
             style["max-height"] = f"{self.height}px"
+        if self.video_style:
+            style.update(self.video_style)
         return style
 
     def _overlay_style(self):
         style = {"position": "absolute", "top": "0px", "left": "0px"}
         style.update(self._video_style())
+        if self.overlay_style:
+            style.update(self.overlay_style)
         return style
 
     def _calc_enc_resolution(self):
