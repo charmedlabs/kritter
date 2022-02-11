@@ -24,7 +24,7 @@ MAX_BITRATE = DEFAULT_BITRATE*2
 FRAMEPERIOD_ADJ_RATE = 0.5
 PADDING_ADJ_RATE = 0.8
 QUEUE_TIMEOUT = 1 # seconds
-PADDING = 8000
+MAX_PADDING = 8000
 MIN_PADDING = 500
 PADDING_PACKET = 1300
 MAX_FRAMEPERIOD = 1/MIN_FRAMERATE # Change MIN_FRAMERATE instead
@@ -149,7 +149,8 @@ class Encoder(aiortc.codecs.base.Encoder):
         self.frameperiod = 1/framerate;
         self.pts_timer = 0
         self.current_frameperiod = self.frameperiod
-        self.current_padding = MIN_PADDING
+        # Assume that we have a good connection and set padding to max.
+        self.current_padding = MAX_PADDING
         self.target_bitrate_t0 = 0
         self._min_target_bitrate = MAX_BITRATE
         self._target_bitrate = None 
@@ -182,6 +183,9 @@ class Encoder(aiortc.codecs.base.Encoder):
     def encode(self, stream, force_keyframe):
         self.flock.acquire()
         if (force_keyframe):
+            # If we get a forced keyframe it could be due to client's decoder
+            # giving up because of buffer overruns or bitstream errors.  
+            # We should set padding to minimum to reduce bitrate. 
             self.current_padding = MIN_PADDING
             self.force_keyframe = True
         self.flock.release()
@@ -276,8 +280,8 @@ class Encoder(aiortc.codecs.base.Encoder):
                 cp *= 1 - PADDING_ADJ_RATE + PADDING_ADJ_RATE*self._min_target_bitrate/self.actual_bitrate
                 if cp<MIN_PADDING:
                     cp = MIN_PADDING
-                elif cp>PADDING:
-                    cp = PADDING 
+                elif cp>MAX_PADDING:
+                    cp = MAX_PADDING 
                 self.current_padding = cp
                 logger.debug(f"prev padding: {pp:.2f} padding: {self.current_padding:.2f} prev framerate: {1/pf:.2f} current framerate: {1/self.current_frameperiod:.2f} actual bitrate: {self.actual_bitrate:.2f} min target bitrate: {self._min_target_bitrate}")
 

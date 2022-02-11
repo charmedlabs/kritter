@@ -7,7 +7,7 @@ _basepath = os.path.dirname(__file__)
 os.environ['LIBCAMERA_IPA_MODULE_PATH'] = _basepath
 
 from .about import __version__
-from .util import file_in_path, set_logger_level, get_rgb_color, get_bgr_color, file_extension, valid_image_name, valid_video_name, valid_media_name, JSONEncodeFromNumpy, JSONDecodeToNumpy
+from .util import file_in_path, set_logger_level, get_rgb_color, get_bgr_color, file_extension, valid_image_name, valid_video_name, valid_media_name, JSONEncodeFromNumpy, JSONDecodeToNumpy, Range, deep_update, FuncTimer
 from .kcamera import Camera 
 from .kencoder import Encoder
 from .streamer import Streamer
