@@ -102,7 +102,7 @@ class JSONEncodeFromNumpy(json.JSONEncoder):
                 "_kind_" : "range",
                 "_value_" : [value[0],value[-1]+1]
             }
-        return super(EncodeFromNumpy, self).default(obj)
+        return super(JSONEncodeFromNumpy, self).default(obj)
 
 
 class JSONDecodeToNumpy(json.JSONDecoder):
