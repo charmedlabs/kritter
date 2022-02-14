@@ -44,7 +44,7 @@ class Kslider(Kcomponent):
         self.id_text = self.id + '-text'
 
         component = dcc.RangeSlider if self.range_ else dcc.Slider
-        slider = component(value=value, min=mxs[0], max=mxs[1], step=mxs[2], updatemode=self.updatemode, disabled=self.disabled, className="_nopadding")
+        slider = component(value=value, min=mxs[0], max=mxs[1], step=mxs[2], updatemode=self.updatemode, disabled=self.disabled, className="_slider")
         cols = [self.label,
             dbc.Col(slider, id=self.id_col, width=self.style['control_width']), 
             dbc.Col(self.format(value), id=self.id_text, width='auto', className="_nopadding"),

@@ -64,6 +64,11 @@ KRITTER_STYLE = '''
     padding: 0px !important;   
     margin: 0px !important; 
 } 
+
+._slider {
+    padding: 5px 0 5px 0 !important;   
+    margin: 0px !important; 
+}
 '''
 
 def index_string(style):
