@@ -14,8 +14,8 @@
   var term = null;
   var socket = null;
   const fitAddon = new FitAddon.FitAddon();
-  const relPath = document.location.pathname.split("/").slice(0, -1).join("/")
-  const url = 'ws://' + document.location.host + relPath + '/_kterm';
+  const relPath = document.location.pathname.split("/").slice(0, -1).join("/");
+  const url = (document.location.protocol.startsWith('https') ? 'wss://' : 'ws://') + document.location.host + relPath + '/_kterm';
 
   function newSocket() {
     socket = new WebSocket(url);

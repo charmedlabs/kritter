@@ -145,6 +145,7 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
 
     _this = _super.call(this, props);
     _this.pc = null;
+    _this.clickCount = 0;
     return _this;
   }
 
@@ -188,7 +189,7 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
       }).then(function (response) {
         return response.json();
       }).then(function (answer) {
-        if (pc.signalingState !== 'closed') pc.setRemoteDescription(answer);
+        return pc.setRemoteDescription(answer);
       });
     }
   }, {
@@ -198,27 +199,15 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
       var config = {
         sdpSemantics: 'unified-plan'
       };
-
-      if (1) {
-        //document.getElementById('use-stun').checked) {
-        config.iceServers = [{
-          urls: ['stun:stun.l.google.com:19302']
-        }];
-      } //else
-      //    config.iceServers = [{urls: []}];
-      //var stream = navigator.mediaDevices.getUserMedia({video: true});
-
-
-      this.pc = new RTCPeerConnection(config); //var videoSender = pc.addTrack(stream.getVideoTracks()[0], stream);
-      // connect video
+      config.iceServers = [{
+        urls: ['stun:stun.l.google.com:19302']
+      }];
+      this.pc = new RTCPeerConnection(config); // connect video
 
       this.pc.addEventListener('track', function (evt) {
         if (evt.track.kind == 'video') {
           document.getElementById(id).srcObject = evt.streams[0];
-        } //console.log('add listener');
-        //var video = document.getElementById('video');
-        //video.focus();
-
+        }
       });
       this.negotiate();
     }
@@ -230,6 +219,40 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
   }, {
     key: "componentDidMount",
     value: function componentDidMount() {
+      var _this2 = this;
+
+      var _this$props = this.props,
+          id = _this$props.id,
+          overlay_id = _this$props.overlay_id;
+      var video = document.getElementById(id);
+
+      var handlePointer = function handlePointer(e) {
+        if (e.button == 0) {
+          var _this2$props = _this2.props,
+              source_width = _this2$props.source_width,
+              source_height = _this2$props.source_height;
+          var x = Math.floor(e.offsetX / video.clientWidth * source_width);
+          var y = Math.floor(e.offsetY / video.clientHeight * source_height);
+
+          _this2.props.setProps({
+            click_data: [_this2.clickCount, x, y]
+          });
+
+          _this2.clickCount++;
+        }
+      };
+
+      var handleTimer = function handleTimer() {
+        var figure = document.getElementById(overlay_id);
+        var nsew = document.getElementsByClassName("nsewdrag")[0];
+        if (figure) figure.addEventListener("pointerdown", handlePointer); // Change cursor to crosshair for nsewdrag
+
+        if (nsew) nsew.style.cursor = "crosshair";
+      };
+
+      video.addEventListener("pointerdown", handlePointer); // We need to wait a bit for page initialization before we can add event listener, etc.
+
+      setTimeout(handleTimer, 1000);
       this.start();
     }
   }, {
@@ -240,19 +263,15 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
   }, {
     key: "render",
     value: function render() {
-      var _this$props = this.props,
-          id = _this$props.id,
-          image = _this$props.image,
-          width = _this$props.width,
-          height = _this$props.height; //console.log("render:", image);
-
+      var _this$props2 = this.props,
+          id = _this$props2.id,
+          style = _this$props2.style;
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("video", {
-        width: width.toString(),
-        height: height.toString(),
         id: id,
-        autoPlay: "true",
-        playsInline: "true",
-        muted: "true"
+        autoPlay: true,
+        playsInline: true,
+        muted: true,
+        style: style
       });
     }
   }]);
@@ -264,24 +283,34 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
 KvideoComp.defaultProps = {};
 KvideoComp.propTypes = {
   /**
-   * Image 
-   */
-  image: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.array,
-
-  /**
    * The ID used to identify this component in Dash callbacks.
    */
   id: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
 
   /**
-   * The width used to specify width of video window
+   * The ID used to identify an overlay component that we register mouse events.
    */
-  width: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
+  overlay_id: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
 
   /**
-   * The height used to specify height of video window
+   * click_data 
    */
-  height: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
+  click_data: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.array,
+
+  /**
+   * source width, hint for click callback.
+   */
+  source_width: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
+
+  /**
+   * source height, hint for click callback.
+   */
+  source_height: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number,
+
+  /**
+   * style is used to pass style parameters to video component.
+   */
+  style: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
 
   /**
    * Dash-assigned callback that should be called to report property changes
