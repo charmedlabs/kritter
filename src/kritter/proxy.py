@@ -1,75 +1,70 @@
+import os
 import asyncio 
-import traceback
 from quart import Response, Blueprint, request, websocket
 import aiohttp
 
+ERROR_400 = "Not ready...", 400
+
+# This web proxy receives on quart and sends on aiohttp
 class Proxy:
 
-    def __init__(self, port):
-        self.port = port
-        self.server = Blueprint(f'Proxy{port}', __name__, template_folder=None, static_folder=None, static_url_path=None)
+    def __init__(self, host="http://localhost:5000", websockets=['_push']):
+        self.host = host
+        self.websockets = websockets
+        self.server = Blueprint(f'Proxy{self.host}', __name__)
 
+        # Set up HTTP GET, POST handlers
         @self.server.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
         @self.server.route('/<path:path>', methods=['GET', 'POST'])
         async def proxy(path):
-            #print("**** path", request.method, path)
+            path = os.path.join(self.host, path)
             if request.method=='GET':
                 async with aiohttp.ClientSession(cookies=request.cookies) as session:
                     try:
-                        async with session.get(f'http://vizyalpha.local:{self.port}/{path}') as resp:
+                        async with session.get(path) as resp:
                             return Response(await resp.read(), mimetype=resp.content_type)
                     except aiohttp.client_exceptions.ClientConnectorError:
-                        print("**** return error 0")
-                        return "Application not ready", 400
+                        return ERROR_400
             else: # POST
                 data = await request.get_data()
                 async with aiohttp.ClientSession(cookies=request.cookies) as session:
                     try:
-                        async with session.post(f'http://vizyalpha.local:{self.port}/{path}', data=data, headers=dict(request.headers)) as resp:
+                        async with session.post(path, data=data, headers=dict(request.headers)) as resp:
                             return Response(await resp.read(), mimetype=resp.content_type)
                     except aiohttp.client_exceptions.ClientConnectorError:
-                        print("**** return error 1")
-                        return "Application not ready", 400
+                        return ERROR_400
 
-        @self.server.websocket('_push')
-        async def wsproxy(authentication=None, username=None):
+        # Set up websocket handlers
+        for w in self.websockets:
+            self.server.websocket(w)(self.ws_func(w))
+
+    def ws_func(self, path):
+        async def func():
             session = aiohttp.ClientSession(cookies=websocket.cookies)
             try: 
-                async with session.ws_connect(f'http://vizyalpha.local:{self.port}/_push') as ws:
-                    print("**** connect!", ws)
+                async with session.ws_connect(os.path.join(self.host, path)) as ws:
+
                     async def recv():
-                        print("*** start receive")
                         while True:
                             data = await websocket.receive()
-                            #print("*** receive data", data)
                             await ws.send_str(data)
-                        print("*** end receive")
+
                     async def send():
-                        print("*** start send")
                         while True:
                             data = await ws.receive()
-                            if data.type==aiohttp.WSMsgType.TEXT:
+                            if data.type==aiohttp.WSMsgType.TEXT or data.type==aiohttp.WSMsgType.BINARY:
                                 await websocket.send(data.data)
                             elif data.type==aiohttp.WSMsgType.CLOSED or data.tp==aiohttp.WSMsgType.ERROR:
-                                print("***** closing!")
                                 raise asyncio.CancelledError
                             else:
-                                print("**** uh")
-                        print("*** end send")
-
-                    tasks = []
-                    tasks.append(asyncio.create_task(recv()))
-                    tasks.append(asyncio.create_task(send()))
+                                raise Exception("unknown websocket message")
 
                     try:
-                        await asyncio.gather(*tasks)
+                        await asyncio.gather(asyncio.create_task(recv()), asyncio.create_task(send()))
                     except asyncio.CancelledError:
                         pass
-                    except:
-                        # Print traceback because Quart seems to be catching everything in this context.
-                        traceback.print_exc() 
-                    finally:
-                        await ws.close()
+                    await ws.close()
             except aiohttp.client_exceptions.ClientConnectorError:
-                print("**** ws error 0")
                 pass
+
+        return func
