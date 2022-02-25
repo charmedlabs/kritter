@@ -11,7 +11,7 @@ class Proxy:
     def __init__(self, host="http://localhost:5000", websockets=['_push']):
         self.host = host
         self.websockets = websockets
-        self.server = Blueprint(f'Proxy{self.host}', __name__)
+        self.server = Blueprint(f'Proxy{self.host.replace(".", "_")}', __name__)
 
         # Set up HTTP GET, POST handlers
         @self.server.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
