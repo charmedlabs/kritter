@@ -39,6 +39,7 @@ from .kimagedetector import KimageDetected, KimageDetector, render_detected, ren
 from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue
+from .proxy import Proxy 
 
 _comp_filepath = os.path.abspath(os.path.join(_basepath, 'kvideocomp', 'package-info.json'))
 with open(_comp_filepath) as f:

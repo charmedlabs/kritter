@@ -176,7 +176,7 @@ var KvideoComp = /*#__PURE__*/function (_Component) {
         });
       }).then(function () {
         var offer = pc.localDescription;
-        return fetch('/offer', {
+        return fetch('offer', {
           body: JSON.stringify({
             sdp: offer.sdp,
             type: offer.type
