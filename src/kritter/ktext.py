@@ -21,10 +21,10 @@ class Ktext(Kcomponent):
         self.set_layout(value)
 
     def out_value(self, value):
-        return [Output(self.id_col, "children", value)]
+        return [Output(self.id, "children", value)]
 
     def state_value(self):
-        return [State(self.id_col, "children")]
+        return [State(self.id, "children")]
 
 
 

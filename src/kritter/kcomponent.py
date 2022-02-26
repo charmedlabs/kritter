@@ -62,7 +62,7 @@ class Kcomponent:
         try:
             self.control.id = self.id
         except:
-            pass
+            self.id = self.id_col
         self.cols = cols
         if self.cols is None:
             if self.grid:

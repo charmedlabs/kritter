@@ -16,8 +16,6 @@ from threading import Thread
 import pty
 import os
 import signal
-import subprocess
-import select
 import termios
 import struct
 import fcntl
