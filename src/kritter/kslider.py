@@ -15,6 +15,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 from .kcomponent import Kcomponent
 from functools import wraps
+from dash.exceptions import PreventUpdate
 
 UPDATE_RATE = 10 #(updates/sec)
 
@@ -58,7 +59,10 @@ class Kslider(Kcomponent):
                 # Limiting update rate keeps things from being queued up in the browser
                 if self.updatemode=="drag":
                     time.sleep(self.updateperiod)
-                return self.format(value)
+                try:
+                    return self.format(value)
+                except:
+                    raise PreventUpdate
 
     def callback(self, state=()):
         def wrap_func(func):
