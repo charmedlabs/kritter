@@ -46,6 +46,8 @@ class Keditor:
     _count = 0 
 
     def __init__(self, path, favicon=None, settings_file=None, protect=None):
+        # Set umask to 0 to give others permission to whatever we create...
+        os.umask(0) 
         self.path = path
         if settings_file is None:
             self.settings_file = os.path.join(os.getenv("HOME"), ".keditor-settings")
