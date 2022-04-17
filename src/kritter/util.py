@@ -31,25 +31,25 @@ def file_in_path(path, file):
     return None
 
 
-def get_rgb_color(index=-1, html=False, alpha=None):
+def get_rgb_color(index=-1, html=False, alpha=None, name=False):
     if index==-1:
         index = get_rgb_color.index
         get_rgb_color.index += 1
     index = index % len(get_rgb_color.colors)
-    color = get_rgb_color.colors[index]
+    color, name_ = get_rgb_color.colors[index]
     if html:
         if alpha:
-            return f"rgba({color[0]}, {color[1]}, {color[2]}, {alpha})"
+            color = f"rgba({color[0]}, {color[1]}, {color[2]}, {alpha})"
         else:
-            return f"rgb({color[0]}, {color[1]}, {color[2]})"
+            color = f"rgb({color[0]}, {color[1]}, {color[2]})"
+    if name:
+        return color, name_
     else:
         return color
 
 
 get_rgb_color.index = 0
-get_rgb_color.colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 128), 
-         (128, 255, 0), (0, 128, 255), (255, 0, 255), (255, 128, 0), (0, 255, 128), 
-         (128, 0, 255), (0, 255, 255))
+get_rgb_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "blue"), ((255, 255, 0), "yellow"), ((255, 128, 255), "pink"), ((0, 255, 255, "cyan"), ((200, 0, 255), "purple"),  ((255, 200, 0), "orange"), ((50, 255, 128), "light green"))
 
 
 def get_bgr_color(index=-1):
