@@ -21,10 +21,11 @@ class Kbutton(Kcomponent):
 
         href = kwargs['href'] if 'href' in kwargs else None
         target = kwargs['target'] if 'target' in kwargs else None
+        size = kwargs['size'] if 'size' in kwargs else "md"
         external_link = kwargs['external_link'] if 'external_link' in kwargs else None
 
         body = self.name if isinstance(self.name, list) else [self.name]
-        button = dbc.Button(body,  disabled=self.disabled, href=href, target=target, external_link=external_link)
+        button = dbc.Button(body,  disabled=self.disabled, href=href, target=target, external_link=external_link, size=size)
 
         self.set_layout(button, html.Div(button, style=self.col_style))
 

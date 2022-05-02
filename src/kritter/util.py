@@ -49,7 +49,7 @@ def get_rgb_color(index=-1, html=False, alpha=None, name=False):
 
 
 get_rgb_color.index = 0
-get_rgb_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "blue"), ((255, 255, 0), "yellow"), ((255, 128, 255), "pink"), ((0, 255, 255, "cyan"), ((200, 0, 255), "purple"),  ((255, 200, 0), "orange"), ((50, 255, 128), "light green"))
+get_rgb_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "blue"), ((255, 255, 0), "yellow"), ((255, 128, 255), "pink"), ((0, 255, 255), "cyan"), ((200, 0, 255), "purple"),  ((255, 200, 0), "orange"), ((50, 255, 128), "light green")
 
 
 def get_bgr_color(index=-1):

@@ -94,8 +94,8 @@ class Kdialog:
 
 class KyesNoDialog(Kdialog):
     def __init__(self, **kwargs):
-        yes = kwargs["yes"] if "yes" in kwargs else "Yes"
-        no = kwargs["no"] if "no" in kwargs else "No"
+        yes = kwargs["yes"] if "yes" in kwargs else [Kritter.icon("thumbs-up"), "Yes"]
+        no = kwargs["no"] if "no" in kwargs else [Kritter.icon("thumbs-down"), "No"]
         self.callback_func = None
         yes_button = dbc.Button(yes, id=Kritter.new_id())
         no_button = dbc.Button(no, id=Kritter.new_id(), style={"margin-left": "10px"})

@@ -22,9 +22,10 @@ class Kdropdown(Kcomponent):
         options = kwargs['options'] if 'options' in kwargs else []
         clearable = kwargs['clearable'] if 'clearable' in kwargs else False
         value = kwargs['value'] if 'value' in kwargs else options[0] if len(options) else None
+        placeholder = kwargs['placeholder'] if 'placeholder' in kwargs else None
         options = [{'label': option, 'value': option} for option in options]
 
-        dropdown = dcc.Dropdown(options=options, value=value, clearable=clearable)
+        dropdown = dcc.Dropdown(options=options, value=value, clearable=clearable, placeholder=placeholder)
 
         self.set_layout(dropdown)
         if self.spinner:
