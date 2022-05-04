@@ -75,10 +75,9 @@ class Kvideo(Kcomponent):
             self.video.overlay_id = self.overlay_id
             self.overlay_shapes = []
             self.overlay_annotations = []
+            self.overlay_graphs = []
             self.overlay_figure = dict(
                 layout=dict(
-                    shapes=self.overlay_shapes,
-                    annotations=self.overlay_annotations,
                     showlegend=False,
                     hovermode='closest',
                     xpad=0,
@@ -268,28 +267,28 @@ class Kvideo(Kcomponent):
                     self.hist_update_time = t
 
     @_needs_overlay
-    def draw_circle(self, x_center, y_center, radius, fillcolor="gray", line=None, editable=False):
-        circle = dict(type="circle", xref="x", yref="y", x0=x_center-radius, x1=x_center+radius, y0=y_center-radius, y1=y_center+radius, fillcolor=fillcolor, editable=editable)
+    def draw_circle(self, x_center, y_center, radius, fillcolor="gray", line=None, editable=False, id=None):
+        circle = dict(type="circle", xref="x", yref="y", x0=x_center-radius, x1=x_center+radius, y0=y_center-radius, y1=y_center+radius, fillcolor=fillcolor, editable=editable, id=id)
         if line:
             circle['line'] = line
         self.overlay_shapes.append(circle)
 
     @_needs_overlay
-    def draw_line(self, x0, y0, x1, y1, line={}, editable=False):
+    def draw_line(self, x0, y0, x1, y1, line={}, editable=False, id=None):
         line__ = dict(color="gray", width=2)
         line__.update(line)
-        line_ = dict(type="line", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, line=line__, editable=editable)
+        line_ = dict(type="line", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, line=line__, editable=editable, id=id)
         self.overlay_shapes.append(line_)
 
     @_needs_overlay
-    def draw_rect(self, x0, y0, x1, y1, fillcolor="gray", line=None, editable=False):
-        rect = dict(type="rect", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, fillcolor=fillcolor, editable=editable)
+    def draw_rect(self, x0, y0, x1, y1, fillcolor="gray", line=None, editable=False, id=None):
+        rect = dict(type="rect", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, fillcolor=fillcolor, editable=editable, id=id)
         if line:
             rect['line'] = line
         self.overlay_shapes.append(rect)
 
     @_needs_overlay
-    def draw_shape(self, points, fillcolor="gray", line=None, editable=False):
+    def draw_shape(self, points, fillcolor="gray", line=None, editable=False, id=None):
         try:
             for i, p in enumerate(points):
                 if i==0:
@@ -301,16 +300,16 @@ class Kvideo(Kcomponent):
         except:
             raise RuntimeError(f"draw_shape() points in wrong format -- need to be [(x0, y0), (x1, y1), ...]. You passed: {points}")
 
-        shape = dict(type="path", xref="x", yref="y", path=path, fillcolor=fillcolor, editable=editable)
+        shape = dict(type="path", xref="x", yref="y", path=path, fillcolor=fillcolor, editable=editable, id=id)
         if line:
             shape['line'] = line
         self.overlay_shapes.append(shape)
 
     @_needs_overlay
-    def draw_text(self, x0, y0, text, font={}, fillcolor="white", padding=2, xanchor="center", yanchor="center"):
+    def draw_text(self, x0, y0, text, font={}, fillcolor="white", padding=2, xanchor="center", yanchor="center", id=None):
         font_ = dict(family="sans serif", size=16, color="gray")
         font_.update(font)
-        text_ = dict(text=text, x=x0, y=y0, xref="x", yref="y", font=font, showarrow=False, borderwidth=0, borderpad=padding, bgcolor=fillcolor, xanchor=xanchor, yanchor=yanchor)
+        text_ = dict(text=text, x=x0, y=y0, xref="x", yref="y", font=font, showarrow=False, borderwidth=0, borderpad=padding, bgcolor=fillcolor, xanchor=xanchor, yanchor=yanchor, id=id)
         self.overlay_annotations.append(text_)
 
     # rect, line, circle, openpath, closedpath
@@ -323,16 +322,42 @@ class Kvideo(Kcomponent):
         self.overlay_figure['layout']['newshape'] = dict(line=line, fillcolor=fillcolor)
 
     @_needs_overlay
-    def draw_clear(self):
-        self.overlay_shapes.clear()
-        self.overlay_annotations.clear()
+    def draw_clear(self, id=None):
+        self.draw_clear_shapes(id)
+        self.draw_clear_annotations(id)
+        self.draw_clear_graphs(id)
 
     @_needs_overlay
-    def draw_graph_data(self, data):
-        self.overlay_figure['data'] = data
+    def draw_clear_shapes(self, id=None):
+        if id is None:
+            self.overlay_shapes = []
+        else:
+            self.overlay_shapes = [s for s in self.overlay_shapes if s['id']!=id]
+
+    @_needs_overlay
+    def draw_clear_annotations(self, id=None):
+        if id is None:
+            self.overlay_annotations = []
+        else:
+            self.overlay_annotations = [s for s in self.overlay_annotations if s['id']!=id]
+
+    @_needs_overlay
+    def draw_clear_graphs(self, id=None):
+        if id is None:
+            self.overlay_graphs = []
+        else:
+            self.overlay_graphs = [g for g in self.overlay_graphs if g.uid!=id]
+
+    @_needs_overlay
+    def draw_graph(self, graph, id=None):
+        graph.uid = id
+        self.overlay_graphs.append(graph)
 
     @_needs_overlay
     def out_draw_overlay(self):
+        self.overlay_figure['layout']['shapes'] = self.overlay_shapes
+        self.overlay_figure['layout']['annotations'] = self.overlay_annotations
+        self.overlay_figure['data'] = self.overlay_graphs        
         return [Output(self.overlay_id, "figure", self.overlay_figure)]  
 
     @_needs_overlay
