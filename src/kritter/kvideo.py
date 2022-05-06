@@ -217,7 +217,10 @@ class Kvideo(Kcomponent):
             @self.kapp.callback(None,
                 [Input(self.overlay_id, "relayoutData")], state, self.service)
             def _func(*args):
-                return func(*args)
+                try:
+                    return func(args[0]['shapes'][-1], *args[1:])
+                except KeyError:
+                    pass
         return wrap_func
 
     @_needs_overlay

@@ -154,12 +154,13 @@ class KsideMenuItem:
         if self.icon is not None:
             name.insert(0, Kritter.icon(self.icon))
         self.dialog = None
+        style = {"margin": "0px", "padding": "0px 10px 0px 10px"}
         if isinstance(action_object, str):
             self.layout = dbc.DropdownMenuItem(name, 
-                id=Kritter.new_id(), href=action_object, target=target, external_link=True, className="_k-menu-button-item")
+                id=Kritter.new_id(), href=action_object, target=target, external_link=True, style=style)
         elif isinstance(action_object, Kdialog):
             self.layout = dbc.DropdownMenuItem(name, 
-                id=Kritter.new_id(), className="_k-menu-button-item")
+                id=Kritter.new_id(), style=style)
             self.dialog = action_object
             @kapp.callback(None, 
                 [Input(self.layout.id, "n_clicks")], service=self.dialog.service)
