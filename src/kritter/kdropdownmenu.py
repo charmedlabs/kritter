@@ -21,6 +21,7 @@ class KdropdownMenu(Kcomponent):
     def __init__(self, **kwargs):
         super().__init__('kdropdown', **kwargs)
         options = kwargs['options'] if 'options' in kwargs else []
+        self.item_style = kwargs['item_style'] if 'item_style' in kwargs else {"margin": "0px", "padding": "0px 10px 0px 10px"}
         clearable = kwargs['clearable'] if 'clearable' in kwargs else False
         nav = kwargs['nav'] if 'nav' in kwargs else False
         value = kwargs['value'] if 'value' in kwargs else 0 if len(options) else None
@@ -40,9 +41,10 @@ class KdropdownMenu(Kcomponent):
             id_ = {'type': self.id_items, 'index': i}
             if isinstance(option, dbc.DropdownMenuItem):
                 option.id = id_
+                option.style = self.item_style
                 self.items.append(option) 
             else:
-                self.items.append(dbc.DropdownMenuItem(option, id=id_))
+                self.items.append(dbc.DropdownMenuItem(option, id=id_, style=self.item_style))
 
     def out_options(self, options):
         self.create_items(options)
