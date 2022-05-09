@@ -23,10 +23,13 @@ class Kslider(Kcomponent):
     def __init__(self, **kwargs):
         super().__init__('kslider', **kwargs)
         mxs = kwargs['mxs'] if 'mxs' in kwargs else (1, 100, 1)
-        value = kwargs['value'] if 'value' in kwargs else mxs[0]
         self.updatemode = kwargs['updatemode'] if 'updatemode' in kwargs else "drag"
         self.updatetext = kwargs['updatetext'] if 'updatetext' in kwargs else True
         self.range_ = kwargs['range'] if 'range' in kwargs else False
+        if self.range_:
+            value = kwargs['value'] if 'value' in kwargs else [mxs[0], mxs[1]]             
+        else:
+            value = kwargs['value'] if 'value' in kwargs else mxs[0]
         updaterate = kwargs['updaterate'] if 'updaterate' in kwargs else UPDATE_RATE
         self.updateperiod = 0 if updaterate==0 else 1/updaterate
         # Use SHARED_MOST_RECENT because we're a slider and only the most recent values are needed

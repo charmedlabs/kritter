@@ -29,7 +29,7 @@ from termcolor import colored
 # For some reason setting logger to debug breaks things
 logger = logging.getLogger(__name__)
 from kritter.util import set_logger_level
-set_logger_level(logger, logging.DEBUG)
+#set_logger_level(logger, logging.DEBUG)
 
 PORT = 5000
 

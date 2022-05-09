@@ -42,7 +42,10 @@ class Kbutton(Kcomponent):
 
     def out_url(self, url):
         return [Output(self.id, "href", url)]
-        
+    
+    def out_click(self):
+        return [Output(self.id, "n_clicks", -1)]
+
     def callback(self, state=()):
         def wrap_func(func):
             @wraps(func)
