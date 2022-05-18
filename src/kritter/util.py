@@ -13,6 +13,7 @@ import time
 import logging
 import json
 import numpy as np
+from contextlib import contextmanager
 
 def set_logger_level(logger, level):
     handler = logging.StreamHandler()
@@ -198,3 +199,13 @@ class FuncTimer:
 
     def cancel(self):
         self.active = False
+
+
+@contextmanager
+def acquire_timeout(lock, timeout):
+    result = lock.acquire(timeout=timeout)
+    yield result
+    if result:
+        lock.release()
+    else:
+        raise TimeoutError
