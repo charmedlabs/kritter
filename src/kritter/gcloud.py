@@ -14,16 +14,37 @@ import requests
 import google_auth_oauthlib.flow
 from google.auth.transport.requests import Request
 from .kritter import BASE_DIR
+from .kdataclient import KdataClient 
+from .gpstoremedia import GPstoreMedia
 
 AUTH_FILE = "gcloud.auth"
-SCOPES = ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing']
-CLIENT_SECRET = os.path.join(BASE_DIR, "client_secret.json")
+SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing']}
 
-class Gcloud:
+class Gcloud(KdataClient):
 
     def __init__(self, etcdir):
+        super().__init__([k for k, v in SCOPES.items()])
         self._creds = None
         self.auth_file = os.path.join(etcdir, AUTH_FILE) 
+
+    def available_interfaces(self):
+        interfaces = self.interfaces.copy()
+        creds = self.creds()
+        if creds:
+            for i in self.interfaces:
+                for s in SCOPES[i]:
+                    if s not in creds.scopes:
+                        interfaces.remove(i)
+                        break 
+            return interfaces
+        return None
+
+    def get_interface(self, interface):
+        if interface in self.available_interfaces():
+            if interface=='KstoreMedia':
+                return GPstoreMedia(self)
+            else:
+                return None
 
     def _save_creds(self):
         with open(self.auth_file, 'wb') as token:
@@ -35,7 +56,7 @@ class Gcloud:
         return self._creds  
 
     def remove_creds(self):
-        os.system(f"rm {self.auth_file}")
+        os.remove(self.auth_file)
         self._creds = None
 
     def connect(self):
@@ -54,9 +75,10 @@ class Gcloud:
 
         return self._creds.valid
 
-    def get_url(self, scopes=SCOPES, client_secret=CLIENT_SECRET):
+    def get_url(self, client_secret, scopes=SCOPES):
+        scopes_list = [i for k, v in scopes.items() for i in v]
         self.flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-            client_secret, scopes=scopes, redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+            client_secret, scopes=scopes_list, redirect_uri='urn:ietf:wg:oauth:2.0:oob')
         url, state = self.flow.authorization_url(
             # This parameter enables offline access which gives your application
             # an access token and a refresh token for the user's credentials.

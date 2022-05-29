@@ -13,7 +13,6 @@ import pickle
 import requests
 from .kstoremedia import KstoreMedia
 from googleapiclient.discovery import build
-from kritter import Gcloud
 
 
 class GPstoreMedia(KstoreMedia):
