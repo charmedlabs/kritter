@@ -18,7 +18,9 @@ from .kdataclient import KdataClient
 from .gpstoremedia import GPstoreMedia
 
 AUTH_FILE = "gcloud.auth"
-SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing']}
+SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextCient": ['https://mail.google.com', 'https://www.googleapis.com/auth/drive']}
+
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "1"
 
 class Gcloud(KdataClient):
 
