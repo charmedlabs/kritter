@@ -10,14 +10,12 @@ from .ktextclient import KtextClient
 
 SUBJECT = "Kritter"
 
-def send_message(service, to, message):
 
 class GtextClient(KtextClient):
 
     def __init__(self, gcloud):
         super().__init__()
         self.gcloud = gcloud
-        self.callback_receive = None
         self._text = ""
 
     def text(self, to, text, subject=SUBJECT):
@@ -29,19 +27,11 @@ class GtextClient(KtextClient):
         pass
 
     def send(self):
-        try:
-            message = self.create_message()
-            service = build('gmail', 'v1', http=self.gcloud.creds().authorize(Http()))
-            message = (service.users().messages().send(userId="me", body=message).execute())
-            print('Message Id: %s' % message['id'])
-        except Exception as e:
-            print(f'An error occurred {e}')
+        message = self.create_message()
         self._text = ""
-
-    def callback_receive(self):
-        def wrap_func(func):
-            self.callback_receive = func
-        return wrap_func
+        service = build('gmail', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
+        message = (service.users().messages().send(userId="me", body=message).execute())
+        return message['id']
 
     def create_message(self):
         message = MIMEText(self._text)

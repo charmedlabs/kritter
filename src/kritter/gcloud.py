@@ -16,9 +16,10 @@ from google.auth.transport.requests import Request
 from .kritter import BASE_DIR
 from .kdataclient import KdataClient 
 from .gpstoremedia import GPstoreMedia
+from .gtextclient import GtextClient
 
 AUTH_FILE = "gcloud.auth"
-SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextCient": ['https://mail.google.com', 'https://www.googleapis.com/auth/drive']}
+SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/', 'https://www.googleapis.com/auth/drive']}
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "1"
 
@@ -45,6 +46,8 @@ class Gcloud(KdataClient):
         if interface in self.available_interfaces():
             if interface=='KstoreMedia':
                 return GPstoreMedia(self)
+            elif interface=='KtextClient':
+                return GtextClient(self)
             else:
                 return None
 

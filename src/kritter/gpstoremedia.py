@@ -86,11 +86,8 @@ class GPstoreMedia(KstoreMedia):
         if album_id==None:
             body.pop('album_id')
 
-        try:        
-            results = service.mediaItems().batchCreate(body=body).execute()
-            return results['newMediaItemResults'][0]['mediaItem']['productUrl']
-        except:
-            return None
+        results = service.mediaItems().batchCreate(body=body).execute()
+        return results['newMediaItemResults'][0]['mediaItem']['productUrl']
 
     def store_video_file(self, filename, album="", desc=""):
         # Google Photos accepts videos through the same API path as images.
