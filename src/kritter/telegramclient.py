@@ -19,9 +19,9 @@ class TelegramClient(KtextClient):
         self.loop = asyncio.get_event_loop()
         # read /etc/telegram_bot_token.json for bot_token_file
         # hardcoded for now..
-        self.bot = Bot("5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8")
-        # self.application = Application()
-        # self.TOKEN = "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8"
+        self.TOKEN = "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8"
+        self.application = Application.builder().token(self.token).build()
+        self.add_application_handlers()
 
     # async def run_telegram_server_coroutine(self):
     #     await application.initialize()
@@ -40,6 +40,14 @@ class TelegramClient(KtextClient):
     #     # this shouldn't block...
     #     loop.run_until_complete(run_telegram_server_coro(application))
 
+    def test_telegrambot(self):
+        """
+        Tests if the bot has been setup correctly
+        by the user during the onboarding process
+        see telegramdialogue.py in vizy.py
+        """
+        pass
+
     def text(self, text):
         """Sends a text to the chat determined by the bot token"""
         pass
@@ -50,8 +58,19 @@ class TelegramClient(KtextClient):
 
     def send(self):
         """Unused by telegram client"""
-        pass        
+        pass
 
+    def add_application_handler():
+        """
+        Adds all handles, mostly commands and message operations,
+        to the Application.
+        Handlers must be defined above this function
+        """
+        # MessageHandler(Filters, message_function) --> see 'echobot.py' in python-telegram-bot/examples
+        # CommandHandler("command", command_function)
+        # self.application.add_handler( CommandHandler(..) or MessageHandler(..) )
+        pass
+    
     def callback_receive(self):
         """
         Note, self.callback_receive function is called with two arguments:
@@ -63,7 +82,7 @@ class TelegramClient(KtextClient):
         return wrap_func
 
     async def handler(self, update: Update, context: CallbackContext):
-        """"""
+        """Runs whatever callback_received has been defined to as a coroutine"""
         if self.callback_receive:
             # Note, use executor when calling into sync function
             await self.loop.run_in_executor(None, self.callback_receive, update.effective_message.chat_id, update.message.text)
