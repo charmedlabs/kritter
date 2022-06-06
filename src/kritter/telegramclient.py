@@ -22,23 +22,24 @@ class TelegramClient(KtextClient):
         self.TOKEN = "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8"
         self.application = Application.builder().token(self.token).build()
         self.add_application_handlers()
+        self.run_telegram_server(self.application)
 
-    # async def run_telegram_server_coroutine(self):
-    #     await application.initialize()
-    #     await application.updater.start_polling(
-    #         poll_interval=0.0,
-    #         timeout=10,
-    #         bootstrap_retries=-1,
-    #         read_timeout=2,
-    #         allowed_updates=None,
-    #         drop_pending_updates=None
-    #     )
-    #     asyncio.create_task(application.start())
+    async def run_telegram_server_coroutine(self, application):
+        await application.initialize()
+        await application.updater.start_polling(
+            poll_interval=0.0,
+            timeout=10,
+            bootstrap_retries=-1,
+            read_timeout=2,
+            allowed_updates=None,
+            drop_pending_updates=None
+        )
+        asyncio.create_task(application.start())
 
-    # def run_telegram_server(application):
-    #     loop = asyncio.get_event_loop()
-    #     # this shouldn't block...
-    #     loop.run_until_complete(run_telegram_server_coro(application))
+    def run_telegram_server(self, application):
+        loop = asyncio.get_event_loop()
+        # this shouldn't block...
+        loop.run_until_complete(self.run_telegram_server_coroutine(application))
 
     def test_telegrambot(self):
         """
