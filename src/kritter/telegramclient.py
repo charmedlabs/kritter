@@ -21,7 +21,7 @@ class TelegramClient(KtextClient):
         # hardcoded for now..
         self.TOKEN = "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8"
         self.application = Application.builder().token(self.token).build()
-        self.add_application_handlers()
+        # self.add_application_handlers()
         self.run_telegram_server(self.application)
 
     async def run_telegram_server_coroutine(self, application):
@@ -61,7 +61,7 @@ class TelegramClient(KtextClient):
         """Unused by telegram client"""
         pass
 
-    def add_application_handler():
+    def add_application_handlers():
         """
         Adds all handles, mostly commands and message operations,
         to the Application.
