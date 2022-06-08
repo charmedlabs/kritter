@@ -1,8 +1,8 @@
 from telegram import Update, ForceReply
-from telegram.ext import Application, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackContext
 import asyncio
 # local imports
-from ktextclient import KtextClient
+from .ktextclient import KtextClient
 
 """
 TelegramClient is, essentially(?), a wrapper for 
@@ -20,7 +20,7 @@ class TelegramClient(KtextClient):
         # read /etc/telegram_bot_token.json for bot_token_file
         # hardcoded for now..
         self.TOKEN = "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8"
-        self.application = Application.builder().token(self.token).build()
+        self.application = Application.builder().token(self.TOKEN).build()
         # self.add_application_handlers()
         self.run_telegram_server(self.application)
 
