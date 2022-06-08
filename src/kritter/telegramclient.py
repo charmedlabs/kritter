@@ -1,5 +1,5 @@
 from telegram import Update, ForceReply
-from telegram.ext import Bot, Application, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, Filters, CallbackContext
 import asyncio
 # local imports
 from ktextclient import KtextClient
