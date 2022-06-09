@@ -1,6 +1,6 @@
 class KtextClient:
     def __init__(self):
-        self.callback_receive = None
+        self.receive_callback = None
 
     def text(self, to, text):
         pass
@@ -18,5 +18,5 @@ class KtextClient:
         Where from is the user id of the sender, message is the message.  
         """
         def wrap_func(func):
-            self.callback_receive = func
+            self.receive_callback = func
         return wrap_func
