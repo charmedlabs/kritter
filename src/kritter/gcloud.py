@@ -19,7 +19,8 @@ from .gpstoremedia import GPstoreMedia
 from .gtextclient import GtextClient
 
 AUTH_FILE = "gcloud.auth"
-SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/', 'https://www.googleapis.com/auth/drive']}
+SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/'], "KstoreFile": ['https://www.googleapis.com/auth/drive'], "KtabularClient": ['https://www.googleapis.com/auth/spreadsheets']}
+
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "1"
 
@@ -81,7 +82,8 @@ class Gcloud(KdataClient):
         return self._creds.valid
 
     def get_url(self, client_secret, scopes=SCOPES):
-        scopes_list = [i for k, v in scopes.items() for i in v]
+        scopes_list = {i for k, v in scopes.items() for i in v} # set comprehension, no replications
+
         self.flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             client_secret, scopes=scopes_list, redirect_uri='urn:ietf:wg:oauth:2.0:oob')
         url, state = self.flow.authorization_url(
