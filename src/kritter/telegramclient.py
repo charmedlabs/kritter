@@ -39,7 +39,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         super().__init__()
         self.loop = asyncio.get_event_loop()
         self.token_file = os.path.join(etcdir, TOKEN_FILE) 
-        self.token = None
+        self.token = dev_tokens['matt']
         self.set_token(dev_tokens['matt']) 
         self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
         self.setup_handlers() # add all handlers (commands, non-commands, etc..) 
