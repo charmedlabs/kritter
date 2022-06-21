@@ -1,4 +1,5 @@
-import os 
+import os
+from tokenize import Token 
 import cv2
 from telegram import ForceReply, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, MessageHandler, filters
@@ -16,7 +17,7 @@ It must be async otherwise Vizy will be blocked,
 incapable of performing its other tasks.
 
 Active Questions:
-1. Abilty to add Multiple Bots
+1. Abilty to add Multiple Bots --> dynamic command handling in dialog ?
 """
 
 """
@@ -31,15 +32,18 @@ dev_tokens = {
     'other': ""
 }
 
-class TelegramClient(KtextClient):
-    def __init__(self):
+TOKEN_FILE = 'telegram_token.json'
+
+class TelegramClient(KtextClient): # Text Messaging Client
+    def __init__(self, etcdir):
         super().__init__()
         self.loop = asyncio.get_event_loop()
-        # read /etc/telegram_bot_token.json for bot_token_file
-        # hardcoded for now..
-        self.TOKEN = dev_tokens['matt'] # using my dev token
-        self.application = Application.builder().token(self.TOKEN).build() # todo: link to 'builder' & 'build'
+        super.token_file = os.path.join(etcdir, TOKEN_FILE) 
+        self.token = None
+        self.set_token(dev_tokens['matt']) 
+        self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
         self.setup_handlers() # add all handlers (commands, non-commands, etc..) 
+        # self.callback_receive = 
         self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
     
     async def run_telegram_server(self):
@@ -54,23 +58,16 @@ class TelegramClient(KtextClient):
         )
         asyncio.create_task(self.application.start())
 
-    def send(self):
-        """TelegramClient sends images and texts immediately, so we don't
-        need to do anything for send()."""
-        pass
-    
-    async def start(self, update: Update, context: CallbackContext):
-        """Send a message when the command /start is issued."""
-        user = update.effective_user
-        await update.message.reply_html(
-            rf"Hi {user.mention_html()}!",
-            reply_markup=ForceReply(selective=True),
-        )
+    def set_token(self, token):
+        try:
+            # create file if not exists, overwrite contexts
+            with open(super.token_file, 'w+') as file:
+                # json.load(file)
+                file.write(token)
+        except: 
+            pass
 
-    async def help(self, update: Update, context: CallbackContext):
-        """Send a message when the command /help is issued."""
-        await update.message.reply_text("Help!")
-
+    # 
     def test_telegrambot(self):
         """
         Tests if the bot has been setup correctly
@@ -99,7 +96,7 @@ class TelegramClient(KtextClient):
             except Exception as e:
                 raise RuntimeError(f"Error processing image array: {e}")
         # Run send_photo (coroutine)
-        # Submit the coroutine assumed, already running, class loop
+        # Submit the coroutine to class's running loop
         future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to, image), self.loop).result()
         try:
             result = future.result(DEFAULT_TIMEOUT)
@@ -112,12 +109,31 @@ class TelegramClient(KtextClient):
         else:
             # todo: log result
             pass
-            
 
-        
+    # Commands
+    async def start(self, update: Update, context: CallbackContext):
+        """Send a message when the command /start is issued."""
+        user = update.effective_user
+        await update.message.reply_html(
+            rf"Hi {user.mention_html()}!",
+            reply_markup=ForceReply(selective=True),
+        )
 
+    async def help(self, update: Update, context: CallbackContext):
+        """Send a message when the command /help is issued."""
+        await update.message.reply_text("Help!")
 
-    def setup_hanlders(self):
+    async def echo(update: Update, context: CallbackContext) -> None:
+        """Echo the user message."""
+        await update.message.reply_text(update.message.text)
+
+    async def recv(self, update: Update, context: CallbackContext):
+        """Runs whatever callback_receive has been defined to as a coroutine"""
+        if self.receive_callback:
+            # Note, use executor when calling into sync function
+            await self.loop.run_in_executor(None, self.receive_callback, update.effective_message.chat_id, update.message.text)
+
+    def setup_handlers(self):
         """Adds the above handlers to the class Telegram application
         todo: make a single fucntion so no handler is ever forgotten ? --> onboarding, ease-of-use, difficulty of implementation ?
         """
@@ -125,11 +141,6 @@ class TelegramClient(KtextClient):
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("help", self.help))
         # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
-        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
-
-    async def recv(self, update: Update, context: CallbackContext):
-        """Runs whatever callback_receive has been defined to as a coroutine"""
-        if self.receive_callback:
-            # Note, use executor when calling into sync function
-            await self.loop.run_in_executor(None, self.receive_callback, update.effective_message.chat_id, update.message.text)
+        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
+        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
 
