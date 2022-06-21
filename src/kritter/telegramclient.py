@@ -58,12 +58,24 @@ class TelegramClient(KtextClient): # Text Messaging Client
         )
         asyncio.create_task(self.application.start())
 
+    def update(self):
+        """Update token and state"""
+        try:
+            # create file if not exists, overwrite contexts
+            with open(self.token_file, 'r') as file:
+                token = file.read()
+                if len(token) > 0 : 
+                    self.token = token
+        except: 
+            pass        
+
     def set_token(self, token):
         try:
             # create file if not exists, overwrite contexts
-            with open(super.token_file, 'w+') as file:
+            with open(self.token_file, 'w+') as file:
                 # json.load(file)
                 file.write(token)
+                self.update()
         except: 
             pass
 
