@@ -24,8 +24,9 @@ class GtabularClient(KtabularClient):
         worksheet.format('A1:Z1', {'textFormat': {'bold': True}}) # makes headers bold
         
     """
-    returns the URL of the google sheet
+    returns the URL of the google sheet and makes the link public share
     """
     def getURL(self):
+        self.sheet.share(None,perm_type = 'anyone', role = 'writer', with_link = True)
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/%s" % self.sheet.id
         return str(spreadsheet_url)
