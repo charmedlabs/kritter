@@ -114,7 +114,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 raise RuntimeError(f"Error processing image array: {e}")
         # Run send_photo (coroutine)
         # Submit the coroutine to class's running loop
-        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to, image), self.loop).result()
+        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to, image), self.loop)
         try:
             result = future.result(DEFAULT_TIMEOUT)
         # todo: get TimoutError working
@@ -159,5 +159,5 @@ class TelegramClient(KtextClient): # Text Messaging Client
         self.application.add_handler(CommandHandler("help", self.help))
         # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
         # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
-        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
+        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
 
