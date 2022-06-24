@@ -42,13 +42,6 @@ class TelegramClient(KtextClient): # Text Messaging Client
         self.token = None
         self.set_token(dev_tokens['matt']) 
         self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
-        self.application.add_handler(CommandHandler("start", self.start))
-        self.application.add_handler(CommandHandler("help", self.help))
-        ## Test handlers in init..
-        # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
-        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
-        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
-        # self.setup_handlers() # add all handlers (commands, non-commands, etc..) 
         self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
     
     async def run_telegram_server(self):
