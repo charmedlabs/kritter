@@ -156,9 +156,9 @@ class TelegramClient(KtextClient): # Text Messaging Client
         todo: make a single fucntion so no handler is ever forgotten ? --> onboarding, ease-of-use, difficulty of implementation ?
         """
         # Command Handlers
-        # self.application.add_handler(CommandHandler("start", self.start))
-        # self.application.add_handler(CommandHandler("help", self.help))
-        # # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
-        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
-        # # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
+        self.application.add_handler(CommandHandler("start", self.start))
+        self.application.add_handler(CommandHandler("help", self.help))
+        # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
+        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
+        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
 
