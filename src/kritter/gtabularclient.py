@@ -5,9 +5,10 @@ import gspread_dataframe as gd
 import pandas
 from .ktabularclient import KtabularClient
 
+
 class GtabularClient(KtabularClient):
 
-    def __init__(self,gcloud):
+    def __init__(self, gcloud):
         self.gcloud = gcloud
         self.tabScopes = ['https://www.googleapis.com/auth/drive']
         self.tabCreds = self.gcloud.creds()
@@ -16,7 +17,7 @@ class GtabularClient(KtabularClient):
     '''
     Creates a google sheet with the requested data 
     '''
-    def createGS(self,fileName,data):
+    def createGS(self, fileName, data):
         self.sheet = self.tabClient.create(fileName)
         sh = self.tabClient.open(fileName) # opens the created worksheet
         worksheet = sh.sheet1 # goes to sheet1
