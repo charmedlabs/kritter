@@ -28,7 +28,6 @@ References:
 
 dev_tokens = {
     'matt': "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8",
-    'rich': "5324425526:AAFX-gW3LOu-gRtpqmRp_deAIdFLMJRVyj8",
     'other': ""
 }
 
@@ -42,6 +41,13 @@ class TelegramClient(KtextClient): # Text Messaging Client
         self.token = None
         self.set_token(dev_tokens['matt']) 
         self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
+        # self.setup_handlers()
+        # Command Handlers
+        self.application.add_handler(CommandHandler("start", self.start))
+        self.application.add_handler(CommandHandler("help", self.help))
+        # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
+        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
+        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
         self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
     
     async def run_telegram_server(self):
@@ -152,6 +158,6 @@ class TelegramClient(KtextClient): # Text Messaging Client
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("help", self.help))
         # Non Command Handlers - so far only messages -- todo: answer: any other 'non commands' ?
-        self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
+        # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)) # echo the message on Telegram
         # self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) # echo the message on Telegram
 
