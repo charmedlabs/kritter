@@ -27,8 +27,8 @@ References:
 """
 
 dev_tokens = {
-    'matt': "5324425526:AAFX-gW3LOu-gRtpqmRp_deAIdFLMJRVyj8",
-    'rich': "",
+    'matt': "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8",
+    'rich': "5324425526:AAFX-gW3LOu-gRtpqmRp_deAIdFLMJRVyj8",
     'other': ""
 }
 
