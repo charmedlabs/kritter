@@ -39,11 +39,10 @@ class TelegramClient(KtextClient): # Text Messaging Client
         super().__init__()
         self.loop = asyncio.get_event_loop()
         self.token_file = os.path.join(etcdir, TOKEN_FILE) 
-        self.token = dev_tokens['matt']
+        self.token = None
         self.set_token(dev_tokens['matt']) 
         self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
         self.setup_handlers() # add all handlers (commands, non-commands, etc..) 
-        # self.callback_receive = 
         self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
     
     async def run_telegram_server(self):
