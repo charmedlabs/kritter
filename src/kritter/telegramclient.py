@@ -66,6 +66,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         """Update token and state"""
         try:
             # create file if not exists, overwrite contexts
+            self.token = None
             with open(self.token_file, 'r') as file:
                 token = file.read()
                 if len(token) > 0 : 
@@ -86,7 +87,9 @@ class TelegramClient(KtextClient): # Text Messaging Client
 
     def remove_token(self):
         try:
-            os.remove(self.token_file)
+            with open(self.token_file, 'w') as file:
+                file.truncate(0) # remove all contents
+                self.update()
         except Exception as exc:
             print(f'Token Removal encountered an error: {exc!r}')
 
