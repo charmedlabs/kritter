@@ -84,14 +84,11 @@ class TelegramClient(KtextClient): # Text Messaging Client
         except: 
             pass
 
-    # 
-    def test_telegrambot(self):
-        """
-        Tests if the bot has been setup correctly
-        by the user during the onboarding process
-        see telegramdialogue.py in vizy.py
-        """
-        pass
+    def remove_token(self):
+        try:
+            os.remove(self.token_file)
+        except Exception as exc:
+            print(f'Token Removal encountered an error: {exc!r}')
 
     def text(self, to, text):
         """Sends a text to the chat determined by the bot token"""
@@ -113,7 +110,6 @@ class TelegramClient(KtextClient): # Text Messaging Client
             except Exception as e:
                 raise RuntimeError(f"Error processing image array: {e}")
         # Run send_photo (coroutine)
-        # Submit the coroutine to class's running loop
         future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to, image), self.loop)
         try:
             result = future.result(DEFAULT_TIMEOUT)
