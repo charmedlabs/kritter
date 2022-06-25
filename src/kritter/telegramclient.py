@@ -38,8 +38,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         super().__init__()
         self.loop = asyncio.get_event_loop()
         self.token_file = os.path.join(etcdir, TOKEN_FILE) 
-        self.token = None
-        self.set_token(dev_tokens['matt']) 
+        self.update_state() 
         self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
         # self.setup_handlers()
         # Command Handlers
@@ -62,7 +61,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         )
         asyncio.create_task(self.application.start())
 
-    def update(self):
+    def update_state(self):
         """Update token and state"""
         try:
             # create file if not exists, overwrite contexts
@@ -80,8 +79,8 @@ class TelegramClient(KtextClient): # Text Messaging Client
             with open(self.token_file, 'w+') as file:
                 # json.load(file)
                 file.write(token)
-                file.read() # self.update does not read from file without this line, perhaps a timer is needed ?
-                self.update()
+                file.read() # self.update_state does not read from file without this line, perhaps a timer is needed ?
+                self.update_state()
         except: 
             pass
 
@@ -89,7 +88,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         try:
             with open(self.token_file, 'w') as file:
                 file.truncate(0) # remove all contents
-                self.update()
+                self.update_state()
         except Exception as exc:
             print(f'Token Removal encountered an error: {exc!r}')
 
