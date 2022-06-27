@@ -5,13 +5,13 @@ class KtabularClient:
         pass
 
     '''
-    Creates a google sheet with the requested data 
+    Creates a google sheet with the requested data and returns the sheet
     '''
-    def createGS(self, fileName, USER, data): # data is a panda data frame
+    def create(self, fileName, data): # data is a panda data frame
         pass
 
     '''
-    Gets the spreadsheet's URL and returns it as a string
+    returns the URL of the google sheet and makes the link public share
     '''
-    def getURL(self):
+    def get_url(self, sheet):
         pass
