@@ -17,6 +17,9 @@ class GtabularClient(KtabularClient):
     Creates a google sheet with the requested data and returns the sheet
     '''
     def create(self, title, data = pd.DataFrame()):
+        find = self.lookup(title)
+        if (find != None):
+            raise Exception("A Google Sheet with that name already exists")
         sheet = self.tab_client.create(title)
         sh = self.tab_client.open(title) # opens the created worksheet
         worksheet = sh.sheet1 # goes to sheet1
