@@ -29,6 +29,8 @@ class GtabularClient(KtabularClient):
     returns the URL of the google sheet and makes the link public share
     """
     def get_url(self,sheet):
+        if (sheet == None):
+            return "The requested sheet does not exist"
         sheet.share(None, perm_type = 'anyone', role = 'writer', with_link = True)
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/%s" % sheet.id
         return str(spreadsheet_url)
@@ -37,7 +39,11 @@ class GtabularClient(KtabularClient):
     looks up the sheet by name and if it exists returns a referance, otherwise returns None
     '''
     def lookup(self, title):
-        pass
+        try:
+            found = self.tab_client.open(title)
+        except:
+            found = None
+        return found
 
     '''
     changes the value of a cell in the requested worksheet
