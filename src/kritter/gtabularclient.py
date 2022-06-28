@@ -51,23 +51,39 @@ class GtabularClient(KtabularClient):
     '''
     changes the value of a cell in the requested worksheet
     '''
-    def edit_cell(self, sheet, row, col):
-        pass
+    def edit_cell(self, sheet, row, col, data):
+        worksheet = sheet.sheet1 # goes to sheet1
+        worksheet.update_cell(row, col, data)
 
     '''
     append data adds data to the sheet without overwriting existing data
     '''
     def append_data(self, sheet, data):
-        pass
+        worksheet = sheet.sheet1
+        existing = gd.get_as_dataframe(worksheet)
+        existing = existing.loc[:, ~existing.columns.str.contains('^Unnamed')] # strips out empty columns
+        updated = pd.concat([existing, data], axis=1) # adds the new dataframe to the right
+        gd.set_with_dataframe(worksheet, updated)
+
+    '''
+    clears all cells in the worksheet
+    '''
+    def clear(self, sheet):
+        worksheet = sheet.sheet1
+        worksheet.clear()
 
     '''
     deletes the requested sheet by name as string
     '''
-    def delete(self, sheet):
-        pass
+    def delete(self, title):
+        try:
+            sheet = self.tab_client.open(title)
+        except:
+            raise Exception("The Google Sheet: {0} does not exist".format(title))
+        self.tab_client.del_spreadsheet(sheet.id)
 
     '''
     renames the requested sheet 
     '''
     def rename(self, sheet, title):
-        pass
+        sheet.update_title(title)

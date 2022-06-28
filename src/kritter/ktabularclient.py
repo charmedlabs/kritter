@@ -25,7 +25,7 @@ class KtabularClient:
     '''
     changes the value of a cell in the requested worksheet
     '''
-    def edit_cell(self, sheet, row, col):
+    def edit_cell(self, sheet, row, col, data):
         pass
 
     '''
@@ -35,9 +35,15 @@ class KtabularClient:
         pass
 
     '''
+    clears all cells in the worksheet
+    '''
+    def clear(self, sheet):
+        pass
+
+    '''
     deletes the requested sheet by name as string
     '''
-    def delete(self, sheet):
+    def delete(self, title):
         pass
 
     '''
