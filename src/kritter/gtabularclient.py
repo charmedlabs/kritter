@@ -19,7 +19,7 @@ class GtabularClient(KtabularClient):
     def create(self, title, data = pd.DataFrame()):
         find = self.lookup(title)
         if (find != None):
-            raise Exception("A Google Sheet with that name already exists")
+            raise Exception(f"A Google Sheet named: '{title}' already exists")
         sheet = self.tab_client.create(title)
         sh = self.tab_client.open(title) # opens the created worksheet
         worksheet = sh.sheet1 # goes to sheet1
@@ -75,11 +75,7 @@ class GtabularClient(KtabularClient):
     '''
     deletes the requested sheet by name as string
     '''
-    def delete(self, title):
-        try:
-            sheet = self.tab_client.open(title)
-        except:
-            raise Exception("The Google Sheet: {0} does not exist".format(title))
+    def delete(self, sheet):
         self.tab_client.del_spreadsheet(sheet.id)
 
     '''

@@ -43,7 +43,7 @@ class KtabularClient:
     '''
     deletes the requested sheet by name as string
     '''
-    def delete(self, title):
+    def delete(self, sheet):
         pass
 
     '''
