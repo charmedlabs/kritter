@@ -36,37 +36,39 @@ TOKEN_ERR = 3
 class TelegramClient(KtextClient): # Text Messaging Client
     def __init__(self, etcdir):
         super().__init__()
-        # todo: client controlling start/stop of Application
-        # -- new loop each 'start' attempt ? 
         self.loop = asyncio.get_event_loop()
         self.token_file = os.path.join(etcdir, TOKEN_FILE) 
         self.update() 
 
-    def take_action(self):
-        '''Run the state of the bot'''
-        try:
-            # ? handle self.token_error ? 
-            # self.start_bot() if self.token else self.stop_bot()
-            if self.token: # has token, is active
-                self.start_bot()
-            else:
-                self.stop_bot()
-        except Exception as exc:
-            pass
+    # def take_action(self):
+    #     '''Run the state of the bot'''
+    #     try:
+    #         # self.start_bot() if self.token else self.stop_bot()
+    #         if self.token: # has token, is active
+    #             self.start_bot()
+    #         else:
+    #             self.stop_bot()
+    #     except Exception as exc:
+    #         pass
 
     def update(self):
         """Update token and start bot"""
         try:
             # create file if not exists, overwrite contexts
             self.token = None
-            with open(self.token_file, 'r') as file:
+            with open(self.token_file, 'r+') as file:
                 token = file.read()
                 if len(token) > 0 : 
                     self.token = token
-        except: 
+                # self.start_bot() if self.token else self.stop_bot()
+                if self.token: # has token, is active
+                    self.start_bot()
+                else:
+                    self.stop_bot()
+        except Exception as exc: 
             # ? set self.token_error to exception
-            pass
-        self.take_action()
+            print(f"Exception rasised in update {exc!r}")
+
 
     def set_token(self, token):
         try:
@@ -147,7 +149,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         await update.message.reply_text(update.message.text)
 
     async def recv(self, update: Update, context: CallbackContext):
-        """Runs whatever callback_receive has been defined to as a coroutine"""
+        """Wrap callback_receive as a coroutine and submit to run"""
         if self.receive_callback:
             # Note, use executor when calling into sync function
             await self.loop.run_in_executor(None, self.receive_callback, update.effective_message.chat_id, update.message.text)
@@ -164,14 +166,20 @@ class TelegramClient(KtextClient): # Text Messaging Client
     def stop_bot(self):
         '''Stops bot if one is running, control event loop too? '''
         try:
-            self.application = None
-            # if self.application:
-            #     self.application.stop()
+            if self.application:
+                if not self.loop.is_running():            
+                    self.loop.run_in_executor(self.application.stop())
+                else:
+                    asyncio.run_coroutine_threadsafe(self.application.stop())
         except Exception as exc:
             print(f'Stop Bot encountered an exception {exc!r}')
         print(f'shutdown hit')
 
     async def run_telegram_server(self):
+        # if not self.loop.is_running(): 
+        #     return self.loop.run_until_complete(self.push_mods_coro(mods, client)) 
+        # else: 
+        #     fut = asyncio.run_coroutine_threadsafe(self.push_mods_coro(mods, client), self.loop) 
         await self.application.initialize()
         await self.application.updater.start_polling(
             poll_interval=0.0,
@@ -187,7 +195,10 @@ class TelegramClient(KtextClient): # Text Messaging Client
         try:
             self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
             self.setup_handlers()
-            self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
+            if not self.loop.is_running():
+                self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
+            else:
+                asyncio.run_coroutine_threadsafe(self.run_telegram_server()).result()
         except Exception as exc:
             print(f'Exception occured starting bot {exc!r}')
             # set self.token_error to exception --> output to dialog
