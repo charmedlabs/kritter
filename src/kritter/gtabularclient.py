@@ -18,7 +18,7 @@ class GtabularClient(KtabularClient):
     '''
     def create(self, title, data = pd.DataFrame()):
         find = self.lookup(title)
-        if (find != None):
+        if find is not None:
             raise Exception(f"A Google Sheet named: '{title}' already exists")
         sheet = self.tab_client.create(title)
         sh = self.tab_client.open(title) # opens the created worksheet
@@ -32,7 +32,7 @@ class GtabularClient(KtabularClient):
     returns the URL of the google sheet and makes the link public share
     """
     def get_url(self,sheet):
-        if (sheet == None):
+        if sheet is None:
             return "The requested sheet does not exist"
         sheet.share(None, perm_type = 'anyone', role = 'writer', with_link = True)
         spreadsheet_url = "https://docs.google.com/spreadsheets/d/%s" % sheet.id
