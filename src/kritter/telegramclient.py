@@ -31,35 +31,39 @@ dev_tokens = {
 
 DEFAULT_TIMEOUT = 60 * 5 # seconds; five minute timeout
 TOKEN_FILE = 'telegram_token.json'
-TOKEN_ERR = 3
+
+
+def get_or_create_eventloop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return asyncio.get_event_loop()
+
 
 class TelegramClient(KtextClient): # Text Messaging Client
     def __init__(self, etcdir):
         super().__init__()
         self.loop = asyncio.get_event_loop()
+        # self.loop = get_or_create_eventloop()
         self.token_file = os.path.join(etcdir, TOKEN_FILE) 
+        open(self.token_file, 'w+') # ensure file exits - todo: ? needed?
+        self.token = None
+        self.application = None 
         self.update() 
 
-    # def take_action(self):
-    #     '''Run the state of the bot'''
-    #     try:
-    #         # self.start_bot() if self.token else self.stop_bot()
-    #         if self.token: # has token, is active
-    #             self.start_bot()
-    #         else:
-    #             self.stop_bot()
-    #     except Exception as exc:
-    #         pass
 
     def update(self):
         """Update token and start bot"""
         try:
-            # create file if not exists, overwrite contexts
             self.token = None
             with open(self.token_file, 'r+') as file:
                 token = file.read()
                 if len(token) > 0 : 
                     self.token = token
+                    print(f"self token {self.token}")
                 # self.start_bot() if self.token else self.stop_bot()
                 if self.token: # has token, is active
                     self.start_bot()
@@ -76,7 +80,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
             with open(self.token_file, 'w+') as file:
                 # json.load(file)
                 file.write(token)
-                file.read() # self.update does not read from file without this line, perhaps a timer is needed ?
+                file.read() # todo: self.update does not properly read from file without this line
                 self.update()
         except: 
             pass
@@ -121,7 +125,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         #     print('The coroutine took too long, cancelling the task...')
         #     future.cancel()
         except Exception as exc:
-            print(f'The coroutine raised an exception: {exc!r}')
+            print(f'The send photo coroutine raised an exception: {exc!r}')
         else:
             # todo: log result --> ? self.token_error ? 
             pass
@@ -137,6 +141,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
 
     async def help(self, update: Update, context: CallbackContext):
         """Replies with small list of commands and functions """
+        # note: commands do not display with new lines..
         newline = '\n'
         await update.message.reply_text(newline.join(
             f"Help!"
@@ -167,19 +172,22 @@ class TelegramClient(KtextClient): # Text Messaging Client
         '''Stops bot if one is running, control event loop too? '''
         try:
             if self.application:
+                # todo: test
                 if not self.loop.is_running():            
                     self.loop.run_in_executor(self.application.stop())
                 else:
-                    asyncio.run_coroutine_threadsafe(self.application.stop())
+                    asyncio.run_coroutine_threadsafe(self.application.stop(), self.loop).result()
         except Exception as exc:
             print(f'Stop Bot encountered an exception {exc!r}')
         print(f'shutdown hit')
 
     async def run_telegram_server(self):
-        # if not self.loop.is_running(): 
-        #     return self.loop.run_until_complete(self.push_mods_coro(mods, client)) 
-        # else: 
-        #     fut = asyncio.run_coroutine_threadsafe(self.push_mods_coro(mods, client), self.loop) 
+        # if not self.loop.is_running():
+        #     self.loop.run_until_complete()
+        # else:
+        #    fut = asyncio.run_coroutine_threadsafe(, self.loop)
+        #    fut.result()
+
         await self.application.initialize()
         await self.application.updater.start_polling(
             poll_interval=0.0,
@@ -193,14 +201,15 @@ class TelegramClient(KtextClient): # Text Messaging Client
 
     def start_bot(self):
         try:
-            self.application = Application.builder().token(self.token).build() # todo: link to 'builder' & 'build'
+            # loop = asyncio.new_event_loop()
+            self.application = Application.builder().token(self.token).build() 
             self.setup_handlers()
             if not self.loop.is_running():
                 self.loop.run_until_complete(self.run_telegram_server()) # this shouldn't block... runs application server ansychronousely
             else:
-                asyncio.run_coroutine_threadsafe(self.run_telegram_server()).result()
+                asyncio.run_coroutine_threadsafe(self.run_telegram_server(), self.loop).result()
         except Exception as exc:
-            print(f'Exception occured starting bot {exc!r}')
-            # set self.token_error to exception --> output to dialog
-            # ? self.take_action() --> handle self.token_error based ?
+            print(f'Start Bot encountered an exception {exc!r}')
+            # set self.token_error to exception --> output to dialog ?
             pass
+
