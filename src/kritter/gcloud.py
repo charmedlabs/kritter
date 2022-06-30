@@ -17,6 +17,7 @@ from .kritter import BASE_DIR
 from .kdataclient import KdataClient 
 from .gpstoremedia import GPstoreMedia
 from .gtextclient import GtextClient
+from .gtabularclient import GtabularClient
 
 AUTH_FILE = "gcloud.auth"
 SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/'], "KstoreFile": ['https://www.googleapis.com/auth/drive'], "KtabularClient": ['https://www.googleapis.com/auth/spreadsheets']}
@@ -49,6 +50,8 @@ class Gcloud(KdataClient):
                 return GPstoreMedia(self)
             elif interface=='KtextClient':
                 return GtextClient(self)
+            elif interface=='KtabularClient':
+                return GtabularClient(self)
             else:
                 return None
 
