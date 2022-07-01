@@ -8,17 +8,6 @@ import asyncio
 from .ktextclient import KtextClient
 
 """
-TelegramClient is, essentially(?), a wrapper for 
-the python-telegram-bot package that will handle
-and obscure the asynchronous aspects from the user.
-It must be async otherwise Vizy will be blocked, 
-incapable of performing its other tasks.
-
-Active Questions:
-1. Abilty to add Multiple Bots --> dynamic command handling in dialog ?
-"""
-
-"""
 References:
 1. Python Telegram Bot | Handlers | https://docs.python-telegram-bot.org/en/stable/telegram.ext.handler.html
 2. Ayncio | Coroutines and Tasks | https://docs.python.org/3/library/asyncio-task.html?highlight=run_coroutine_threadsafe#asyncio.run_coroutine_threadsafe
