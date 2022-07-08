@@ -60,8 +60,10 @@ def callback_server(self, socket):
     self.callbacks.append(get_func(c.call_callbacks))
 
 
-def KtextVisor(text_client):
+def KtextVisor(text_client=None):
     try:
+        if text_client is None:
+            raise Exception() # branch below
         tv = _KtextVisor(text_client)
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
@@ -77,7 +79,7 @@ def KtextVisor(text_client):
         tm = _KtextManager(address=('localhost', SOCKET), authkey=AUTHKEY)
         tm.connect()
         tv = tm.KtextVisor()
-        tv.callback = MethodType(callback_client, tv)
+        tv.callback_receive = MethodType(callback_client, tv)
         return tv
 
 def format_content(content):
@@ -113,7 +115,9 @@ class _KtextVisor():
         def func(sender, message):
             print(f"*** Received: {message} from {sender}.")
             words = message.split()
-            responses = self.call_callbacks(sender, words)
+            context = self.pre_handle_context(sender)
+            responses = self.call_callbacks(sender, words, context)
+            self.post_handle_context(sender, responses)
             self.send_responses(sender, responses)
 
     def close(self):
@@ -123,28 +127,28 @@ class _KtextVisor():
         except:
             pass
 
-    def callback(self):
+    def callback_receive(self):
         def wrap_func(func):
             self.callbacks.append(func)
         return wrap_func
 
-    def call_callbacks(self, sender, words):
+    def call_callbacks(self, sender, words, context):
         responses = []
-        context = self.pre_handle_context(sender)
         for c in self.callbacks.copy():
             try:
-                with self.lock:
-                    response = c(sender, words, context)
+                response = c(sender, words, context)
+                print("*** response", response, type(response))
                 if isinstance(response, Response):
                     responses += [response]
+                elif isinstance(response, list) and isinstance(response[0], Response):
+                    responses += response
                 elif response:
                     responses += [Response(response)]
-                claimed = bool([r['claim'] for r in responses if r['claim']])
+                claimed = bool([r.claim for r in responses if r.claim])
                 if claimed:
                     break
             except ConnectionRefusedError:
                 self.callbacks.remove(c)
-        self.post_handle_context(sender, responses)
         return responses
     
     def pre_handle_context(self, sender):
