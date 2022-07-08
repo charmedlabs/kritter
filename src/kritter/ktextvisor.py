@@ -16,7 +16,7 @@ from multiprocessing.managers import BaseManager
 SOCKET = 50000
 MAX_CLIENTS = 5
 AUTHKEY = b'KtextVisor'
-CONTEXT_TIMEOUT = 5*60 # seconds
+CONTEXT_TIMEOUT = 60*5 # seconds
 
 
 class _KtextManager(BaseManager):
@@ -76,6 +76,8 @@ def KtextVisor(text_client=None):
     except:
         print("Running KtextVisor client...")
         _KtextManager.register('KtextVisor')
+        # This will throw an exception if server isn't running.  Client code can catch 
+        # and retry if needed. 
         tm = _KtextManager(address=('localhost', SOCKET), authkey=AUTHKEY)
         tm.connect()
         tv = tm.KtextVisor()
@@ -156,7 +158,7 @@ class _KtextVisor():
         # c is a tuple: (timestamp, tags):
         self.context = {_sender: c for _sender, c in self.context.items() if t-c[0]<CONTEXT_TIMEOUT}
         try:
-            return context[sender][1]
+            return self.context[sender][1]
         except:
             return []
 
@@ -168,16 +170,16 @@ class _KtextVisor():
             context = set(contexts[-1])
         else:
             try:
-                context = self.context['sender']
+                context = self.context[sender]
             except:
                 context = []
         if context==[]:
             try:
-                del self.context['sender']
+                del self.context[sender]
             except: 
                 pass
         else:
-            self.context['sender'] = (t, context)
+            self.context[sender] = (t, context)
 
                         
     def send_responses(self, sender, responses):
@@ -188,7 +190,7 @@ class _KtextVisor():
                 if isinstance(c, str):
                     self.text_client.text(sender, c)
                 else: # must be an image    
-                    self.text_client.image(sender, c)
+                    self.text_client.image(sender, c.image)
 
     def intrinsic_callback(self, sender, words, context):
         if not words:
