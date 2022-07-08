@@ -23,7 +23,6 @@ class _KtextManager(BaseManager):
     pass    
 
 def callback_client(self):
-    print("callback_client")
     def wrap_func(func):
         try:
             self.callbacks.append(func)
@@ -67,6 +66,7 @@ def KtextVisor(text_client=None):
         tv = _KtextVisor(text_client)
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
+        _KtextManager.register('text_client', callable=lambda:text_client)
         print("Running KtextVisor server...")
         _KtextManager.register('call_callbacks')
         tv.callback_server = MethodType(callback_server, tv) 
@@ -76,12 +76,15 @@ def KtextVisor(text_client=None):
     except:
         print("Running KtextVisor client...")
         _KtextManager.register('KtextVisor')
+        _KtextManager.register('text_client')
         # This will throw an exception if server isn't running.  Client code can catch 
         # and retry if needed. 
         tm = _KtextManager(address=('localhost', SOCKET), authkey=AUTHKEY)
         tm.connect()
         tv = tm.KtextVisor()
+        tv.text_client = tm.text_client()
         tv.callback_receive = MethodType(callback_client, tv)
+        tv.close = MethodType(_KtextVisor.close, tv)
         return tv
 
 def format_content(content):
@@ -140,7 +143,9 @@ class _KtextVisor():
             try:
                 response = c(sender, words, context)
                 print("*** response", response, type(response))
-                if isinstance(response, Response):
+                if response==[]:
+                    continue
+                elif isinstance(response, Response):
                     responses += [response]
                 elif isinstance(response, list) and isinstance(response[0], Response):
                     responses += response
@@ -170,7 +175,7 @@ class _KtextVisor():
             context = set(contexts[-1])
         else:
             try:
-                context = self.context[sender]
+                context = self.context[sender][1]
             except:
                 context = []
         if context==[]:
