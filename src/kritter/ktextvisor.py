@@ -139,6 +139,8 @@ class _KtextVisor():
             context = self.pre_handle_context(sender)
             responses = self.call_callbacks(sender, words, context)
             self.post_handle_context(sender, responses)
+            if not responses:
+                responses = [Response('Try "help".')]
             self.send_responses(sender, responses)
 
     def close(self):

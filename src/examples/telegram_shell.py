@@ -26,7 +26,7 @@ class Shell:
             print("sending command", command)
             self.process.stdin.write(command.encode())
             self.process.stdin.flush()
-            return Response("")
+            return Response("") # Empty response, but claim=True
 
         def shell(sender, words, context):
             self.sender = sender
@@ -41,7 +41,7 @@ class Shell:
             "ctrl-c": (ctrl_c, "Interrupts current program."),
             "exit": (exit, "Exits shell."),
             "*": (command, "Any shell command.")
-        }, help_claim=True)
+        }, help_claim=True) # help_claim basically says that we're claiming all commands
         tv_table = KtextVisorTable({
             "shell": (shell, "Starts shell."),
             "*": (shell_other, None)
