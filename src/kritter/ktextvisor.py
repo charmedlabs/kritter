@@ -12,6 +12,7 @@ import time
 from types import MethodType
 from threading import Thread, Lock
 from multiprocessing.managers import BaseManager
+import fnmatch
 
 SOCKET = 50000
 MAX_CLIENTS = 5
@@ -22,10 +23,13 @@ CONTEXT_TIMEOUT = 60*5 # seconds
 class _KtextManager(BaseManager):
     pass    
 
-def callback_client(self):
+def callback_client(self, prepend=False):
     def wrap_func(func):
         try:
-            self.callbacks.append(func)
+            if prepend:
+                self.callbacks.insert(0, func)
+            else:
+                self.callbacks.append(func)
         except:
             self.callbacks = [func]
             for i in range(MAX_CLIENTS+1):
@@ -42,7 +46,7 @@ def callback_client(self):
                     continue
             self.thread = Thread(target=self.server.serve_forever).start()
             # Client registers with server
-            self.callback_server(socket, self.client_name)        
+            self.callback_server(socket, self.client_name, prepend)        
     return wrap_func
 
 # The result of the proxied functions is multiprocessor.managers.AutoProxy type, 
@@ -53,13 +57,16 @@ def get_func(callback):
         return res._getvalue() 
     return func
 
-def callback_server(self, socket, client_name):
+def callback_server(self, socket, client_name, prepend):
     c = _KtextManager(address=('localhost', socket), authkey=AUTHKEY)
     c.connect()
     func = get_func(c.call_callbacks)
     func.client_name = client_name
     self.callbacks = [callback for callback in self.callbacks if not hasattr(callback, "client_name") or callback.client_name!=client_name]
-    self.callbacks.append(func)
+    if prepend:
+        self.callbacks.insert(0, func)
+    else:
+        self.callbacks.append(func)
 
 # Pass in pointer to KtextClient if server or client_name if client
 def KtextVisor(text_client=""):
@@ -70,14 +77,12 @@ def KtextVisor(text_client=""):
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
         _KtextManager.register('text_client', callable=lambda:text_client)
-        print("Running KtextVisor server...")
         _KtextManager.register('call_callbacks')
         tv.callback_server = MethodType(callback_server, tv) 
         tv.server = tm.get_server()       
         tv.thread = Thread(target=tv.server.serve_forever).start()
         return tv
     except:
-        print("Running KtextVisor client...")
         _KtextManager.register('KtextVisor')
         _KtextManager.register('text_client')
         # This will throw an exception if server isn't running.  Client code can catch 
@@ -92,15 +97,8 @@ def KtextVisor(text_client=""):
         return tv
 
 def format_content(content):
-    if isinstance(content, (str, Image)):
+    if isinstance(content, (str, Image, dict)):
         return [content] 
-    elif isinstance(content, dict):
-        res = ""
-        for k, v in content.items():
-            if res:
-                res += '\n'
-            res += f"{k}: {v}"
-        return [res]
     elif isinstance(content, (list, tuple)):
         res = []
         for i in content:
@@ -108,11 +106,25 @@ def format_content(content):
             if isinstance(r[0], str) and len(res) and isinstance(res[-1], str):
                 res[-1] += '\n' + r[0] # combine strings
                 res += r[1:] # then append rest of content
+            elif isinstance(r[0], dict) and len(res) and isinstance(res[-1], dict):
+                r[0].update(res[-1]) # update backwards because of nature of ordering
+                res[-1] = r[0]
+                res += r[1:] 
             else:
                 res += r 
         return res 
     else:
         raise RuntimeError(f"Can only process Image, str, dict, tuple, and list -- not {type(content)}.")
+
+def format_dict(content):
+    justify = max([len(k) for k, v in content.items()]) + 2
+    res = ""
+    for k, v in content.items():
+        if res:
+            res += '\n'
+        k += ':'
+        res += k.ljust(justify) + v
+    return res    
 
 class _KtextVisor():
     def __init__(self, text_client):
@@ -136,9 +148,12 @@ class _KtextVisor():
         except:
             pass
 
-    def callback_receive(self):
+    def callback_receive(self, prepend=False):
         def wrap_func(func):
-            self.callbacks.append(func)
+            if prepend:
+                self.callbacks.insert(0, func)
+            else:
+                self.callbacks.append(func)
         return wrap_func
 
     def call_callbacks(self, sender, words, context):
@@ -146,7 +161,6 @@ class _KtextVisor():
         for c in self.callbacks.copy():
             try:
                 response = c(sender, words, context)
-                print("*** response", response, type(response))
                 if response==[]:
                     continue
                 elif isinstance(response, Response):
@@ -192,8 +206,10 @@ class _KtextVisor():
 
                         
     def send_responses(self, sender, responses):
-        content = [r.content for r in responses]
-        content = format_content(content)
+        content = [r.content for r in responses] # extract content
+        content = format_content(content) # combine strs and dicts
+        content = [format_dict(c) if isinstance(c, dict) else c for c in content] # format dicts into strs
+        content = format_content(content) # combine strs again
         for c in content:
             with self.lock:
                 if isinstance(c, str):
@@ -214,15 +230,16 @@ class _KtextVisor():
         pass 
 
 class KtextVisorTable:
-    def __init__(self, table):
-        self.table = table 
+    def __init__(self, table, help_claim=False):
+        self.table = table
+        self.help_claim = help_claim
 
     def lookup(self, sender, words, context):
         if words[0].lower()=="help":
-            return Response({k: v[1] for k, v in self.table.items()}, claim=False)
+            return Response({k: v[1] for k, v in self.table.items() if v[1]}, claim=self.help_claim)
         else:
             for k, v in self.table.items():
-                if words[0].lower()==k:
+                if fnmatch.fnmatch(words[0], k):
                     return v[0](sender, words, context)
 
 # context = None means no change to context, context = [] means reset context

@@ -1,5 +1,5 @@
 import time
-from kritter.ktextvisor import KtextVisor, Response, Image
+from kritter.ktextvisor import KtextVisor, KtextVisorTable, Response
 import os
 import subprocess
 import threading
@@ -11,34 +11,51 @@ class Shell:
         self.text_visor = KtextVisor("shell")
         self.sender = None
         self.process = None
-        @self.text_visor.callback_receive()
+
+        def ctrl_c(sender, words, context):
+            self.kill()
+            self.spawn()
+            return "^C"
+
+        def exit(sender, words, context):
+            self.kill()
+            return Response('Shell has exited.', context=[])
+
+        def command(sender, words, context):
+            command = ' '.join(words) + '\n'
+            print("sending command", command)
+            self.process.stdin.write(command.encode())
+            self.process.stdin.flush()
+            return Response("")
+
+        def shell(sender, words, context):
+            self.sender = sender
+            return Response("Entering shell...", context=["shell"])
+
+        def shell_other(sender, words, context):
+            if self.process:
+                self.kill()
+                return Response("Shell has exited.", claim=False)
+
+        tv_shell_table = KtextVisorTable({
+            "ctrl-c": (ctrl_c, "Interrupts current program."),
+            "exit": (exit, "Exits shell."),
+            "*": (command, "Any shell command.")
+        }, help_claim=True)
+        tv_table = KtextVisorTable({
+            "shell": (shell, "Starts shell."),
+            "*": (shell_other, None)
+        })
+
+        @self.text_visor.callback_receive(True)
         def func(sender, words, context):
             print("***", words, sender, context)
-            if not words:
-                return
             if 'shell' in context:
                 self.sender = sender
                 self.spawn()
-                if words[0].lower()=='ctrl-c':
-                    print("sending ctrl-c")
-                    self.kill()
-                    self.spawn()
-                elif words[0].lower()=='exit':
-                    self.kill()
-                    return Response('Shell has exited.', context=[])
-                else:
-                    command = ' '.join(words) + '\n'
-                    print("sending command", command)
-                    self.process.stdin.write(command.encode())
-                    self.process.stdin.flush()
-                return ''
+                return tv_shell_table.lookup(sender, words, context)
             else:
-                if words[0].lower()=='shell':
-                    self.sender = sender
-                    return Response("Entering shell...", context=["shell"])
-                elif self.process:
-                    self.kill()
-                    return Response("Shell has exited.", claim=False)
+                return tv_table.lookup(sender, words, context)
 
     def spawn(self):
         if not self.process:
