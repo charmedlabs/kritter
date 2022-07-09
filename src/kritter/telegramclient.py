@@ -70,7 +70,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
         if text:
-            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to, text="```\n"+text+"```", parse_mode="MarkdownV2"), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text="```\n"+text+"```", parse_mode="MarkdownV2"), self.loop).result()
     
     def image(self, to, image) -> None:
         if not self.application:
@@ -90,7 +90,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
             except Exception as e:
                 raise RuntimeError(f"Error processing image array: {e}")
         # Run send_photo (coroutine)
-        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to, image), self.loop)
+        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to['id'], image), self.loop)
         try:
             result = future.result(DEFAULT_TIMEOUT)
         except Exception as e:
@@ -119,7 +119,8 @@ class TelegramClient(KtextClient): # Text Messaging Client
         """Wrap callback_receive as a coroutine and submit to run"""
         if self.receive_callback:
             # Note, use executor when calling into sync function
-            await self.loop.run_in_executor(None, self.receive_callback, update.effective_message.chat_id, update.message.text)
+            sender = {"id": update.effective_message.chat.id, "name": update.effective_message.chat.full_name}
+            await self.loop.run_in_executor(None, self.receive_callback, sender, update.message.text)
 
     async def stop_server_coro(self):
         if self.application:

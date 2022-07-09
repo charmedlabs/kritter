@@ -183,7 +183,7 @@ class _KtextVisor():
         # c is a tuple: (timestamp, tags):
         self.context = {_sender: c for _sender, c in self.context.items() if t-c[0]<CONTEXT_TIMEOUT}
         try:
-            return self.context[sender][1]
+            return self.context[sender['id']][1]
         except:
             return []
 
@@ -195,16 +195,16 @@ class _KtextVisor():
             context = set(contexts[-1])
         else:
             try:
-                context = self.context[sender][1]
+                context = self.context[sender['id']][1]
             except:
                 context = []
         if context==[]:
             try:
-                del self.context[sender]
+                del self.context[sender['id']]
             except: 
                 pass
         else:
-            self.context[sender] = (t, context)
+            self.context[sender['id']] = (t, context)
 
                         
     def send_responses(self, sender, responses):
