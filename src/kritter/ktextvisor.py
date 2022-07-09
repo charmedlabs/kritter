@@ -42,7 +42,7 @@ def callback_client(self):
                     continue
             self.thread = Thread(target=self.server.serve_forever).start()
             # Client registers with server
-            self.callback_server(socket)        
+            self.callback_server(socket, self.client_name)        
     return wrap_func
 
 # The result of the proxied functions is multiprocessor.managers.AutoProxy type, 
@@ -53,16 +53,20 @@ def get_func(callback):
         return res._getvalue() 
     return func
 
-def callback_server(self, socket):
+def callback_server(self, socket, client_name):
     c = _KtextManager(address=('localhost', socket), authkey=AUTHKEY)
     c.connect()
-    self.callbacks.append(get_func(c.call_callbacks))
+    func = get_func(c.call_callbacks)
+    func.client_name = client_name
+    self.callbacks = [callback for callback in self.callbacks if not hasattr(callback, "client_name") or callback.client_name!=client_name]
+    self.callbacks.append(func)
+    print("*** len", len(self.callbacks))
 
-
-def KtextVisor(text_client=None):
+# Pass in pointer to KtextClient if server or client_name if client
+def KtextVisor(text_client=""):
     try:
-        if text_client is None:
-            raise Exception() # branch below
+        if isinstance(text_client, str):
+            raise Exception() # branch to client code below
         tv = _KtextVisor(text_client)
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
@@ -82,6 +86,7 @@ def KtextVisor(text_client=None):
         tm = _KtextManager(address=('localhost', SOCKET), authkey=AUTHKEY)
         tm.connect()
         tv = tm.KtextVisor()
+        tv.client_name = text_client
         tv.text_client = tm.text_client()
         tv.callback_receive = MethodType(callback_client, tv)
         tv.close = MethodType(_KtextVisor.close, tv)

@@ -8,7 +8,7 @@ import signal
 # The way context is set up, we'd need one shell instance per user....
 class Shell:
     def __init__(self):
-        self.text_visor = KtextVisor()
+        self.text_visor = KtextVisor("shell")
         self.sender = None
         self.process = None
         @self.text_visor.callback_receive()
@@ -23,6 +23,9 @@ class Shell:
                     print("sending ctrl-c")
                     self.kill()
                     self.spawn()
+                elif words[0].lower()=='exit':
+                    self.kill()
+                    return Response('Shell has exited.', context=[])
                 else:
                     command = ' '.join(words) + '\n'
                     print("sending command", command)
