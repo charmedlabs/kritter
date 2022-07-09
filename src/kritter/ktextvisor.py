@@ -60,7 +60,6 @@ def callback_server(self, socket, client_name):
     func.client_name = client_name
     self.callbacks = [callback for callback in self.callbacks if not hasattr(callback, "client_name") or callback.client_name!=client_name]
     self.callbacks.append(func)
-    print("*** len", len(self.callbacks))
 
 # Pass in pointer to KtextClient if server or client_name if client
 def KtextVisor(text_client=""):
@@ -118,7 +117,7 @@ def format_content(content):
 class _KtextVisor():
     def __init__(self, text_client):
         self.text_client = text_client
-        self.callbacks = [self.intrinsic_callback]
+        self.callbacks = [self.native_callback]
         self.context = {}
         self.lock = Lock()
         @self.text_client.callback_receive()
@@ -202,7 +201,7 @@ class _KtextVisor():
                 else: # must be an image    
                     self.text_client.image(sender, c.image)
 
-    def intrinsic_callback(self, sender, words, context):
+    def native_callback(self, sender, words, context):
         if not words:
             return
         if words[0]=="subscribe":
@@ -214,6 +213,17 @@ class _KtextVisor():
     def notify(self):
         pass 
 
+class KtextVisorTable:
+    def __init__(self, table):
+        self.table = table 
+
+    def lookup(self, sender, words, context):
+        if words[0].lower()=="help":
+            return Response({k: v[1] for k, v in self.table.items()}, claim=False)
+        else:
+            for k, v in self.table.items():
+                if words[0].lower()==k:
+                    return v[0](sender, words, context)
 
 # context = None means no change to context, context = [] means reset context
 class Response:
