@@ -217,12 +217,8 @@ class _KtextVisor:
             self.text_client.send(content, sender)
 
     def native_callback(self, words, sender, context):
-        if not words:
-            return
-        if words[0]=="subscribe":
-            pass
-        elif words[0]=="unsubscribe":
-            pass 
+        pass
+        # this where subscribe goes
 
     def send(self, msg, to):
         if to is None:
