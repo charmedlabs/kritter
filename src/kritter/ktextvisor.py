@@ -13,6 +13,7 @@ from types import MethodType
 from threading import Thread, Lock
 from multiprocessing.managers import BaseManager
 import fnmatch
+from .ktextclient import Image
 
 SOCKET = 50000
 MAX_CLIENTS = 5
@@ -76,7 +77,6 @@ def KtextVisor(text_client=""):
         tv = _KtextVisor(text_client)
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
-        _KtextManager.register('text_client', callable=lambda:text_client)
         _KtextManager.register('call_callbacks')
         tv.callback_server = MethodType(callback_server, tv) 
         tv.server = tm.get_server()       
@@ -91,7 +91,6 @@ def KtextVisor(text_client=""):
         tm.connect()
         tv = tm.KtextVisor()
         tv.client_name = text_client
-        tv.text_client = tm.text_client()
         tv.callback_receive = MethodType(callback_client, tv)
         tv.close = MethodType(_KtextVisor.close, tv)
         return tv
@@ -126,22 +125,23 @@ def format_dict(content):
         res += k.ljust(justify) + v
     return res    
 
-class _KtextVisor():
+class _KtextVisor:
     def __init__(self, text_client):
         self.text_client = text_client
         self.callbacks = [self.native_callback]
         self.context = {}
         self.lock = Lock()
         @self.text_client.callback_receive()
-        def func(sender, message):
+        def func(message, sender):
             print(f"*** Received: {message} from {sender}.")
             words = message.split()
             context = self.pre_handle_context(sender)
-            responses = self.call_callbacks(sender, words, context)
+            responses = self.call_callbacks(words, sender, context)
             self.post_handle_context(sender, responses)
-            claimed = bool([r.claim for r in responses if r.claim])
-            if not claimed:
-                responses += [Response('Try "help".')]
+            if words[0].lower()!="help":
+                claimed = bool([r.claim for r in responses if r.claim])
+                if not claimed:
+                    responses += [Response('Try "help".')]
             self.send_responses(sender, responses)
 
     def close(self):
@@ -159,11 +159,11 @@ class _KtextVisor():
                 self.callbacks.append(func)
         return wrap_func
 
-    def call_callbacks(self, sender, words, context):
+    def call_callbacks(self, words, sender, context):
         responses = []
         for c in self.callbacks.copy():
             try:
-                response = c(sender, words, context)
+                response = c(words, sender, context)
                 if response==[]:
                     continue
                 elif isinstance(response, Response):
@@ -213,14 +213,10 @@ class _KtextVisor():
         content = format_content(content) # combine strs and dicts
         content = [format_dict(c) if isinstance(c, dict) else c for c in content] # format dicts into strs
         content = format_content(content) # combine strs again
-        for c in content:
-            with self.lock:
-                if isinstance(c, str):
-                    self.text_client.text(sender, c)
-                else: # must be an image    
-                    self.text_client.image(sender, c.image)
+        with self.lock:
+            self.text_client.send(content, sender)
 
-    def native_callback(self, sender, words, context):
+    def native_callback(self, words, sender, context):
         if not words:
             return
         if words[0]=="subscribe":
@@ -228,22 +224,25 @@ class _KtextVisor():
         elif words[0]=="unsubscribe":
             pass 
 
-    # send to all interested recipients
-    def notify(self):
-        pass 
+    def send(self, msg, to):
+        if to is None:
+            pass
+            # send to all interested parties 
+        else:
+            self.text_client.send(msg, to)
 
 class KtextVisorTable:
     def __init__(self, table, help_claim=False):
         self.table = table
         self.help_claim = help_claim
 
-    def lookup(self, sender, words, context):
+    def lookup(self, words, sender, context):
         if words[0].lower()=="help":
             return Response({k: v[1] for k, v in self.table.items() if v[1]}, claim=self.help_claim)
         else:
             for k, v in self.table.items():
                 if fnmatch.fnmatch(words[0], k):
-                    return v[0](sender, words, context)
+                    return v[0](words, sender, context)
 
 # context = None means no change to context, context = [] means reset context
 class Response:
@@ -252,6 +251,3 @@ class Response:
         self.context = context
         self.claim = claim
 
-class Image:
-    def __init__(self, image):
-        self.image = image

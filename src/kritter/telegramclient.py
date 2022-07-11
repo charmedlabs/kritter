@@ -15,7 +15,7 @@ from telegram import ForceReply, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, MessageHandler, filters
 import asyncio
 # local imports
-from .ktextclient import KtextClient
+from .ktextclient import KtextClient, Image
 
 """
 References:
@@ -66,13 +66,25 @@ class TelegramClient(KtextClient): # Text Messaging Client
         self.write_config()
         self.run_coro(self.stop_server_coro)
 
-    def text(self, to, text):
+
+    def send(self, msg, to):
+        if isinstance(msg, str):
+            self.text(msg, to)
+        elif isinstance(msg, Image):
+            self.image(msg.image, to)
+        elif isinstance(msg, (tuple, list)):
+            for m in msg:
+                self.send(m, to)
+        else:
+            raise RuntimeError(f"{type(msg)} is not supported.")
+
+    def text(self, text, to):
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
         if text:
             asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text="```\n"+text+"```", parse_mode="MarkdownV2"), self.loop).result()
     
-    def image(self, to, image) -> None:
+    def image(self, image, to) -> None:
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
         """Sends an image given a file location, local or URL; also sending numpy array directly"""
@@ -120,7 +132,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         if self.receive_callback:
             # Note, use executor when calling into sync function
             sender = {"id": update.effective_message.chat.id, "name": update.effective_message.chat.full_name}
-            await self.loop.run_in_executor(None, self.receive_callback, sender, update.message.text)
+            await self.loop.run_in_executor(None, self.receive_callback, update.message.text, sender)
 
     async def stop_server_coro(self):
         if self.application:

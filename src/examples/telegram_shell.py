@@ -12,27 +12,27 @@ class Shell:
         self.sender = None
         self.process = None
 
-        def ctrl_c(sender, words, context):
+        def ctrl_c(words, sender, context):
             self.kill()
             self.spawn()
             return "^C"
 
-        def exit(sender, words, context):
+        def exit(words, sender, context):
             self.kill()
             return Response('Shell has exited.', context=[])
 
-        def command(sender, words, context):
+        def command(words, sender, context):
             command = ' '.join(words) + '\n'
             print("sending command", command)
             self.process.stdin.write(command.encode())
             self.process.stdin.flush()
             return Response("") # Empty response, but claim=True
 
-        def shell(sender, words, context):
+        def shell(words, sender, context):
             self.sender = sender
             return Response("Entering shell...", context=["shell"])
 
-        def shell_other(sender, words, context):
+        def shell_other(words, sender, context):
             if self.process:
                 self.kill()
                 return Response("Shell has exited.", claim=False)
@@ -48,14 +48,14 @@ class Shell:
         })
 
         @self.text_visor.callback_receive(True)
-        def func(sender, words, context):
+        def func(words, sender, context):
             print("***", words, sender, context)
             if 'shell' in context:
                 self.sender = sender
                 self.spawn()
-                return tv_shell_table.lookup(sender, words, context)
+                return tv_shell_table.lookup(words, sender, context)
             else:
-                return tv_table.lookup(sender, words, context)
+                return tv_table.lookup(words, sender, context)
 
     def spawn(self):
         if not self.process:
@@ -83,7 +83,7 @@ class Shell:
             except:
                 break
             print("*** text:", text)
-            self.text_visor.text_client.text(self.sender, text)
+            self.text_visor.send(text, self.sender)
         print("exitting....")
 
 exit = False
