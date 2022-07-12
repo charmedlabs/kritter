@@ -10,6 +10,7 @@
 
 import os
 import time
+import logging
 import pickle 
 import requests
 import socket
@@ -27,6 +28,10 @@ SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'http
 AUTH_SERVER = "https://auth.vizycam.com"
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "1"
+
+logger = logging.getLogger(__name__)
+from .util import set_logger_level
+#set_logger_level(logger, logging.DEBUG)
 
 class Gcloud(KdataClient):
 
@@ -48,7 +53,7 @@ class Gcloud(KdataClient):
                         interfaces.remove(i)
                         break 
             return interfaces
-        return None
+        return []
 
     def get_interface(self, interface):
         if interface in self.available_interfaces():
@@ -86,12 +91,12 @@ class Gcloud(KdataClient):
 
         if (not self._creds.valid or self._creds.expired) and self._creds.refresh_token:
             try:
-                print("Refreshing token...")
+                logger.debug("Refreshing token...")
                 self._creds.refresh(Request())
                 self._save_creds()
-                print("Success!")
+                logger.debug("Success!")
             except Exception as e:
-                print("Error refreshing token: ", e)
+                logger.debug(f"Error refreshing token: {e}")
                 return False
 
         return self._creds.valid
@@ -102,14 +107,12 @@ class Gcloud(KdataClient):
         self.flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
             client_secret, scopes=scopes_list, redirect_uri=AUTH_SERVER)
         url, self.state = self.flow.authorization_url(
-            # This parameter enables offline access which gives your application
-            # an access token and a refresh token for the user's credentials.
+            # We need these to get a valid refresh token.
             access_type='offline',
+            prompt='consent',
             # This parameter enables incremental auth.
             include_granted_scopes='true')
 
-        print("**** url:", url)
-        print("**** state:", self.state)
         return url
 
 
@@ -119,20 +122,19 @@ class Gcloud(KdataClient):
         req = urllib.request.Request(f'{AUTH_SERVER}/poll/?state={self.state}', headers={'User-Agent': 'Mozilla/5.0'})
         try:
             code = urllib.request.urlopen(req, timeout=10).read()
-            print("*** received code", code)
+            logger.debug(f"received code: {code}")
             # If we receive b'', it's the same as a timeout (code hasn't arrived) 
             if not code: 
-                print("*** no code, sleeping")
+                logger.debug("no code, sleeping...")
                 time.sleep(5)
                 raise TimeoutError
         except socket.timeout:
-            print("*** timeout2")
+            logger.debug("request timed out")
             raise TimeoutError
         code = code.decode('utf-8')
         self.flow.fetch_token(code=code)                  
-        session = self.flow.authorized_session()
-        self._creds = session.credentials
-        print("*** creds", self._creds, self.flow.credentials)
+        self._creds = self.flow.credentials
+        logger.debug(f"creds: {self._creds} refresh: {self._creds.refresh_token}")
         self._save_creds()
         return True
 
