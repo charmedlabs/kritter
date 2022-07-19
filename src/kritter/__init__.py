@@ -40,7 +40,7 @@ from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue
 from .proxy import Proxy 
-from .telegramclient import TelegramClient
+from .textingclient import TextingClient
 from .configfile import ConfigFile
 from .importconfig import import_config
 
