@@ -29,10 +29,10 @@ dev_tokens = {
 }
 
 DEFAULT_TIMEOUT = 60 * 5 # seconds; five minute timeout
-CONFIG_FILE = 'telegram_config.json'
+CONFIG_FILE = 'texting_config.json'
 
 
-class TelegramClient(KtextClient): # Text Messaging Client
+class TextingClient(KtextClient): # Text Messaging Client
     def __init__(self, etcdir):
         super().__init__()
         self.loop = asyncio.get_event_loop()
@@ -54,7 +54,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
             with open(self.config_filename, "w") as file:
                 json.dump(self._config, file)
         except Exception as e:
-            print(f"Unable to write Telegram config file {self.config_filename}: {e}")
+            print(f"Unable to write Texting config file {self.config_filename}: {e}")
 
     def set_token(self, token):
         self._config['token'] = token
