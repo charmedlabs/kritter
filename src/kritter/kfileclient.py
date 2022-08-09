@@ -16,13 +16,7 @@ class KfileClient:
         pass
 
     '''
-    returns a list of files and directories at given path in google drive
+    returns a list of files and their ID's as a dictionary
     '''
     def list(self, path):
-        pass
-
-    '''
-    returns the url of the file or directory at given path in drive
-    '''
-    def get_url(slef, path):
         pass
