@@ -12,9 +12,15 @@ class GfileClient(KfileClient):
     Copys a file of a given path from the vizy to google drive in the requested directory
     '''
     def copy_to(self, target, destination): 
-        title = target.split('/')[-1]
-
-
+        name = target.split('/')[-1]
+        try:
+            file_meta = {'name': name}
+            media = MediaFileUpload(target)
+            file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
+            return(f'https://drive.google.com/file/d/{file.get("id")}/edit')
+        except:
+            print('failed to upload to google drive')
+            
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
