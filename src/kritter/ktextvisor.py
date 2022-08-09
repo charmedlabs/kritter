@@ -237,7 +237,7 @@ class KtextVisorTable:
             return Response({k: v[1] for k, v in self.table.items() if v[1]}, claim=self.help_claim)
         else:
             for k, v in self.table.items():
-                if fnmatch.fnmatch(words[0], k):
+                if fnmatch.fnmatch(words[0].lower(), k):
                     return v[0](words, sender, context)
 
 # context = None means no change to context, context = [] means reset context
