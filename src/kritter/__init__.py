@@ -38,6 +38,7 @@ from .execterm import ExecTerm
 from .kimagedetector import KimageDetector, render_detected, render_detected_box, KimageDetectorThread
 from .processify import Processify
 from .kimageclassifier import KimageClassifier
+from .detectiontracker import DetectionTracker
 from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue

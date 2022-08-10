@@ -50,8 +50,9 @@ class TFliteDetector(KimageDetector):
             box = [0 if i<0 else i for i in box]
             obj = {
                 "box": box,
-                "class":  d.classes[max_index].class_name, 
-                "score": d.classes[max_index].score
+                "class": d.classes[max_index].class_name, 
+                "score": d.classes[max_index].score,
+                "index": d.classes[max_index].index
             }
             res.append(obj)
         return res  

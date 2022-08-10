@@ -18,15 +18,18 @@ class KimageDetector:
 
 from threading import Thread, Lock
 
-class KimageDetectorThread:
+class KimageDetectorThread(KimageDetector):
     def __init__(self, detector):
         self.detector = detector 
         self.lock = Lock()
         self.thread = None
         self.result = None
 
-    def detect(self, image):
-        self.image = image
+    def detect(self, image, threshold=None):
+        # Use a copy of the image to make sure any changes outside of the thread
+        # to the image don't affect our classification.
+        self.image = image.copy()
+        self.threshold = threshold
         if not self.thread:
             self.run_thread = True
             self.thread = Thread(target=self.run)
@@ -38,7 +41,7 @@ class KimageDetectorThread:
 
     def run(self):
         while self.run_thread:
-            result = self.detector.detect(self.image)
+            result = self.detector.detect(self.image, self.threshold)
             with self.lock:
                 self.result = result
 
@@ -59,6 +62,9 @@ def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=c
     nudge = int(line_width/2+0.5) 
 
     w, h = cv2.getTextSize(label, font, font_size, font_width)[0]
+    # If label is off the top of the screen, put label below top line.
+    if box[1]<h+2*padding:
+        label_on_top = False
     if bg_3d:
         bg_outline = 2
     if bg:
