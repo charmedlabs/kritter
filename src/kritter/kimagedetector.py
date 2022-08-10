@@ -11,6 +11,12 @@
 from kritter import get_bgr_color
 import cv2 
 
+def _hash(string):
+    val = 1
+    for c in string:
+        val *= ord(c)
+    return val 
+        
 class KimageDetector:
 
     def detect(self, image, threshold=None):
@@ -107,7 +113,10 @@ def render_detected(image, detected, disp_score=True, x_offset=0, y_offset=0, fo
                 txt = f"{i['class']} {i['score']:.2f}"
             else:
                 txt = i['class']
-            color = get_bgr_color(hash(i['class']))
+            try:
+                color = get_bgr_color(i['index'])
+            except:
+                color = get_bgr_color(_hash(i['class']))
             render_detected_box(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
     if isinstance(detected, dict):

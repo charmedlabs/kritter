@@ -148,6 +148,7 @@ class DetectionTracker:
         # loop over the bounding box rectangles
         for i, det in enumerate(dets):
             # use the bounding box coordinates to derive the centroid
+            # Add class index so we can use the class index to match between images. 
             inputBoxes[i] = det['box'] + [det['index']*10000]
             classScores.append((det['class'], det['score']))
         # if we are currently not tracking any objects take the input
