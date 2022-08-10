@@ -229,47 +229,46 @@ class _KtextVisor:
 
     def native_callback(self, words, sender, context):
         def subscribe(words, sender, context):
-            output = "Usage: \n1. subscribe add/remove <username> <userid> \n2. subscribe status <username>"
+            output = "error subscribing"
             self.config.load()
             subscriber_list = self.config['subscribers']
-            arg_length = len(words)
-            if arg_length > 2:
-                arg = words[1].lower()
-                username = words[2]
-                if arg_length == 3 and arg == 'status':
-                    output = f"checking status of {username}..."
-                elif arg == 'remove':
-                    if not username in subscriber_list.keys():
-                        output = f"user {username} is not subscribed"
-                    else:
-                        # could use pop(key, None) instead -- works even if key does not exist
-                        # del subscriber_list[f"{sender['name']}"]
-                        del subscriber_list[f'{username}']
-                        self.config['subscribers'] = subscriber_list
-                        self.config.save()
-                        output = f"{username} has been unsubscribed"
-                elif arg_length == 4:
-                    userid = words[3]
-                    if arg == 'add':
-                        if username in subscriber_list.keys():
-                            output = f"user {username} is already subscribed"
-                        else:
-                            # subscriber_list[f"{sender['name']}"] = f"{sender['id']}"
-                            subscriber_list[f"{username}"] = f"{userid}"
-                            self.config['subscribers'] = subscriber_list
-                            self.config.save()
-                            output = f"{username} has been subscribed"
+            if not sender['name'] in subscriber_list.keys():
+                subscriber_list[sender['name']] = sender['id']
+                output = f"{sender['name']} is now subscribed"
+            else:
+                output = f"{sender['name']} is already subscribed"
+            self.config['subscribers'] = subscriber_list
+            self.config.save()
             return output
 
-        tv_table = KtextVisorTable({"subscribe": (subscribe, "Manage subscriptions: add, remove, check status.")})
+        def unsubscribe(words, sender, context):
+            output = "error unsubscribing"
+            self.config.load()
+            subscriber_list = self.config['subscribers']
+            if sender['name'] in subscriber_list.keys():
+                del subscriber_list[sender['name']]
+                output = f"{sender['name']} has been unsubscribed"
+            else:
+                output = f"{sender['name']} was not subscribed"
+            self.config['subscribers'] = subscriber_list
+            self.config.save()
+            return output
+
+        tv_table = KtextVisorTable({
+            "subscribe": (subscribe, "Subscribe self to Vizy updates."),
+            "unsubscribe": (unsubscribe, "Unsubscribe self from Vizy updates.")}, 
+            help_claim=False)
         @self.callback_receive()
         def func(words, sender, context):
             return tv_table.lookup(words, sender, context)            
 
     def send(self, msg, to):
         if to is None:
-            pass
-            # send to all interested parties 
+            # send to all subscribers using their Ids
+            self.config.load()
+            subscriber_list = self.config['subscribers']
+            for sub in subscriber_list.values():
+                self.text_client.send(msg, sub)
         else:
             self.text_client.send(msg, to)
 
