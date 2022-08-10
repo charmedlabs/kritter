@@ -3,6 +3,9 @@ from .kfileclient import KfileClient
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaIoBaseDownload
+import io
+import shutil
 
 class GfileClient(KfileClient):
 
@@ -14,15 +17,15 @@ class GfileClient(KfileClient):
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
     '''
     def copy_to(self, location, destination):
-        dirs = destination.split('/')
+        dirs = destination.split('/')[1:]
         # get the id of the users root directory
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the destination path
-        for dir in dirs[1:-1]:
+        for dir in dirs[:-1]:
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
-                raise Exception(f"the path '{destination}' could not be found in google drive")
+                raise Exception(f"the location '{destination}' could not be found in google drive")
         folder_id = id
         name = dirs[-1]
         # check if the file already exists
@@ -39,8 +42,29 @@ class GfileClient(KfileClient):
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
-    def copy_from(self, target, destination):
-        pass
+    def copy_from(self, location, destination):
+        dirs = location.split('/')[1:]
+        # get the id of the users root directory
+        root = self.drive_client.files().get(fileId='root').execute()['id']
+        id = root
+        # follow the destination path
+        for dir in dirs:
+            id = self._search_file(self.drive_client,id,dir)
+            if(id == None):
+                raise Exception(f"the location '{destination}' could not be found in google drive")
+        file_id = id
+        request = self.drive_client.files().get_media(fileId=file_id)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+            print("Download %d%%" % int(status.progress() * 100))
+
+        # The file has been downloaded into RAM, now save it in a file
+        fh.seek(0)
+        with open('your_filename.jpg', 'wb') as f:
+            shutil.copyfileobj(fh, f, length=131072)
 
     '''
     returns a list of files and their ID's as a dictionary

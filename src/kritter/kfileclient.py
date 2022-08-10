@@ -12,7 +12,7 @@ class KfileClient:
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
-    def copy_from(self, target, destination):
+    def copy_from(self, location, destination):
         pass
 
     '''
