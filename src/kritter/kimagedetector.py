@@ -8,32 +8,44 @@
 # support@charmedlabs.com. 
 #
 
-import numpy as np
-from abc import ABC, abstractmethod 
 from kritter import get_bgr_color
 import cv2 
 
-class KimageDetector(ABC):
+class KimageDetector:
 
-    # Return array of KimageDetected
-    @abstractmethod
-    def detect(self, image, block=True):
+    def detect(self, image, threshold=None):
         pass
 
-    def open(self):
-        pass
+from threading import Thread, Lock
+
+class KimageDetectorThread:
+    def __init__(self, detector):
+        self.detector = detector 
+        self.lock = Lock()
+        self.thread = None
+        self.result = None
+
+    def detect(self, image):
+        self.image = image
+        if not self.thread:
+            self.run_thread = True
+            self.thread = Thread(target=self.run)
+            self.thread.start()
+        with self.lock:
+            result = self.result 
+            self.result = None
+        return result 
+
+    def run(self):
+        while self.run_thread:
+            result = self.detector.detect(self.image)
+            with self.lock:
+                self.result = result
 
     def close(self):
-        pass
-
-
-class KimageDetected:
-
-    def __init__(self, index, label, score, box):
-        self.index = index
-        self.label = label
-        self.score = score
-        self.box = box
+        if self.thread:
+            self.run_thread = False
+            self.thread.join()
 
 
 def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
@@ -81,61 +93,23 @@ def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=c
             cv2.putText(image, label, (box[0]+x_offset+padding+bg_3d, box[1]+y_offset+hoffs+bg_3d), font, font_size, bg_color, font_width*bg_outline)
         cv2.putText(image, label, (int(box[0]+x_offset+padding), int(box[1]+y_offset+hoffs)), font, font_size, (255, 255, 255), font_width)
 
+def render_detected(image, detected, disp_score=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
 
-def render_detected(image, detected, disp_confidence=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
+    if isinstance(detected, list):
+        for i in detected:
+            if disp_score:
+                txt = f"{i['class']} {i['score']:.2f}"
+            else:
+                txt = i['class']
+            color = get_bgr_color(hash(i['class']))
+            render_detected_box(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
-    for i in detected:
-        if disp_confidence:
-            txt = i.label + ' %.2f' % i.score
-        else:
-            txt = i.label
-        color = get_bgr_color(i.index)
-        render_detected_box(image, color, txt, i.box, x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+    if isinstance(detected, dict):
+        for i, v in detected.items():
+            if disp_score:
+                txt = f"{v['class']} {i}, {v['score']:.2f}"
+            else:
+                txt = f"{v['class']}"
+            color = get_bgr_color(hash(v['class']))
+            render_detected_box(image, color, txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
-
-# Malisiewicz et al., adapted from pyimagesearch.com
-def non_max_suppression(boxes, overlapThresh=0.5):
-    # if there are no boxes, return an empty list
-    if len(boxes) == 0:
-        return []
-    # if the bounding boxes integers, convert them to floats --
-    # this is important since we'll be doing a bunch of divisions
-    if boxes.dtype.kind == "i":
-        boxes = boxes.astype("float")
-    # initialize the list of picked indexes 
-    pick = []
-    # grab the coordinates of the bounding boxes
-    x1 = boxes[:,0]
-    y1 = boxes[:,1]
-    x2 = boxes[:,2]
-    y2 = boxes[:,3]
-    # compute the area of the bounding boxes and sort the bounding
-    # boxes by the bottom-right y-coordinate of the bounding box
-    area = (x2 - x1 + 1) * (y2 - y1 + 1)
-    idxs = np.argsort(y2)
-    # keep looping while some indexes still remain in the indexes
-    # list
-    while len(idxs) > 0:
-        # grab the last index in the indexes list and add the
-        # index value to the list of picked indexes
-        last = len(idxs) - 1
-        i = idxs[last]
-        pick.append(i)
-        # find the largest (x, y) coordinates for the start of
-        # the bounding box and the smallest (x, y) coordinates
-        # for the end of the bounding box
-        xx1 = np.maximum(x1[i], x1[idxs[:last]])
-        yy1 = np.maximum(y1[i], y1[idxs[:last]])
-        xx2 = np.minimum(x2[i], x2[idxs[:last]])
-        yy2 = np.minimum(y2[i], y2[idxs[:last]])
-        # compute the width and height of the bounding box
-        w = np.maximum(0, xx2 - xx1 + 1)
-        h = np.maximum(0, yy2 - yy1 + 1)
-        # compute the ratio of overlap
-        overlap = (w * h) / area[idxs[:last]]
-        # delete all indexes from the index list that have
-        idxs = np.delete(idxs, np.concatenate(([last],
-            np.where(overlap > overlapThresh)[0])))
-    # return only the bounding boxes that were picked using the
-    # integer data type
-    return pick

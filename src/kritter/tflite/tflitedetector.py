@@ -9,134 +9,49 @@
 #
 
 import os
-import re
-import numpy as np
+from kritter import KimageDetector
+from tflite_support.task import core
+from tflite_support.task import processor
+from tflite_support.task import vision
 import cv2
-from threading import Thread, Condition
-from kritter import KimageDetected, KimageDetector, render_detected
-from tflite_runtime.interpreter import Interpreter
+
+BASEDIR = os.path.dirname(__file__)
 
 class TFliteDetector(KimageDetector):
-
-    def __init__(self, path, threshold=0.5):
-        self.path = path
+    def __init__(self, model=None, threshold=0.75):
+        # If model isn't specified, use the common objects network
+        if not model:
+            model = os.path.join(BASEDIR, "efficientdet_lite0.tflite") 
         self.threshold = threshold
-        self.thread = None
-        self.thread_enable = False
-        self.result = None
-        self.image = None
-        self.image_cond = Condition()
-        self.result_cond = Condition()
+        base_options = core.BaseOptions(file_name=model, use_coral=False, num_threads=4)
+        detection_options = processor.DetectionOptions(score_threshold=0.1)
+        options = vision.ObjectDetectorOptions(base_options=base_options, detection_options=detection_options)
+        self.detector = vision.ObjectDetector.create_from_options(options)
 
-        self._load_labels()
-        self.interpreter = Interpreter(os.path.join(self.path, "detect.tflite"))
-        self.interpreter.allocate_tensors()
-        _, self.input_height, self.input_width, _ = self.interpreter.get_input_details()[0]['shape']
-
-    def _load_labels(self):
-        """Loads the labels file. Supports files with or without index numbers."""
-        with open(os.path.join(self.path, "labels.txt"), 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-            self.labels = {}
-            for row_number, content in enumerate(lines):
-                pair = re.split(r'[:\s]+', content.strip(), maxsplit=1)
-                if len(pair) == 2 and pair[0].strip().isdigit():
-                    self.labels[int(pair[0])] = pair[1].strip()
-                else:
-                    self.labels[row_number] = pair[0].strip()
-
-    def _set_input_tensor(self, image):
-        """Sets the input tensor."""
-        tensor_index = self.interpreter.get_input_details()[0]['index']
-        input_tensor = self.interpreter.tensor(tensor_index)()[0]
-        input_tensor[:, :] = image
-
-
-    def _get_output_tensor(self, index):
-        """Returns the output tensor at the given index."""
-        output_details = self.interpreter.get_output_details()[index]
-        tensor = np.squeeze(self.interpreter.get_tensor(output_details['index']))
-        return tensor 
-
-    def set_threshold(self, val):
-        self.threshold = val  
-        
-    def detect(self, image, block=True):
-        if block:
-            return self.run_detect(image)
-        else:
-            if self.thread is None:
-                self.thread = Thread(target=self.run) 
-                self.thread_enable = True
-                self.thread.start()
-
-            with self.image_cond:
-                # Copy image because we will likely be overlaying it with bounding boxes.
-                self.image = image.copy() 
-                self.image_cond.notify()
-
-            with self.result_cond:
-                if self.result is not None:
-                    result = self.result 
-                    self.result = None
-                    self.result_cond.notify()
-                    return result
-                else:
-                    return None
-
-    def run_detect(self, image):
-
-        width = image.shape[1]
-        height = image.shape[0]
-        image = cv2.resize(image, (self.input_width, self.input_height))
+    def detect(self, image, threshold=None):
+        if not threshold:
+            threshold = self.threshold
+        res = []
+        orig_resolution = (image.shape[1], image.shape[0])
+        new_resolution = (640, 480)
+        scale = (orig_resolution[0]/new_resolution[0], orig_resolution[1]/new_resolution[1])
+        image = cv2.resize(image, new_resolution)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
- 
-        self._set_input_tensor(image)
-        self.interpreter.invoke()
-
-        # Get all output details
-        boxes = self._get_output_tensor(0)
-        classes = self._get_output_tensor(1)
-        scores = self._get_output_tensor(2)
-        count = int(self._get_output_tensor(3))
-
-        result = []
-        for i in range(count):
-            if scores[i] >= self.threshold:
-                ymin, xmin, ymax, xmax = boxes[i]
-                xmin = max(1, int(xmin*width))
-                xmax = max(1, int(xmax*width))
-                ymin = max(1, int(ymin*height))
-                ymax = max(1, int(ymax*height))
-                r = KimageDetected(int(classes[i]), self.labels[classes[i]], scores[i], [xmin, ymin, xmax, ymax])
-                result.append(r)
-        return result
-
-
-    def run(self):
-        while(self.thread_enable):
-            with self.image_cond:
-                while self.image is None and self.thread_enable:
-                    self.image_cond.wait()
-                image = self.image
-                self.image = None
-
-            self.result = self.run_detect(image)
-            with self.result_cond:
-                while self.result is not None and self.thread_enable:
-                    self.result_cond.wait()
-
-    def close(self):
-        if self.thread is not None:
-            self.thread_enable = False
-            with self.image_cond:
-                self.image = []
-                self.image_cond.notify()
-            with self.result_cond:
-                self.result = None
-                self.result_cond.notify()
-                
-            self.thread.join()
-            self.thread = None
-            self.result = None
-            self.image = None
+        input_tensor = vision.TensorImage.create_from_array(image)
+        # Run object detection estimation using the model.
+        detected = self.detector.detect(input_tensor)
+        for d in detected.detections:
+            scores = [c.score for c in d.classes]
+            max_score = max(scores)
+            if max_score<threshold:
+                continue
+            max_index = scores.index(max_score)
+            box = [int(d.bounding_box.origin_x*scale[0]), int(d.bounding_box.origin_y*scale[1]), int((d.bounding_box.origin_x+d.bounding_box.width)*scale[0]), int((d.bounding_box.origin_y+d.bounding_box.height)*scale[1])]
+            box = [0 if i<0 else i for i in box]
+            obj = {
+                "box": box,
+                "class":  d.classes[max_index].class_name, 
+                "score": d.classes[max_index].score
+            }
+            res.append(obj)
+        return res  

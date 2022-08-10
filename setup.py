@@ -29,6 +29,6 @@ setup(
     license=about['__license__'],
     package_dir={"": "src"},
     packages=["kritter"],
-    package_data = {"": ['*.so', '*.sign', '*.json'], "kritter": ["kvideocomp/*", "assets/*", "media/*", "kterm/*", "kterm/static/*", "keditor/*", "keditor/static/*", "login/*", "tf/*", "tf/coco/*", "tf/birdfeeder/*", "tflite/*", "tflite/coco/*"]},
+    package_data = {"": ['*.so', '*.sign', '*.json'], "kritter": ["kvideocomp/*", "assets/*", "media/*", "kterm/*", "kterm/static/*", "keditor/*", "keditor/static/*", "login/*", "tflite/*"]},
     zip_safe=False    
     )
