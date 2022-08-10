@@ -4,9 +4,9 @@ class KfileClient:
         pass
 
     '''
-    Copys a file of a given path from the vizy to google drive in the requested directory
+    Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
     '''
-    def copy_to(self, target, destination): 
+    def copy_to(self, location, destination): 
         pass
 
     '''

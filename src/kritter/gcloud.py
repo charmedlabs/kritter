@@ -22,9 +22,10 @@ from .kdataclient import KdataClient
 from .gpstoremedia import GPstoreMedia
 from .gtextclient import GtextClient
 from .gtabularclient import GtabularClient
+from .gfileclient import GfileClient
 
 AUTH_FILE = "gcloud.auth"
-SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/'], "KstoreFile": ['https://www.googleapis.com/auth/drive'], "KtabularClient": ['https://www.googleapis.com/auth/spreadsheets']}
+SCOPES = {"KstoreMedia": ['https://www.googleapis.com/auth/photoslibrary', 'https://www.googleapis.com/auth/photoslibrary.sharing'], "KtextClient": ['https://mail.google.com/'], "KstoreFile": ['https://www.googleapis.com/auth/drive'], "KtabularClient": ['https://www.googleapis.com/auth/spreadsheets'], "KfileClient": ['https://www.googleapis.com/auth/drive']}
 AUTH_SERVER = "https://auth.vizycam.com"
 
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = "1"
@@ -56,13 +57,15 @@ class Gcloud(KdataClient):
         return []
 
     def get_interface(self, interface):
-        if interface in self.available_interfaces():
+        #if interface in self.available_interfaces():
             if interface=='KstoreMedia':
                 return GPstoreMedia(self)
             elif interface=='KtextClient':
                 return GtextClient(self)
             elif interface=='KtabularClient':
                 return GtabularClient(self)
+            elif interface=='KfileClient':
+                return GfileClient(self)
             else:
                 return None
 
