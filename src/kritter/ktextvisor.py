@@ -8,12 +8,20 @@
 # support@charmedlabs.com. 
 #
 
+import os
 import time
+import json
 from types import MethodType
 from threading import Thread, Lock
 from multiprocessing.managers import BaseManager
 import fnmatch
 from .ktextclient import Image
+from .configfile import ConfigFile
+
+CONFIG_FILE = "textvisor.json"
+DEFAULT_CONFIG = {
+    "subscribers": {}
+}
 
 SOCKET = 50000
 MAX_CLIENTS = 5
@@ -70,11 +78,11 @@ def callback_server(self, socket, client_name, prepend):
         self.callbacks.append(func)
 
 # Pass in pointer to KtextClient if server or client_name if client
-def KtextVisor(text_client=""):
+def KtextVisor(text_client="", etcdir=""):
     try:
         if isinstance(text_client, str):
             raise Exception() # branch to client code below
-        tv = _KtextVisor(text_client)
+        tv = _KtextVisor(text_client, etcdir)
         tm = _KtextManager(address=('', SOCKET), authkey=AUTHKEY)
         _KtextManager.register('KtextVisor', callable=lambda:tv)
         _KtextManager.register('call_callbacks')
@@ -126,9 +134,12 @@ def format_dict(content):
     return res    
 
 class _KtextVisor:
-    def __init__(self, text_client):
+    def __init__(self, text_client, etcdir):
         self.text_client = text_client
-        self.callbacks = [self.native_callback]
+        self.config_filename = os.path.join(etcdir, CONFIG_FILE) 
+        self.config = ConfigFile(self.config_filename, DEFAULT_CONFIG) 
+        self.config.load() # load subscribers
+        self.callbacks = [self.native_callback] 
         self.context = {}
         self.lock = Lock()
         @self.text_client.callback_receive()
@@ -217,8 +228,43 @@ class _KtextVisor:
             self.text_client.send(content, sender)
 
     def native_callback(self, words, sender, context):
-        pass
-        # this where subscribe goes
+        def subscribe(words, sender, context):
+            output = "Usage: \n1. subscribe add/remove <username> <userid> \n2. subscribe status <username>"
+            self.config.load()
+            subscriber_list = self.config['subscribers']
+            arg_length = len(words)
+            if arg_length > 2:
+                arg = words[1].lower()
+                username = words[2]
+                if arg_length == 3 and arg == 'status':
+                    output = f"checking status of {username}..."
+                elif arg == 'remove':
+                    if not username in subscriber_list.keys():
+                        output = f"user {username} is not subscribed"
+                    else:
+                        # could use pop(key, None) instead -- works even if key does not exist
+                        # del subscriber_list[f"{sender['name']}"]
+                        del subscriber_list[f'{username}']
+                        self.config['subscribers'] = subscriber_list
+                        self.config.save()
+                        output = f"{username} has been unsubscribed"
+                elif arg_length == 4:
+                    userid = words[3]
+                    if arg == 'add':
+                        if username in subscriber_list.keys():
+                            output = f"user {username} is already subscribed"
+                        else:
+                            # subscriber_list[f"{sender['name']}"] = f"{sender['id']}"
+                            subscriber_list[f"{username}"] = f"{userid}"
+                            self.config['subscribers'] = subscriber_list
+                            self.config.save()
+                            output = f"{username} has been subscribed"
+            return output
+
+        tv_table = KtextVisorTable({"subscribe": (subscribe, "Manage subscriptions: add, remove, check status.")})
+        @self.callback_receive()
+        def func(words, sender, context):
+            return tv_table.lookup(words, sender, context)            
 
     def send(self, msg, to):
         if to is None:
