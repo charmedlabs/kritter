@@ -35,7 +35,7 @@ def iou(boxA, boxB):
 
 
 class DetectionTracker:
-    def __init__(self, maxDisappeared=1, maxDistance=250, maxClassHistory=100, registerThreshold=0.5, iouEquiv=0.4, classSwitch=False):
+    def __init__(self, maxDisappeared=1, maxDistance=250, maxClassHistory=100, threshold=0.5, iouEquiv=0.4, classSwitch=False):
         # initialize the next unique object ID along with two ordered
         # dictionaries used to keep track of mapping a given object
         # ID to its centroid and number of consecutive frames it has
@@ -56,7 +56,7 @@ class DetectionTracker:
         self.maxDistance = maxDistance
 
         self.maxClassHistory = maxClassHistory
-        self.registerThreshold = registerThreshold
+        self.threshold = threshold
         self.iouEquiv = iouEquiv
         self.classSwitch = classSwitch
         if not self.classSwitch:
@@ -148,14 +148,16 @@ class DetectionTracker:
         # loop over the bounding box rectangles
         for i, det in enumerate(dets):
             # use the bounding box coordinates to derive the centroid
-            # Add class index so we can use the class index to match between images. 
+            # Add class index so we can use the class index to match between images.
+            # Use 10000 multiplier because this exceeds all likely image resolutions 
+            # and distances within the image.  
             inputBoxes[i] = det['box'] + [det['index']*10000]
             classScores.append((det['class'], det['score']))
         # if we are currently not tracking any objects take the input
         # centroids and register each of them
         if len(self.objects) == 0:
             for i in range(0, len(inputBoxes)):
-                if classScores[i][1]>=self.registerThreshold:
+                if classScores[i][1]>=self.threshold:
                     self.register(inputBoxes[i], classScores[i])
         # otherwise, are are currently tracking objects so we need to
         # try to match the input centroids to existing object
@@ -251,9 +253,11 @@ class DetectionTracker:
             # than the number of existing object centroids we need to
             # register each new input centroid as a trackable object
             for col in unusedCols:
-                if classScores[col][1]>=self.registerThreshold:
+                if classScores[col][1]>=self.threshold:
                     self.register(inputBoxes[col], classScores[col])
 
         # return the set of trackable objects
         return self.mostLikelyState(showDisappeared)
 
+    def setThreshold(self, threshold):
+        self.threshold = threshold
