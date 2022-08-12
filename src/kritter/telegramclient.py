@@ -29,10 +29,10 @@ dev_tokens = {
 }
 
 DEFAULT_TIMEOUT = 60 * 5 # seconds; five minute timeout
-CONFIG_FILE = 'texting_config.json'
+CONFIG_FILE = 'telegram_config.json'
 
 
-class TextingClient(KtextClient): # Text Messaging Client
+class TelegramClient(KtextClient): # Text Messaging Client
     def __init__(self, etcdir):
         super().__init__()
         self.loop = asyncio.get_event_loop()
