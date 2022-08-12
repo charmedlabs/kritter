@@ -138,7 +138,6 @@ class _KtextVisor:
         self.text_client = text_client
         self.config_filename = os.path.join(etcdir, CONFIG_FILE) 
         self.config = ConfigFile(self.config_filename, DEFAULT_CONFIG) 
-        self.config.load() # load subscribers
         self.callbacks = [self.native_callback] 
         self.context = {}
         self.lock = Lock()
@@ -234,7 +233,9 @@ class _KtextVisor:
         def subscribe(words, sender, context):
             output = "error subscribing"
             subscribers = self.config['subscribers']
-            userid = str(sender['id'])
+            # userid = str(sender['id'])
+            # userid = int(sender['id'])
+            userid = sender['id']
             if not userid in subscribers.keys():
                 subscribers[userid] = sender['name']
                 output = f"{sender['name']} is now subscribed"
@@ -247,7 +248,9 @@ class _KtextVisor:
         def unsubscribe(words, sender, context):
             output = "error unsubscribing"
             subscribers = self.config['subscribers']
-            userid = str(sender['id'])
+            # userid = str(sender['id'])
+            # userid = int(sender['id'])
+            userid = sender['id']
             if userid in subscribers.keys():
                 del subscribers[userid]
                 output = f"{sender['name']} has been unsubscribed"
