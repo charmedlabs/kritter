@@ -6,7 +6,7 @@ class KfileClient:
     '''
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
     '''
-    def copy_to(self, location, destination): 
+    def copy_to(self, location, destination, create=False): 
         pass
 
     '''

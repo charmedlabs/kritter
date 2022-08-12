@@ -14,17 +14,24 @@ class GfileClient(KfileClient):
 
     '''
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
+    optional arg specifies wether or not to create the requested dir
     '''
-    def copy_to(self, location, destination):
+    def copy_to(self, location, destination, create=False):
         dirs = destination.split('/')[1:]
         # get the id of the users root directory
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
+        parent_id = None
         # follow the destination path
         for dir in dirs[:-1]:
+            parent_id = id
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
-                raise Exception(f"the location '{destination}' could not be found in google drive")
+                # if createis true, creates the missing directories
+                if create:
+                    id = self._create_folder(self.drive_client, dir, parent_id)
+                else:
+                    raise Exception(f"the location '{destination}' could not be found in google drive")
         folder_id = id
         name = dirs[-1]
         # check if the file already exists
@@ -121,4 +128,16 @@ class GfileClient(KfileClient):
         response = client.files().list(q=f"parents  in '{parent_id}' and name = '{target_name}'",pageToken=page_token).execute()
         for file in response.get('files', []):
             return(file.get("id"))
+
+    '''
+    creates a folder on google drive and returns its id
+    '''
+    def _create_folder(self, client, folder_name, parent_id):
+        body = {
+        'name' : folder_name,
+        'parents' : [parent_id],
+        'mimeType' : 'application/vnd.google-apps.folder'
+        }
+        folder = client.files().create(body = body).execute()
+        return folder['id']
 
