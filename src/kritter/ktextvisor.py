@@ -227,14 +227,9 @@ class _KtextVisor:
             self.text_client.send(content, sender)
 
     def native_callback(self, words, sender, context):
-        # userids need to be saved as strings to avoid
-        # duplication error related to json.loads()
-        # duplication appears as { 1: 'name': '1': 'name' }
         def subscribe(words, sender, context):
             output = "error subscribing"
             subscribers = self.config['subscribers']
-            # userid = str(sender['id'])
-            # userid = int(sender['id'])
             userid = sender['id']
             if not userid in subscribers.keys():
                 subscribers[userid] = sender['name']
@@ -248,8 +243,6 @@ class _KtextVisor:
         def unsubscribe(words, sender, context):
             output = "error unsubscribing"
             subscribers = self.config['subscribers']
-            # userid = str(sender['id'])
-            # userid = int(sender['id'])
             userid = sender['id']
             if userid in subscribers.keys():
                 del subscribers[userid]
