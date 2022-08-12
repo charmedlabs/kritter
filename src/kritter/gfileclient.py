@@ -5,7 +5,6 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.http import MediaIoBaseDownload
 import io
-import shutil
 
 class GfileClient(KfileClient):
 
@@ -44,14 +43,15 @@ class GfileClient(KfileClient):
     '''
     def copy_from(self, location, destination):
         dirs = location.split('/')[1:]
-        # get the id of the users root directory
+        # get the id of the users root directory in google
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
-        # follow the destination path
+        # follow the location path
         for dir in dirs:
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
-                raise Exception(f"the location '{destination}' could not be found in google drive")
+                raise Exception(f"the location '{location}' could not be found in google drive")
+        # download file to memory using google drive api
         file_id = id
         request = self.drive_client.files().get_media(fileId=file_id)
         fh = io.BytesIO()
@@ -59,40 +59,65 @@ class GfileClient(KfileClient):
         done = False
         while done is False:
             status, done = downloader.next_chunk()
-            print("Download %d%%" % int(status.progress() * 100))
-
-        # The file has been downloaded into RAM, now save it in a file
+        # save file to drive
         fh.seek(0)
-        with open('your_filename.jpg', 'wb') as f:
-            shutil.copyfileobj(fh, f, length=131072)
+        with open(destination, 'wb') as f:
+            f.write(fh.read())
+            f.close
 
     '''
-    returns a list of files and their ID's as a dictionary
+    returns a list of files at a specific path in google drive
     '''
     def list(self, path):
-        pass
+        dirs = path.split('/')[1:]
+        # get the id of the users root directory in google
+        root = self.drive_client.files().get(fileId='root').execute()['id']
+        id = root
+        # follow the location path
+        for dir in dirs:
+            id = self._search_file(self.drive_client,id,dir)
+            if(id == None):
+                raise Exception(f"the location '{path}' could not be found in google drive")
+        parent_id = id
 
-    """
+        files = []
+        page_token = None
+        while True:
+            response = self.drive_client.files().list(q=f"parents  in '{parent_id}'",pageToken=page_token).execute()
+            for file in response.get('files', []):
+                files.append(file.get("name"))
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        return files
+
+
+    '''
+    returns the url in google drive of a file or folder at the provided path
+    '''
+    def get_url(self, path):
+        dirs = path.split('/')[1:]
+        # get the id of the users root directory in google
+        root = self.drive_client.files().get(fileId='root').execute()['id']
+        id = root
+        # follow the location path
+        for dir in dirs:
+            id = self._search_file(self.drive_client,id,dir)
+            if(id == None):
+                raise Exception(f"the location '{path}' could not be found in google drive")
+        return self.drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
+
+
+    '''
     search_file is a helper function that takes the id of the folder you wish to search in 
-    as well as the name of what your looking for and returns the id of your target or -1
+    as well as the name of what your looking for and returns the id of your target or None
     if the target is not found
-    """
+    '''
     def _search_file(self, client, parent_id, target_name):
-        try:
-            # create drive api client
-            files = []
-            page_token = None
-            while True:
-                # pylint: disable=maybe-no-member
-                response = client.files().list(q=f"parents  in '{parent_id}' and name = '{target_name}'",pageToken=page_token).execute()
-                for file in response.get('files', []):
-                    # Process change
-                    #print(F'Found file: {file.get("name")}, {file.get("id")}')
-                    return(file.get("id"))
-                files.extend(response.get('files', []))
-                page_token = response.get('nextPageToken', None)
-                if page_token is None:
-                    break
-        except:
-            return -1
+        
+        # create drive api client
+        page_token = None
+        response = client.files().list(q=f"parents  in '{parent_id}' and name = '{target_name}'",pageToken=page_token).execute()
+        for file in response.get('files', []):
+            return(file.get("id"))
 
