@@ -105,8 +105,9 @@ class GfileClient(KfileClient):
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
                 raise Exception(f"the location '{path}' could not be found in google drive")
+        if path[-6:]=='.ipynb':
+            return f'https://colab.research.google.com/drive/{id}'
         return self.drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
-
 
     '''
     search_file is a helper function that takes the id of the folder you wish to search in 
