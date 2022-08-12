@@ -230,7 +230,7 @@ class _KtextVisor:
         def subscribe(words, sender, context):
             output = "error subscribing"
             subscribers = self.config['subscribers']
-            userid = sender['id']
+            userid = str(sender['id'])
             if not userid in subscribers.keys():
                 subscribers[userid] = sender['name']
                 output = f"{sender['name']} is now subscribed"
@@ -243,7 +243,7 @@ class _KtextVisor:
         def unsubscribe(words, sender, context):
             output = "error unsubscribing"
             subscribers = self.config['subscribers']
-            userid = sender['id']
+            userid = str(sender['id'])
             if userid in subscribers.keys():
                 del subscribers[userid]
                 output = f"{sender['name']} has been unsubscribed"
