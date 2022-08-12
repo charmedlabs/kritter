@@ -233,7 +233,6 @@ class _KtextVisor:
         # duplication appears as { 1: 'name': '1': 'name' }
         def subscribe(words, sender, context):
             output = "error subscribing"
-            self.config.load()
             subscribers = self.config['subscribers']
             userid = str(sender['id'])
             if not userid in subscribers.keys():
@@ -247,7 +246,6 @@ class _KtextVisor:
 
         def unsubscribe(words, sender, context):
             output = "error unsubscribing"
-            self.config.load()
             subscribers = self.config['subscribers']
             userid = str(sender['id'])
             if userid in subscribers.keys():
@@ -269,7 +267,6 @@ class _KtextVisor:
     def send(self, msg, to):
         if to is None:
             # send to all subscribers using their Ids
-            self.config.load()
             subscribers = self.config['subscribers']
             for userid in subscribers.keys():
                 self.text_client.send(msg, userid)
