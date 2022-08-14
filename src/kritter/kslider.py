@@ -57,11 +57,9 @@ class Kslider(Kcomponent):
 
         if self.updatetext:
             @self.kapp.callback(Output(self.id_text, 'children'),
-                [Input(self.id, 'value')], (), self.service)
+                [Input(self.id, 'drag_value')], (), self.service)
             def func(value):
-                # Limiting update rate keeps things from being queued up in the browser
-                if self.updatemode=="drag":
-                    time.sleep(self.updateperiod)
+                #time.sleep(self.updateperiod)
                 try:
                     return self.format(value)
                 except:

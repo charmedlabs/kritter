@@ -26,13 +26,16 @@ class Camera(Camera_):
         assert(set(modes)==set(self.mode_info.keys()))
 
         save_mode = self.mode
+        save_framerate = self.framerate
         for m in modes:
             self.mode = m 
             framerate = self.min_framerate, self.max_framerate
             self.mode_info[m]['resolution'] = self.resolution
             self.mode_info[m]['framerate'] = framerate
 
+        # Restore default mode and framerate 
         self.mode = save_mode
+        self.framerate = save_framerate
 
 
     def getmodes(self):
