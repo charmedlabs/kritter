@@ -82,7 +82,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
         if text:
-            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text="```\n"+text+"```", parse_mode="MarkdownV2"), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text, parse_mode="MarkdownV2"), self.loop).result()
     
     def image(self, image, to) -> None:
         if not self.application:
