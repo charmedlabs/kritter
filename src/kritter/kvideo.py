@@ -96,6 +96,7 @@ class Kvideo(Kcomponent):
             self.layout = html.Div([self.video, self.hist], id=self.id_div)
 
         # Create RGB histogram graph objects.
+        zeros = numpy.zeros(64)
         self.hist_data = [
             go.Scatter(
                 line=dict(color = "#0000ff"),
@@ -105,6 +106,7 @@ class Kvideo(Kcomponent):
                 fillcolor="rgba(0, 0, 255, 0.25)",
                 #hovertemplate='%{y:.1f}%',
                 hoverinfo='none',
+                y = zeros
             ),
             go.Scatter(
                 line=dict(color = "#00ff00"),
@@ -114,6 +116,7 @@ class Kvideo(Kcomponent):
                 fillcolor="rgba(0, 255, 0, 0.25)",
                 #hovertemplate='%{y:.1f}%',
                 hoverinfo='none',
+                y = zeros
             ),
             go.Scatter(
                 line=dict(color = "#ff0000"),
@@ -123,6 +126,7 @@ class Kvideo(Kcomponent):
                 fillcolor="rgba(255, 0, 0, 0.25)",
                 #hovertemplate='%{y:.1f}%',
                 hoverinfo='none',
+                y = zeros
             ),
         ]
         self.hist_figure = dict(
@@ -204,9 +208,7 @@ class Kvideo(Kcomponent):
             hist = hist/len(colorsub)*100
             self.hist_data[i].y = hist
         try:
-            self.kapp.push_mods({
-                self.hist_graph_id: {"figure": self.hist_figure}
-            })
+            self.kapp.push_mods([Output(self.hist_graph_id, "figure", self.hist_figure)])
         except:
             pass
 
