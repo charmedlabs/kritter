@@ -43,6 +43,10 @@ from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue
 from .proxy import Proxy 
+from .telegramclient import TelegramClient
+from .ktextvisor import KtextVisor
+from .configfile import ConfigFile
+from .importconfig import import_config
 
 _comp_filepath = os.path.abspath(os.path.join(_basepath, 'kvideocomp', 'package-info.json'))
 with open(_comp_filepath) as f:
