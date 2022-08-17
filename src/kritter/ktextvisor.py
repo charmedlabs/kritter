@@ -131,7 +131,7 @@ def format_dict(content):
             res += '\n'
         k += ':'
         res += k.ljust(justify) + v
-    return res    
+    return res 
 
 class _KtextVisor:
     def __init__(self, text_client, etcdir):
@@ -139,6 +139,7 @@ class _KtextVisor:
         self.config_filename = os.path.join(etcdir, CONFIG_FILE) 
         self.config = ConfigFile(self.config_filename, DEFAULT_CONFIG) 
         self.callbacks = [self.native_callback] 
+        self.subscribe_callback = None
         self.context = {}
         self.lock = Lock()
         @self.text_client.callback_receive()
@@ -154,6 +155,38 @@ class _KtextVisor:
                     responses += [Response('Try "help".')]
             self.send_responses(sender, responses)
 
+        def subscribe(words, sender, context):
+            output = "error subscribing"
+            userid = str(sender['id'])
+            if not userid in self.config['subscribers'].keys():
+                self.config['subscribers'][userid] = sender
+                output = f"{sender['name']} is now subscribed"
+                # Update client code
+                if self.subscribe_callback:
+                    self.subscribe_callback()
+            else:
+                output = f"{sender['name']} is already subscribed"
+            self.config.save()
+            return output
+
+        def unsubscribe(words, sender, context):
+            output = "error unsubscribing"
+            userid = str(sender['id'])
+            if userid in self.config['subscribers'].keys():
+                del self.config['subscribers'][userid]
+                output = f"{sender['name']} has been unsubscribed"
+                # Update client code
+                if self.subscribe_callback:
+                    self.subscribe_callback()
+            else:
+                output = f"{sender['name']} was not subscribed"
+            self.config.save()
+            return output
+
+        self.tv_table = KtextVisorTable({
+            "subscribe": (subscribe, "Subscribe to Vizy updates."),
+            "unsubscribe": (unsubscribe, "Unsubscribe from Vizy updates.")})
+
     def close(self):
         try:
             self.server.stop_event.set()
@@ -161,12 +194,19 @@ class _KtextVisor:
         except:
             pass
 
+    # Callback to add to list of callbacks
     def callback_receive(self, prepend=False):
         def wrap_func(func):
             if prepend:
                 self.callbacks.insert(0, func)
             else:
                 self.callbacks.append(func)
+        return wrap_func
+
+    # Callback to update client code when users are subscribed or unsubscribed
+    def callback_subscribe(self):
+        def wrap_func(func):
+            self.subscribe_callback = func
         return wrap_func
 
     def call_callbacks(self, words, sender, context):
@@ -227,45 +267,13 @@ class _KtextVisor:
             self.text_client.send(content, sender)
 
     def native_callback(self, words, sender, context):
-        def subscribe(words, sender, context):
-            output = "error subscribing"
-            subscribers = self.config['subscribers']
-            userid = str(sender['id'])
-            if not userid in subscribers.keys():
-                subscribers[userid] = sender['name']
-                output = f"{sender['name']} is now subscribed"
-            else:
-                output = f"{sender['name']} is already subscribed"
-            self.config['subscribers'] = subscribers
-            self.config.save()
-            return output
+        return self.tv_table.lookup(words, sender, context)            
 
-        def unsubscribe(words, sender, context):
-            output = "error unsubscribing"
-            subscribers = self.config['subscribers']
-            userid = str(sender['id'])
-            if userid in subscribers.keys():
-                del subscribers[userid]
-                output = f"{sender['name']} has been unsubscribed"
-            else:
-                output = f"{sender['name']} was not subscribed"
-            self.config['subscribers'] = subscribers
-            self.config.save()
-            return output
-
-        tv_table = KtextVisorTable({
-            "subscribe": (subscribe, "Subscribe self to Vizy updates."),
-            "unsubscribe": (unsubscribe, "Unsubscribe self from Vizy updates.")})
-        @self.callback_receive()
-        def func(words, sender, context):
-            return tv_table.lookup(words, sender, context)            
-
-    def send(self, msg, to):
+    def send(self, msg, to=None):
         if to is None:
             # send to all subscribers using their Ids
-            subscribers = self.config['subscribers']
-            for userid in subscribers.keys():
-                self.text_client.send(msg, userid)
+            for subscriber in self.config['subscribers'].values():
+                self.text_client.send(msg, subscriber)
         else:
             self.text_client.send(msg, to)
 

@@ -54,7 +54,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
             with open(self.config_filename, "w") as file:
                 json.dump(self._config, file)
         except Exception as e:
-            print(f"Unable to write Texting config file {self.config_filename}: {e}")
+            print(f"Unable to write Telegram config file {self.config_filename}: {e}")
 
     def set_token(self, token):
         self._config['token'] = token
@@ -82,7 +82,15 @@ class TelegramClient(KtextClient): # Text Messaging Client
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
         if text:
-            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text, parse_mode="MarkdownV2"), self.loop).result()
+            text_ = text.strip().lower()
+            # Handle URLs
+            if text_.startswith("http://") or text_.startswith("https://"):
+                # markup can't handle periods -- they need to be escaped
+                text = text.replace('.', '\\.') 
+            # Print verbatim, fixed font    
+            else: 
+                text = "```\n"+text+"```"
+            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text=text, parse_mode="MarkdownV2"), self.loop).result()
     
     def image(self, image, to) -> None:
         if not self.application:
