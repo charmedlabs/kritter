@@ -26,3 +26,22 @@ class KfileClient:
     '''
     def get_url(self, path):
         pass
+
+    '''
+    deletes the folder or file at the path provided
+    '''
+    def delete(self, path):
+        pass
+
+    '''
+    opens and returns the file similar to the native python open(), the r option specifies read only
+    and the w method allows writing
+    '''
+    def open(self, path):
+        pass
+
+    '''
+    closes the already opened file and pushes any updates to drive
+    '''
+    def close(self, path):
+        pass

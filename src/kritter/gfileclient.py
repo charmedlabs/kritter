@@ -18,33 +18,39 @@ class GfileClient(KfileClient):
     '''
     def copy_to(self, location, destination, create=False):
         dirs = destination.split('/')[1:]
+        if not dirs[-1]:
+            dirs[-1] = location.split('/')[-1]
         # get the id of the users root directory
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
         parent_id = None
-        # follow the destination path
+        # follow the detination path
         for dir in dirs[:-1]:
             parent_id = id
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
-                # if createis true, creates the missing directories
+                # if create is true, creates the missing directories
                 if create:
                     id = self._create_folder(self.drive_client, dir, parent_id)
                 else:
                     raise Exception(f"the location '{destination}' could not be found in google drive")
-        folder_id = id
-        name = dirs[-1]
-        # check if the file already exists
-        check = self._search_file(self.drive_client,folder_id,name)
-        if(check != None):
-            raise Exception("the requested file already exists") 
+        check = self._search_file(self.drive_client,id,dirs[-1])
+        if check:   # something with that name exists
+            # if id is a folder:
+            if(self.drive_client.files().get(fileId=check).execute()['mimeType'] == 'application/vnd.google-apps.folder'):
+                name = location.split('/')[-1]
+                id = check
+            # if id is a file
+            else:
+                self.delete(destination)
+        else: # file does not exist
+            name = dirs[-1]
         # upload the file from 'location' path
-        file_meta = {'name': name, 'parents': [folder_id]}
+        file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
         file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
-        return(file.get("id"))
+        return(file.get("id")) 
         
-
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
@@ -122,8 +128,6 @@ class GfileClient(KfileClient):
     if the target is not found
     '''
     def _search_file(self, client, parent_id, target_name):
-        
-        # create drive api client
         page_token = None
         response = client.files().list(q=f"parents  in '{parent_id}' and name = '{target_name}'",pageToken=page_token).execute()
         for file in response.get('files', []):
