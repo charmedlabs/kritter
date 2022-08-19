@@ -33,7 +33,7 @@ class GfileClient(KfileClient):
                 if create:
                     id = self._create_folder(self.drive_client, dir, parent_id)
                 else:
-                    raise Exception(f"the location '{destination}' could not be found in google drive")
+                    return(False)
         check = self._search_file(self.drive_client,id,dirs[-1])
         if check:   # something with that name exists
             # if id is a folder:
@@ -42,14 +42,20 @@ class GfileClient(KfileClient):
                 id = check
             # if id is a file
             else:
-                self.delete(destination)
+                # delete old file
+                rm = '/'
+                name = dirs[-1]
+                for dir in dirs[:-1]:
+                    rm = rm + dir + '/'
+                rm = rm + name
+                self.delete(rm) 
         else: # file does not exist
             name = dirs[-1]
         # upload the file from 'location' path
         file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
         file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
-        return(file.get("id")) 
+        return(True) 
         
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
@@ -123,6 +129,38 @@ class GfileClient(KfileClient):
         return self.drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
 
     '''
+    deletes the folder or file at the path provided
+    '''
+    def delete(self, path):
+        dirs = path.split('/')[1:]
+        # get the id of the users root directory in google
+        root = self.drive_client.files().get(fileId='root').execute()['id']
+        id = root
+        # follow the location path
+        for dir in dirs:
+            id = self._search_file(self.drive_client,id,dir)
+            if(id == None):
+                raise Exception(f"the location '{path}' could not be found in google drive")
+        self.drive_client.files().delete(fileId=id).execute()
+
+    '''
+    opens and returns the file similar to the native python open(), for mode: the r option specifies read only
+    and the w method allows writing
+    '''
+    def open(self, path, mode):
+        if not (mode == 'r' or mode == 'w'):
+            raiseExceptions(f"{mode}: is not a valid mode")
+        self.copy_from(path, r'/tmp/tempfile')
+        f = open(path, "w")
+        _close_orig = f.close
+        def _close():
+            if(mode == 'w'):
+                self.copy_to(r'/tmp/tempfile', r"/test")
+            _close_orig()
+        f.close = _close
+        return f
+
+    '''
     search_file is a helper function that takes the id of the folder you wish to search in 
     as well as the name of what your looking for and returns the id of your target or None
     if the target is not found
@@ -144,4 +182,3 @@ class GfileClient(KfileClient):
         }
         folder = client.files().create(body = body).execute()
         return folder['id']
-

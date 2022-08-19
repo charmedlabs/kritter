@@ -34,10 +34,10 @@ class KfileClient:
         pass
 
     '''
-    opens and returns the file similar to the native python open(), the r option specifies read only
+    opens and returns the file similar to the native python open(), for mode: the r option specifies read only
     and the w method allows writing
     '''
-    def open(self, path):
+    def open(self, path, mode):
         pass
 
     '''
