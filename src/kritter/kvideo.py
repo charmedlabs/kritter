@@ -58,7 +58,7 @@ class Kvideo(Kcomponent):
         self.height = kwargs['height'] if 'height' in kwargs else None
         self.video_style = kwargs['video_style'] if 'video_style' in kwargs else {}
         self.hist_style = kwargs['hist_style'] if 'hist_style' in kwargs else self.video_style
-        self.overlay_style = kwargs['overlay_style'] if 'overlay_style' in kwargs else self.video_style
+        self.overlay_style = kwargs['overlay_style'] if 'overlay_style' in kwargs else {}
         self.max_area = kwargs['max_area'] if 'max_area' in kwargs else MAX_AREA
         self.hist_height = kwargs['hist_height'] if 'hist_height' in kwargs else HIST_HEIGHT
         self.source_width = self.source_height = None

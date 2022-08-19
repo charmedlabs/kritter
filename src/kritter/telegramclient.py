@@ -11,6 +11,7 @@
 import os
 import json
 import cv2
+import numpy as np
 from telegram import ForceReply, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, MessageHandler, filters
 import asyncio
@@ -104,11 +105,13 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 pass # We can pass http url's as-is.
             else:
                 raise RuntimeError(f"Unknown image type: {image}")
-        else: # assume it's a numpy array
+        elif isinstance(image, np.ndarray): 
             try:
                 image = cv2.imencode('.jpg', image)[1].tobytes()
             except Exception as e:
                 raise RuntimeError(f"Error processing image array: {e}")
+        else:
+            raise RuntimeError("Unsupported image type")
         # Run send_photo (coroutine)
         future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to['id'], image), self.loop)
         try:
