@@ -33,6 +33,9 @@ from .kdialog import Kdialog, KyesNoDialog, KokDialog, KprogressDialog, KsideMen
 from .ktext import Ktext
 from .ktextbox import KtextBox
 from .kradio import Kradio
+from .kcheckbox import Kcheckbox
+from .koverlay import Koverlay, OVERLAY_WIDTH_HEIGHT
+from .kimage import Kimage
 from .klogin import Klogin, PMASK_MAX, PMASK_MIN
 from .execterm import ExecTerm
 from .kimagedetector import KimageDetector, render_detected, render_detected_box, KimageDetectorThread

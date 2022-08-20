@@ -17,7 +17,7 @@ OVERLAY_WIDTH_HEIGHT = 10000
 
 class Koverlay:
     def __init__(self, underlay, kapp, service):
-        self.update_underlay_style(underlay.style)
+        self.underlay_style = underlay.style
         self.service = service
         self.kapp = kapp
         self.id = self.kapp.new_id("overlay")
@@ -43,7 +43,7 @@ class Koverlay:
 
     def style(self):
         style = {"position": "absolute", "top": "0px", "left": "0px"}
-        style.update(self._underlay_style)
+        style.update(self.underlay_style)
         return style
 
     def update_resolution(self, width, height):
@@ -52,9 +52,6 @@ class Koverlay:
         self.height = height
         self.figure['layout']['yaxis'] = dict(zeroline=False, showticklabels=False, fixedrange=True, showgrid=False, range=[self.height-1, 0])
         return self.out_draw()
-
-    def update_underlay_style(self, style):
-        self._underlay_style = style
 
     def callback_draw(self, state=()):
         def wrap_func(func):
@@ -84,21 +81,18 @@ class Koverlay:
             circle['line'] = line
         self.shapes.append(circle)
 
-
     def draw_line(self, x0, y0, x1, y1, line={}, editable=False, id=None):
         line__ = dict(color="gray", width=2)
         line__.update(line)
         line_ = dict(type="line", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, line=line__, editable=editable, id=id)
         self.shapes.append(line_)
-
     
     def draw_rect(self, x0, y0, x1, y1, fillcolor="gray", line=None, editable=False, id=None):
         rect = dict(type="rect", xref="x", yref="y", x0=x0, y0=y0, x1=x1, y1=y1, fillcolor=fillcolor, editable=editable, id=id)
         if line:
             rect['line'] = line
         self.shapes.append(rect)
-
-    
+   
     def draw_shape(self, points, fillcolor="gray", line=None, editable=False, id=None):
         try:
             for i, p in enumerate(points):
@@ -115,7 +109,6 @@ class Koverlay:
         if line:
             shape['line'] = line
         self.shapes.append(shape)
-
     
     def draw_text(self, x0, y0, text, font={}, fillcolor="white", padding=2, xanchor="center", yanchor="center", id=None):
         font_ = dict(family="sans serif", size=16, color="gray")
@@ -124,7 +117,6 @@ class Koverlay:
         self.annotations.append(text_)
 
     # rect, line, circle, openpath, closedpath
-    
     def draw_user(self, shape, fillcolor="gray", line=None):
         if not shape:
             self.figure['layout']['dragmode'] = None
@@ -132,46 +124,43 @@ class Koverlay:
             self.figure['layout']['dragmode'] = f"draw{shape}" 
         self.figure['layout']['newshape'] = dict(line=line, fillcolor=fillcolor)
 
-    
     def draw_clear(self, id=None):
         self.draw_clear_shapes(id)
         self.draw_clear_annotations(id)
         self.draw_clear_graphs(id)
-
     
     def draw_clear_shapes(self, id=None):
         if id is None:
             self.shapes = []
         else:
             self.shapes = [s for s in self.shapes if s['id']!=id]
-
-    
+   
     def draw_clear_annotations(self, id=None):
         if id is None:
             self.annotations = []
         else:
             self.annotations = [s for s in self.annotations if s['id']!=id]
-
     
     def draw_clear_graphs(self, id=None):
         if id is None:
             self.graphs = []
         else:
             self.graphs = [g for g in self.graphs if g.uid!=id]
-
     
     def draw_graph(self, graph, id=None):
         graph.uid = id
         self.graphs.append(graph)
 
-    
+    def out_style(self, underlay_style):
+        self.underlay_style = underlay_style
+        return [Output(self.id, "style", self.style())]
+
     def out_draw(self):
         self.figure['layout']['shapes'] = self.shapes
         self.figure['layout']['annotations'] = self.annotations
         self.figure['data'] = self.graphs        
         return [Output(self.id, "figure", self.figure)]  
 
-    
     def out_disp(self, disp):
         if disp:
             return [Output(self.div.id, "style", {"display": "block"})]
