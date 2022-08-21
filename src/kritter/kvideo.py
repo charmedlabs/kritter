@@ -8,11 +8,15 @@
 # support@charmedlabs.com. 
 #
 
+import os
 import time
 import numpy
 import cv2
+import base64
+from .kstoremedia import KstoreMedia
 from kritter.kvideocomp import KvideoComp
 from .streamer import Streamer
+from .kritter import file_in_path, MEDIA_DIR
 from .kcomponent import Kcomponent
 from dash_devices.dependencies import Input, Output
 import dash_core_components as dcc
@@ -50,6 +54,12 @@ class Kvideo(Kcomponent):
 
         self.width = kwargs['width'] if 'width' in kwargs else None
         self.height = kwargs['height'] if 'height' in kwargs else None
+
+        src = kwargs['src'] if 'src' in kwargs else None
+        loop = kwargs['loop'] if 'loop' in kwargs else False
+        controls = kwargs['controls'] if 'controls' in kwargs else True
+        autoplay = kwargs['autoplay'] if 'autoplay' in kwargs else False
+
         self.video_style = kwargs['video_style'] if 'video_style' in kwargs else {}
         self.hist_style = kwargs['hist_style'] if 'hist_style' in kwargs else self.video_style
         self.max_area = kwargs['max_area'] if 'max_area' in kwargs else MAX_AREA
@@ -61,8 +71,11 @@ class Kvideo(Kcomponent):
         self.streamer = Streamer(server=self.kapp.server, html=None, js=None)
 
         self.hist = html.Div(dcc.Graph(id=self.hist_graph_id, style=self._hist_style(), config={'displayModeBar': False}), id=self.hist_id, style={"display": "block" if self.hist_disp else "none"})
- 
-        self.video = KvideoComp(id=self.id, style=self._video_style())
+        if src is None:           
+            self.video = KvideoComp(id=self.id, style=self._video_style())
+        else:
+            self.video = html.Video(id=self.id, src=self._build_src(src), controls=controls, muted=True, autoPlay=autoplay, loop=loop, style=self._video_style())
+
         if overlay:
             self.overlay = Koverlay(self.video, self.kapp, self.service)
             self.video.overlay_id = self.overlay.id
@@ -179,6 +192,30 @@ class Kvideo(Kcomponent):
         except:
             pass
 
+    def _build_src(self, src):
+        if src is None:
+            return ""
+        elif isinstance(src, str):
+            if src=="":
+                return "" 
+            # If the file is in our media_path, just add the MEDIA_DIR (we can load directly)
+            if file_in_path(self.kapp.media_path, src):
+                return os.path.join("/"+MEDIA_DIR, src)
+            # Otherwise the best way to send the image is to load it, encode it, and send as base64 string
+            else: 
+                encoded = base64.b64encode(open(src, 'rb').read())
+                return f"data:video/mp4;charset=utf-8;base64,{encoded.decode('utf-8')}" 
+        # If it's an array, encode it as jpg, then and send as base64 string
+        elif str(type(src))=="<class 'kcamera.streamer'>": # extension doesn't have accessible types
+            sm = KstoreMedia()
+            sm.store_video_stream(src)
+            with open(sm.tempvideo, 'rb') as f:
+                image = f.read()
+            image = base64.b64encode(image)
+            return f"data:video/mp4;charset=utf-8;base64,{image.decode('utf-8')}" 
+        else:
+            raise RuntimeError("Unsupported image type")
+
     def callback_click(self, state=()):
         def wrap_func(func):
             @wraps(func)
@@ -234,3 +271,6 @@ class Kvideo(Kcomponent):
 
     def out_width(self, value):
         return self.out_width_height(width=value)
+
+    def out_src(self, src):
+        return [Output(self.id, "src", self._build_src(src))]

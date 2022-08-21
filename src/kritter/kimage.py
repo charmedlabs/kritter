@@ -18,7 +18,7 @@ import numpy as np
 
 class Kimage(Kcomponent):
     def __init__(self, **kwargs):
-        super().__init__('Kchecklist', **kwargs)
+        super().__init__('Kimage', **kwargs)
 
         src = kwargs['src'] if 'src' in kwargs else ""
         width = kwargs['width'] if 'width' in kwargs else None

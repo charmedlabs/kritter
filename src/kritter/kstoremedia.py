@@ -32,7 +32,7 @@ class KstoreMedia:
         frame = stream.frame()
         if not frame:
             return
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
         writer = cv2.VideoWriter(self.tempvideo, fourcc, fps, (frame[0].shape[1], frame[0].shape[0]))
         i=1
         while frame:
