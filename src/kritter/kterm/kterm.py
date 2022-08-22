@@ -130,6 +130,15 @@ class Kterm:
             logger.debug('spawn')
             await self.connect()
 
+        # If no command, we are going to "term-ify" the existing process
+        if not self.command:
+            self.single = True 
+            self.start_single_process()
+            # One side of the fork becomes the server
+            if self.single_pid:
+                self.run()
+                # Don't fall through
+                os._exit(0)
 
     def run(self, port=PORT):
         app = Quart("kterm")
@@ -141,7 +150,6 @@ class Kterm:
         # and exit cleanly.
         if self.single_pid:
             os.kill(self.single_pid, signal.SIGTERM)
-        #app.run(debug=False, use_reloader=False, host="0.0.0.0", port=port, loop=self.loop)#, certfile='cert.pem', keyfile='cert.pem')
 
     def set_winsize(self, fd, row, col):
         logger.debug('set_winsize ' + str(row) + str(col))
@@ -174,6 +182,9 @@ class Kterm:
         if client is not None:
             try:
                 data = os.read(client.fd, 0x8000).decode()
+                # If no command, go ahead and pass-thru stdout
+                if not self.command:
+                    print(data, end="")
             except IOError:
                 self.loop.remove_reader(client.fd)
                 return
@@ -181,6 +192,9 @@ class Kterm:
         else:
             try:
                 data = os.read(self.single_fd, 0x8000).decode()
+                # If no command, go ahead and pass-thru stdout
+                if not self.command:
+                    print(data, end="")
             except IOError:
                 self.loop.remove_reader(self.single_fd)
                 return
@@ -199,12 +213,12 @@ class Kterm:
             try:
                 if self.logfile:
                     os.execvp("script", ("script", "-f", self.logfile, "-c", self.script.format(self.command)))
-                else:
+                elif self.command:
                     os.execvp("bash", ("bash", "-c", self.script.format(self.command)))
+                # else fall through, continue execute current process
             except Exception as e:
                 print(f"Unable to start: {e}")
-        else:
-            return pid, fd
+        return pid, fd
 
     def start_single_process(self, command=None):
         if not self.single:
@@ -213,6 +227,8 @@ class Kterm:
             self.command = command
 
         self.single_pid, self.single_fd = self.fork()
+        if self.single_pid==0:
+            return 0
         # Spawn a thread to wait for child to exit, then return exit code.
         if self.wfc_thread:
             wait_thread = Thread(target=self.wait_for_child)

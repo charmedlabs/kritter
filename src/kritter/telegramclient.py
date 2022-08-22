@@ -24,11 +24,6 @@ References:
 2. Ayncio | Coroutines and Tasks | https://docs.python.org/3/library/asyncio-task.html?highlight=run_coroutine_threadsafe#asyncio.run_coroutine_threadsafe
 """
 
-dev_tokens = {
-    'matt': "5487939010:AAGDFGNneria4_npbFNpj5ONDFDc7Uxnyd8",
-    'other': ""
-}
-
 DEFAULT_TIMEOUT = 60 * 5 # seconds; five minute timeout
 CONFIG_FILE = 'telegram_config.json'
 
