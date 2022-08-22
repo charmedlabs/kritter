@@ -19,8 +19,14 @@ def _hash(string):
         
 class KimageDetector:
 
+    def __init__(self):
+        self._classes = []
+
     def detect(self, image, threshold=None):
         pass
+
+    def classes(self):
+        return self._classes
 
 from threading import Thread, Lock
 

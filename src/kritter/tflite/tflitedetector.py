@@ -9,6 +9,7 @@
 #
 
 import os
+from pydoc import importfile
 from kritter import KimageDetector
 from tflite_support.task import core
 from tflite_support.task import processor
@@ -19,14 +20,19 @@ BASEDIR = os.path.dirname(__file__)
 
 class TFliteDetector(KimageDetector):
     def __init__(self, model=None, threshold=0.75):
+        super().__init__()
         # If model isn't specified, use the common objects network
         if not model:
-            model = os.path.join(BASEDIR, "efficientdet_lite0.tflite") 
+            model = os.path.join(BASEDIR, "efficientdet_lite0.tflite")
+        self.get_consts(model)
         self.threshold = threshold
         base_options = core.BaseOptions(file_name=model, use_coral=False, num_threads=4)
         detection_options = processor.DetectionOptions(score_threshold=0.1)
         options = vision.ObjectDetectorOptions(base_options=base_options, detection_options=detection_options)
         self.detector = vision.ObjectDetector.create_from_options(options)
+
+    def foo(self):
+        print("foo")
 
     def detect(self, image, threshold=None):
         if not threshold:
@@ -56,3 +62,15 @@ class TFliteDetector(KimageDetector):
             }
             res.append(obj)
         return res  
+
+    def get_consts(self, model):
+        assert(model.endswith("tflite"))
+        consts_file = model[0:-6]+"py"
+        try:
+            consts = importfile(consts_file)
+            self._classes = consts.CLASSES
+        except:
+            pass
+
+        print(self.classes)
+
