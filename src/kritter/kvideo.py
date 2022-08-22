@@ -274,3 +274,7 @@ class Kvideo(Kcomponent):
 
     def out_src(self, src):
         return [Output(self.id, "src", self._build_src(src))]
+
+    def out_disp(self, state):
+        style = {'display': 'block'} if state else {'display': 'none'}
+        return [Output(self.id_div, "style", style)]

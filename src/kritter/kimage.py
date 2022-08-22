@@ -20,6 +20,7 @@ class Kimage(Kcomponent):
     def __init__(self, **kwargs):
         super().__init__('Kimage', **kwargs)
 
+        self.id_div = self.id + '-div'
         src = kwargs['src'] if 'src' in kwargs else ""
         width = kwargs['width'] if 'width' in kwargs else None
         height = kwargs['height'] if 'height' in kwargs else None
@@ -30,13 +31,14 @@ class Kimage(Kcomponent):
             style["max-width"] = f"{width}px"
         if height:
             style["max-height"] = f"{height}px"
-        image = html.Img(id=self.kapp.new_id(), src=self._build_src(src), style=style)
+        image = html.Img(id=self.id, src=self._build_src(src), style=style)
 
         if overlay:
             self.overlay = Koverlay(image, self.kapp, self.service)
-            self.set_layout(image, self.overlay.layout)
+            self.overlay.layout.id = self.id_div
+            self.layout = self.overlay.layout
         else:
-            self.set_layout(image, html.Div(image))
+            self.layout = Div(image, id=self.id_div)
 
     def _build_src(self, src):
         if src is None:
@@ -66,3 +68,7 @@ class Kimage(Kcomponent):
 
     def out_src(self, src):
         return [Output(self.id, "src", self._build_src(src))]
+
+    def out_disp(self, state):
+        style = {'display': 'block'} if state else {'display': 'none'}
+        return [Output(self.id_div, "style", style)]
