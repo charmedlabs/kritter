@@ -8,7 +8,7 @@
 # support@charmedlabs.com. 
 #
 
-from kritter import get_bgr_color
+from kritter import get_color
 import cv2 
 
 def _hash(string):
@@ -120,9 +120,9 @@ def render_detected(image, detected, disp_score=True, x_offset=0, y_offset=0, fo
             else:
                 txt = i['class']
             try:
-                color = get_bgr_color(i['index'])
+                color = get_color(i['index'], bgr=True)
             except:
-                color = get_bgr_color(_hash(i['class']))
+                color = get_color(_hash(i['class']), bgr=True)
             render_detected_box(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
     if isinstance(detected, dict):
@@ -131,6 +131,6 @@ def render_detected(image, detected, disp_score=True, x_offset=0, y_offset=0, fo
                 txt = f"{v['class']} {i}, {v['score']:.2f}"
             else:
                 txt = f"{v['class']}"
-            color = get_bgr_color(hash(v['class']))
+            color = get_color(hash(v['class']), bgr=True)
             render_detected_box(image, color, txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 

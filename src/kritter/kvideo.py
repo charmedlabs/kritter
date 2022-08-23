@@ -205,7 +205,7 @@ class Kvideo(Kcomponent):
             else: 
                 encoded = base64.b64encode(open(src, 'rb').read())
                 return f"data:video/mp4;charset=utf-8;base64,{encoded.decode('utf-8')}" 
-        # If it's an array, encode it as jpg, then and send as base64 string
+        # If it's a kcamera streamer, encode it as mp4, then and send as base64 string
         elif str(type(src))=="<class 'kcamera.streamer'>": # extension doesn't have accessible types
             sm = KstoreMedia()
             sm.store_video_stream(src)
