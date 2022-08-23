@@ -11,11 +11,6 @@
 from kritter import get_color
 import cv2 
 
-def _hash(string):
-    val = 1
-    for c in string:
-        val *= ord(c)
-    return val 
         
 class KimageDetector:
 
@@ -62,8 +57,50 @@ class KimageDetectorThread(KimageDetector):
             self.run_thread = False
             self.thread.join()
 
+def _hash(string):
+    val = 7
+    for c in string:
+        val += val*31 + ord(c)
+    return val 
 
-def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
+def render_detected_box(overlay, color, label, box, font, font_size, line_width):
+    html_color = f'rgb({color[0]},{color[1]},{color[2]}' 
+    overlay.draw_rect(*box[0:4], fillcolor="rgba(0,0,0,0)", line=dict(color=html_color, width=line_width), id='render_detected_box')
+
+    offset = int(line_width/2)
+    xoffset = 0 if box[0]<offset else -offset
+    if box[1]<font_size*1.4:
+        yoffset = 0 if box[1]<offset else -offset
+        yanchor = "top"
+    else:
+        yoffset = offset
+        yanchor = "bottom"
+
+    # Perform an elaborate calculation to determine if we should have white or black text
+    color_calc = color[0]*0.8+color[1]*1.4+color[2]*0.5
+    text_color = "white" if color_calc<350 else "black"
+
+    overlay.draw_text(box[0]+xoffset, box[1]+yoffset, label, font=dict(family=font, size=font_size, color=text_color), fillcolor=html_color, xanchor="left", yanchor=yanchor, id='render_detected_box')
+
+def render_detected(overlay, detected, disp_score=True, font="sans-serif", font_size=12, line_width=2):
+    overlay.draw_clear(id='render_detected_box')
+    _detected = detected.values() if isinstance(detected, dict) else detected
+    for i in _detected:
+        if disp_score:
+            txt = f"{i['class']} {i['score']*100:.0f}%"
+        else:
+            txt = i['class']
+        try:
+            index = i['index']
+        except:
+            index = _hash(i['class'])
+        color = get_color(index)
+        render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width)
+
+    return overlay.out_draw()
+
+
+def render_detected_box_image(image, color, label, box, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
 
     if font_width==0:
         font_width = int(font_size*2 + 0.5)
@@ -111,26 +148,19 @@ def render_detected_box(image, color, label, box, x_offset=0, y_offset=0, font=c
             cv2.putText(image, label, (box[0]+x_offset+padding+bg_3d, box[1]+y_offset+hoffs+bg_3d), font, font_size, bg_color, font_width*bg_outline)
         cv2.putText(image, label, (int(box[0]+x_offset+padding), int(box[1]+y_offset+hoffs)), font, font_size, (255, 255, 255), font_width)
 
-def render_detected(image, detected, disp_score=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
+def render_detected_image(image, detected, disp_score=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
 
-    if isinstance(detected, list):
-        for i in detected:
-            if disp_score:
-                txt = f"{i['class']} {i['score']:.2f}"
-            else:
-                txt = i['class']
-            try:
-                color = get_color(i['index'], bgr=True)
-            except:
-                color = get_color(_hash(i['class']), bgr=True)
-            render_detected_box(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+    _detected = detected.values() if isinstance(detected, dict) else detected
+    for i in _detected:
+        if disp_score:
+            txt = f"{i['class']} {i['score']*100:.0f}%"
+        else:
+            txt = i['class']
+        try:
+            index = i['index']
+        except:
+            index = _hash(i['class'])
+        color = get_color(index, bgr=True)
+        render_detected_box_image(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
-    if isinstance(detected, dict):
-        for i, v in detected.items():
-            if disp_score:
-                txt = f"{v['class']} {i}, {v['score']:.2f}"
-            else:
-                txt = f"{v['class']}"
-            color = get_color(hash(v['class']), bgr=True)
-            render_detected_box(image, color, txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
