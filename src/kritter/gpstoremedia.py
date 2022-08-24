@@ -9,6 +9,7 @@
 #
 
 import os
+import json
 import pickle
 import requests
 from .kstoremedia import KstoreMedia
@@ -36,7 +37,7 @@ class GPstoreMedia(KstoreMedia):
         return r.content
 
 
-    def store_image_file(self, filename, album="", desc=""):
+    def store_image_file(self, filename, album="", desc="", data={}):
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
 
         album_id = None
@@ -70,6 +71,12 @@ class GPstoreMedia(KstoreMedia):
 
         # Call the Drive v3 API
         upload_token = self._post_gphoto(filename)
+        # If we want to save data with picture instead of just a description string, 
+        # turn description string into a json string and add desc (if needed).
+        if data:
+            if desc:
+                data['desc'] = desc
+            desc = json.dumps(data)
         body = {
             'album_id': album_id, 
             'newMediaItems': [
@@ -89,6 +96,6 @@ class GPstoreMedia(KstoreMedia):
         results = service.mediaItems().batchCreate(body=body).execute()
         return results['newMediaItemResults'][0]['mediaItem']['productUrl']
 
-    def store_video_file(self, filename, album="", desc=""):
+    def store_video_file(self, filename, album="", desc="", data={}):
         # Google Photos accepts videos through the same API path as images.
         return self.store_image_file(filename, album, desc)

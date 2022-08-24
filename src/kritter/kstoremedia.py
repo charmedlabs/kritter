@@ -21,14 +21,14 @@ class KstoreMedia:
         self.tempimage = os.path.join(TEMPDIR, self.tempfile+".jpg")
         self.tempvideo = os.path.join(TEMPDIR, self.tempfile+".mp4")
 
-    def store_image_array(self, array, album="", desc=""):
+    def store_image_array(self, array, album="", desc="", data={}):
         cv2.imwrite(self.tempimage, array, [cv2.IMWRITE_JPEG_QUALITY, 100])
-        return self.store_image_file(self.tempimage, album, desc)
+        return self.store_image_file(self.tempimage, album, desc, data)
 
-    def store_image_file(self, filename, album="", desc=""):
+    def store_image_file(self, filename, album="", desc="", data={}):
         pass
 
-    def store_video_stream(self, stream, fps=30, album="", desc=""):
+    def store_video_stream(self, stream, fps=30, album="", desc="", data={}):
         frame = stream.frame()
         if not frame:
             return
@@ -41,7 +41,7 @@ class KstoreMedia:
             i += 1
         writer.release()
         print(f"Wrote {i} frames") # Note, can't just print the stream.len() because it may not be ready yet.   
-        return self.store_video_file(self.tempvideo, album, desc)
+        return self.store_video_file(self.tempvideo, album, desc, data)
 
-    def store_video_file(self, filename, album="", desc=""):
+    def store_video_file(self, filename, album="", desc="", data={}):
         pass

@@ -69,7 +69,7 @@ class TFliteDetector(KimageDetector):
         try:
             consts = importfile(consts_file)
             self._classes = consts.CLASSES
-            self._classes.sort()
+            self._classes.sort(key=lambda c: c.lower())
         except:
             pass
 
