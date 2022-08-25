@@ -21,11 +21,16 @@ class Kimage(Kcomponent):
         super().__init__('Kimage', **kwargs)
 
         self.id_div = self.id + '-div'
+        # outer Div style
+        # Even though Kcomponent has it's own styling, we're going with the strict CSS
+        # styling because we're being displayed as a single column (no label, etc.)
+        self.style = kwargs['style'] if 'style' in kwargs else {}
         src = kwargs['src'] if 'src' in kwargs else ""
         width = kwargs['width'] if 'width' in kwargs else None
         height = kwargs['height'] if 'height' in kwargs else None
         overlay = kwargs['overlay'] if 'overlay' in kwargs else False
 
+        # Img style
         style = {"width": "100%", "height": "100%"}
         if width:
             style["max-width"] = f"{width}px"
@@ -35,10 +40,8 @@ class Kimage(Kcomponent):
 
         if overlay:
             self.overlay = Koverlay(image, self.kapp, self.service)
-            self.overlay.layout.id = self.id_div
-            self.layout = self.overlay.layout
-        else:
-            self.layout = html.Div(image, id=self.id_div)
+            image = self.overlay.layout
+        self.layout = html.Div(image, id=self.id_div, style=self.style)
 
     def _build_src(self, src):
         if src is None:
@@ -70,5 +73,5 @@ class Kimage(Kcomponent):
         return [Output(self.id, "src", self._build_src(src))]
 
     def out_disp(self, state):
-        style = {'display': 'block'} if state else {'display': 'none'}
+        style = {**self.style, 'display': 'block'} if state else {'display': 'none'}
         return [Output(self.id_div, "style", style)]
