@@ -48,9 +48,10 @@ class KimageDetectorThread(KimageDetector):
 
     def run(self):
         while self.run_thread:
-            result = self.detector.detect(self.image, self.threshold)
+            active_image = self.image
+            result = self.detector.detect(active_image, self.threshold)
             with self.lock:
-                self.result = result
+                self.result = result, active_image
 
     def close(self):
         if self.thread:

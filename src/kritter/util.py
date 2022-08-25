@@ -59,7 +59,10 @@ get_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "
 
 
 def file_extension(filename):
-    return filename.split(".")[-1].lower()
+    return filename.split(".")[-1]
+
+def file_basename(filename):
+    return filename.split(".")[0]
 
 
 def valid_image_name(filename):

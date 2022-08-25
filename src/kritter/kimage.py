@@ -38,7 +38,7 @@ class Kimage(Kcomponent):
             self.overlay.layout.id = self.id_div
             self.layout = self.overlay.layout
         else:
-            self.layout = Div(image, id=self.id_div)
+            self.layout = html.Div(image, id=self.id_div)
 
     def _build_src(self, src):
         if src is None:

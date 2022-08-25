@@ -122,26 +122,7 @@ class classproperty(object):
 
 class Kritter(Dash):
 
-    # Context variable for referencing the kapp variable.  
-    # If we have more than one kritter server, we can either pass
-    # around the different kapp objects, or we can create a new context
-    # by calling Kritter.new_context(func) where func()  
-    # can instantiate a new Kritter and references to Kritter.kapp will 
-    # be independent from the other kritter servers.   
-    _kapp_var = contextvars.ContextVar('kapp')
-
-    @classproperty 
-    def kapp(cls):
-        try:
-            return cls._kapp_var.get()
-        except:
-            return None 
-
-    @classmethod
-    def new_context(cls, func):
-        context = contextvars.copy_context()
-        context.run(func)
-
+    kapp = None  
     # Used for id generator
     _id_count = 0
 
@@ -150,7 +131,8 @@ class Kritter(Dash):
         super().__init__("kritter", server=server)
 
         self.config.suppress_callback_exceptions = True
-        Kritter._kapp_var.set(self)
+        if Kritter.kapp is None:
+            Kritter.kapp = self
 
         self.main_div = html.Div([], id="_main") 
         self.title = "Kritter"

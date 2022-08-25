@@ -16,14 +16,11 @@ from collections import defaultdict
 import cv2
 import datetime
 from .kstoremedia import KstoreMedia
-from .util import file_extension, valid_image_name, valid_video_name, valid_media_name
+from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name
 
 UPLOADED = "U"
 KEEP_UPLOADED = 100
 KEEP = 100
-
-def basename(filename):
-    return filename.split(".")[0]
 
 class SaveMediaQueue(KstoreMedia):
 
@@ -85,7 +82,7 @@ class SaveMediaQueue(KstoreMedia):
                     files = sorted(files)
                     for i in range(len(files)-keep):
                         file = os.path.join(self.path, files[i])
-                        for f in (file, basename(file)+".json", basename(file)[0:-len(UPLOADED)]+".json"):
+                        for f in (file, file_basename(file)+".json", file_basename(file)[0:-len(UPLOADED)]+".json"):
                             try:
                                 os.remove(f)
                             except:
@@ -97,13 +94,13 @@ class SaveMediaQueue(KstoreMedia):
         return os.path.join(self.path, datetime.datetime.now().strftime(f"%Y_%m_%d_%H_%M_%S_%f.{ext}"))
 
     def _save_metadata(self, filename, data):
-        with open(f'{basename(filename)}.json', 'w') as file:
+        with open(f'{file_basename(filename)}.json', 'w') as file:
             json.dump(data, file)   
 
     def _load_metadata(self, filename):
         # return defaultdict because we don't want lookup exceptions
         try:
-            with open(f'{basename(filename)}.json') as file:
+            with open(f'{file_basename(filename)}.json') as file:
                 return defaultdict(str, json.load(file))
         except:
             return defaultdict(str)  
