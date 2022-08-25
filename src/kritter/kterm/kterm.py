@@ -131,7 +131,7 @@ class Kterm:
             await self.connect()
 
         # If no command, we are going to "term-ify" the existing process
-        if not self.command:
+        if self.command is None:
             self.single = True 
             self.start_single_process()
             # One side of the fork becomes the server
@@ -183,7 +183,7 @@ class Kterm:
             try:
                 data = os.read(client.fd, 0x8000).decode()
                 # If no command, go ahead and pass-thru stdout
-                if not self.command:
+                if self.command is None:
                     print(data, end="")
             except IOError:
                 self.loop.remove_reader(client.fd)
@@ -193,7 +193,7 @@ class Kterm:
             try:
                 data = os.read(self.single_fd, 0x8000).decode()
                 # If no command, go ahead and pass-thru stdout
-                if not self.command:
+                if self.command is None:
                     print(data, end="")
             except IOError:
                 self.loop.remove_reader(self.single_fd)
@@ -213,7 +213,7 @@ class Kterm:
             try:
                 if self.logfile:
                     os.execvp("script", ("script", "-f", self.logfile, "-c", self.script.format(self.command)))
-                elif self.command:
+                elif self.command is not None:
                     os.execvp("bash", ("bash", "-c", self.script.format(self.command)))
                 # else fall through, continue execute current process
             except Exception as e:

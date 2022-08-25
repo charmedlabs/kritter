@@ -86,6 +86,8 @@ class Kcomponent:
             c.style.update({'display': 'block'} if self.disp else {'display': 'none'})
             self.col_info.append({"id": c.id, "style": c.style})
 
+    def to_plotly_json(self):
+        return self.layout
 
     def append(self, component):
         if not isinstance(component, Kcomponent):

@@ -73,6 +73,9 @@ class Kdialog:
         def func(open_):
             pass
 
+    def to_plotly_json(self):
+        return self.layout
+
     def out_title(self, title):
         return [Output(self.header.id, "children", title)]
 
