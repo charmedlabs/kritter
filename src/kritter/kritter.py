@@ -194,13 +194,33 @@ class Kritter(Dash):
         _style = KRITTER_STYLE + _style
         self.index_string = index_string(_style)
 
+    
+    # Kcomponents need to be "unwrapped" to put the underlying Dash components
+    # into the layout.  This is a convenience -- so we can treat Kcomponents 
+    # like Dash components.  We just need to make sure that any 
+    # Kcomponents that make into the layout need to be unwrapped before they can be 
+    # used by Dash. 
+    @staticmethod
+    def unwrap(layout):
+        from .kdialog import Kdialog
+        if hasattr(layout, "children"):
+            layout.children = Kritter.unwrap(layout.children)
+        if isinstance(layout, (Kcomponent, Kdialog)):
+            layout = layout.layout = Kritter.unwrap(layout.layout)
+        elif isinstance(layout, (list, tuple)):
+            if isinstance(layout, tuple):
+                layout = list(layout)
+            for i in range(len(layout)):
+                layout[i] = Kritter.unwrap(layout[i])
+        return layout
+
     @property
     def layout(self):
         return self.main_div.children
 
     @layout.setter
     def layout(self, layout):
-        self.push_mods(Output(self.main_div.id, "children", layout))
+        self.push_mods(Output(self.main_div.id, "children", Kritter.unwrap(layout)))
 
     def get_media_url(self, filename):
         return os.path.join(MEDIA_URL_PATH, filename)

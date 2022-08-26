@@ -73,10 +73,6 @@ class Kdialog:
         def func(open_):
             pass
 
-    # This is used by Dash to render component
-    def to_plotly_json(self):
-        return self.layout
-
     def out_title(self, title):
         return [Output(self.header.id, "children", title)]
 
