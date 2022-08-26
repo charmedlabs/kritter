@@ -10,7 +10,6 @@
 
 from kritter import get_color
 import cv2 
-
         
 class KimageDetector:
 
@@ -70,7 +69,7 @@ def render_detected_box(overlay, color, label, box, font, font_size, line_width)
 
     offset = int(line_width/2)
     xoffset = 0 if box[0]<offset else -offset
-    if box[1]<font_size*1.4:
+    if box[1]<font_size*3:
         yoffset = 0 if box[1]<offset else -offset
         yanchor = "top"
     else:

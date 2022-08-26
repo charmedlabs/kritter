@@ -27,6 +27,7 @@ class Koverlay:
         self.figure = dict(
             layout=dict(
                 showlegend=False,
+                dragmode=False, # disable dragmode -- to prevent interfering with scrolling on mobile
                 hovermode='closest',
                 xpad=0,
                 ypad=0,
@@ -119,7 +120,7 @@ class Koverlay:
     # rect, line, circle, openpath, closedpath
     def draw_user(self, shape, fillcolor="gray", line=None):
         if not shape:
-            self.figure['layout']['dragmode'] = None
+            self.figure['layout']['dragmode'] = False
         else: 
             self.figure['layout']['dragmode'] = f"draw{shape}" 
         self.figure['layout']['newshape'] = dict(line=line, fillcolor=fillcolor)
