@@ -187,6 +187,15 @@ class _KtextVisor:
             "subscribe": (subscribe, "Subscribe to Vizy updates."),
             "unsubscribe": (unsubscribe, "Unsubscribe from Vizy updates.")})
 
+        @self.tv_table.callback_help()
+        def func(help_dict, words, sender, context):
+            if str(sender['id']) in self.config['subscribers']:
+                del help_dict['subscribe']
+            else:
+                del help_dict['unsubscribe']
+            return help_dict
+
+
     def close(self):
         try:
             self.server.stop_event.set()
@@ -278,13 +287,24 @@ class _KtextVisor:
             self.text_client.send(msg, to)
 
 class KtextVisorTable:
-    def __init__(self, table, help_claim=False):
+    def __init__(self, table):
         self.table = table
-        self.help_claim = help_claim
+        self.help_callback = None
+
+    # Callback to add to list of callbacks
+    def callback_help(self):
+        def wrap_func(func):
+            self.help_callback = func
+        return wrap_func
 
     def lookup(self, words, sender, context):
         if words[0].lower()=="help":
-            return Response({k: v[1] for k, v in self.table.items() if v[1]}, claim=self.help_claim)
+            help_dict = {k: v[1] for k, v in self.table.items() if v[1]}
+            if self.help_callback:
+                help_dict = self.help_callback(help_dict, words, sender, context)
+                if isinstance(help_dict, Response):
+                    return help_dict 
+            return Response(help_dict, claim=False)
         else:
             for k, v in self.table.items():
                 if fnmatch.fnmatch(words[0].lower(), k):

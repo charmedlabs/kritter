@@ -205,7 +205,6 @@ class Kterm:
             if len(self.buffer)>self.buffer_max_size:
                 self.buffer = self.buffer[int(0.2*self.buffer_max_size):]
 
-
     def fork(self):
         logger.debug("fork")
         pid, fd = pty.fork()
@@ -282,6 +281,10 @@ class Kterm:
         logger.debug("done waiting_for_child")
         os._exit(obj.si_status)
 
+    def print(self, msg):
+        for client in self.clients:
+            client.queue.put_nowait({"id": "output", "data": msg+"\n\r"})
+             
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="A terminal that runs any command-line program and renders it in your browser.",

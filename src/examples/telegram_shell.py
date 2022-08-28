@@ -41,11 +41,15 @@ class Shell:
             "ctrl-c": (ctrl_c, "Interrupts current program."),
             "exit": (exit, "Exits shell."),
             "*": (command, "Any shell command.")
-        }, help_claim=True) # help_claim basically says that we're claiming all commands
+        })
         tv_table = KtextVisorTable({
             "shell": (shell, "Starts shell."),
             "*": (shell_other, None)
         })
+
+        @self.tv_shell_table.callback_help()
+        def func(help_dict, words, sender, context):
+            return Response(help_dict, claim=True) # claim help
 
         @self.text_visor.callback_receive(True)
         def func(words, sender, context):
