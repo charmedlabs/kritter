@@ -24,9 +24,8 @@ class Kchecklist(Kcomponent):
         value = kwargs['value'] if 'value' in kwargs else [] 
         scrollable = kwargs['scrollable'] if 'scrollable' in kwargs else False
         clear_check_all = kwargs['clear_check_all'] if 'clear_check_all' in kwargs else False
-        body = self.name if isinstance(self.name, list) else [self.name]
 
-        button = dbc.Button(body, disabled=self.disabled)
+        button = dbc.Button(Kritter.icon("chevron-right", padding=0), disabled=self.disabled, size="sm")
         options = [{'label': option, 'value': option} for option in options]
         self.checklist = dbc.Checklist(options=options, value=value, id=self.kapp.new_id())
         if clear_check_all:
@@ -52,9 +51,16 @@ class Kchecklist(Kcomponent):
         else:
             style = {"padding": "5px"}
         po_body = html.Div(po_children, style=style)
-        po = dbc.Popover(po_body, trigger="legacy", hide_arrow=True)
-        self.set_layout(button, html.Div([button, po]))
+        po = dbc.Popover(po_body, id=self.id+"po", trigger="legacy", hide_arrow=True)
+        self.set_layout(button)
+        self.cols.append(po)
         po.target = button.id
+
+        @self.kapp.callback(None, [Input(po.id, "is_open")])
+        def func(_open):
+            icon = "chevron-left" if _open else "chevron-right"
+            return Output(button.id, "children", Kritter.icon(icon, padding=0))
+
 
     def callback(self, state=()):
         def wrap_func(func):
