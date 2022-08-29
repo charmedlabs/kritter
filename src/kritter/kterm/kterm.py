@@ -188,7 +188,8 @@ class Kterm:
             except IOError:
                 self.loop.remove_reader(client.fd)
                 return
-            client.queue.put_nowait({"id": "output", "data": data})
+            # asyncio queue isn't threadsafe, so run it this way from thread-land
+            asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": data}), self.loop)
         else:
             try:
                 data = os.read(self.single_fd, 0x8000).decode()
@@ -200,7 +201,8 @@ class Kterm:
                 return
             # Print output of child process. Should this be a command line option?
             for client in self.clients:
-                client.queue.put_nowait({"id": "output", "data": data})
+                # asyncio queue isn't threadsafe, so run it this way from thread-land
+                asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": data}), self.loop)
             self.buffer += data
             if len(self.buffer)>self.buffer_max_size:
                 self.buffer = self.buffer[int(0.2*self.buffer_max_size):]
@@ -246,7 +248,7 @@ class Kterm:
             self.loop.add_reader(fd, self.reader_callback, client)
         else:
             client = Client(None)
-            client.queue.put_nowait({"id": "output", "data": self.buffer})
+            await client.queue.put({"id": "output", "data": self.buffer})
 
         self.clients.append(client)
 
@@ -283,7 +285,8 @@ class Kterm:
 
     def print(self, msg):
         for client in self.clients:
-            client.queue.put_nowait({"id": "output", "data": msg+"\n\r"})
+            # asyncio queue isn't threadsafe, so run it this way from thread-land
+            asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": msg+"\n\r"}), self.loop)
              
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

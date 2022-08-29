@@ -31,9 +31,7 @@ class TFliteDetector(KimageDetector):
         options = vision.ObjectDetectorOptions(base_options=base_options, detection_options=detection_options)
         self.detector = vision.ObjectDetector.create_from_options(options)
 
-    def foo(self):
-        print("foo")
-
+ 
     def detect(self, image, threshold=None):
         if not threshold:
             threshold = self.threshold
@@ -72,6 +70,4 @@ class TFliteDetector(KimageDetector):
             self._classes.sort(key=lambda c: c.lower())
         except:
             pass
-
-        print(self.classes)
 

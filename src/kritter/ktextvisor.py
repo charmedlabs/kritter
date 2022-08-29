@@ -157,7 +157,7 @@ class _KtextVisor:
 
         def subscribe(words, sender, context):
             output = "error subscribing"
-            userid = str(sender['id'])
+            userid = sender['id']
             if not userid in self.config['subscribers'].keys():
                 self.config['subscribers'][userid] = sender
                 output = f"{sender['name']} is now subscribed"
@@ -171,7 +171,7 @@ class _KtextVisor:
 
         def unsubscribe(words, sender, context):
             output = "error unsubscribing"
-            userid = str(sender['id'])
+            userid = sender['id']
             if userid in self.config['subscribers'].keys():
                 del self.config['subscribers'][userid]
                 output = f"{sender['name']} has been unsubscribed"
@@ -189,7 +189,7 @@ class _KtextVisor:
 
         @self.tv_table.callback_help()
         def func(help_dict, words, sender, context):
-            if str(sender['id']) in self.config['subscribers']:
+            if sender['id'] in self.config['subscribers']:
                 del help_dict['subscribe']
             else:
                 del help_dict['unsubscribe']

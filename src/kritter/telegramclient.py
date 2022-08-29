@@ -86,7 +86,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
             # Print verbatim, fixed font    
             else: 
                 text = "```\n"+text+"```"
-            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(to['id'], text=text, parse_mode="MarkdownV2"), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(int(to['id']), text=text, parse_mode="MarkdownV2"), self.loop).result()
     
     def image(self, image, to) -> None:
         if not self.application:
@@ -108,7 +108,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         else:
             raise RuntimeError("Unsupported image type")
         # Run send_photo (coroutine)
-        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(to['id'], image), self.loop)
+        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(int(to['id']), image), self.loop)
         try:
             result = future.result(DEFAULT_TIMEOUT)
         except Exception as e:
@@ -137,7 +137,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
         """Wrap callback_receive as a coroutine and submit to run"""
         if self.receive_callback:
             # Note, use executor when calling into sync function
-            sender = {"id": update.effective_message.chat.id, "name": update.effective_message.chat.full_name}
+            sender = {"id": str(update.effective_message.chat.id), "name": update.effective_message.chat.full_name}
             await self.loop.run_in_executor(None, self.receive_callback, update.message.text, sender)
 
     async def stop_server_coro(self):
