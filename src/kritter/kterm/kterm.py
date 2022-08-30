@@ -249,9 +249,11 @@ class Kterm:
             self.loop.add_reader(fd, self.reader_callback, client)
         else:
             client = Client(None)
-            await client.queue.put({"id": "output", "data": self.buffer})
 
         self.clients.append(client)
+
+        if self.single:
+            await client.queue.put({"id": "output", "data": self.buffer})
 
         try:
             sender = asyncio.create_task(copy_current_websocket_context(self.send_client)(client))
@@ -285,9 +287,13 @@ class Kterm:
         os._exit(obj.si_status)
 
     def print(self, msg):
-        for client in self.clients:
-            # asyncio queue isn't threadsafe, so run it this way from thread-land
-            asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": msg+"\n\r"}), self.loop)
+        msg += "\n\r" # Add linefeed and carriage-return
+        if not self.clients: # If no one is connected, add to buffer
+            self.buffer += msg
+        else: # else send to all clients
+            for client in self.clients:
+                # asyncio queue isn't threadsafe, so run it this way from thread-land
+                asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": msg}), self.loop)
              
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
