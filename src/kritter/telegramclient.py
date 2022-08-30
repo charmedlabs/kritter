@@ -12,6 +12,7 @@ import os
 import json
 import cv2
 import numpy as np
+from telegram.error import TimedOut
 from telegram import ForceReply, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, MessageHandler, filters
 import asyncio
@@ -24,14 +25,18 @@ References:
 2. Ayncio | Coroutines and Tasks | https://docs.python.org/3/library/asyncio-task.html?highlight=run_coroutine_threadsafe#asyncio.run_coroutine_threadsafe
 """
 
-DEFAULT_TIMEOUT = 60 * 5 # seconds; five minute timeout
 CONFIG_FILE = 'telegram_config.json'
-
+RETRIES = 4
+TIMEOUT = 15
 
 class TelegramClient(KtextClient): # Text Messaging Client
-    def __init__(self, etcdir):
+    def __init__(self, etcdir, loop=None):
         super().__init__()
-        self.loop = asyncio.get_event_loop()
+        self.task = None
+        if loop is None:
+            self.loop = asyncio.get_event_loop()
+        else:
+            self.loop = loop
         self.config_filename = os.path.join(etcdir, CONFIG_FILE) 
         self.application = None 
         self.read_config()
@@ -60,7 +65,7 @@ class TelegramClient(KtextClient): # Text Messaging Client
     def remove_token(self):
         self._config['token'] = None
         self.write_config()
-        self.run_coro(self.stop_server_coro)
+        self.close()
 
 
     def send(self, msg, to):
@@ -86,7 +91,12 @@ class TelegramClient(KtextClient): # Text Messaging Client
             # Print verbatim, fixed font    
             else: 
                 text = "```\n"+text+"```"
-            asyncio.run_coroutine_threadsafe(self.application.bot.send_message(int(to['id']), text=text, parse_mode="MarkdownV2"), self.loop).result()
+            for i in range(RETRIES):
+                try:
+                    asyncio.run_coroutine_threadsafe(self.application.bot.send_message(int(to['id']), text=text, parse_mode="MarkdownV2"), self.loop).result()
+                    break
+                except TimedOut:
+                    print("Timeout. Resending Telegram text...")
     
     def image(self, image, to) -> None:
         if not self.application:
@@ -108,11 +118,12 @@ class TelegramClient(KtextClient): # Text Messaging Client
         else:
             raise RuntimeError("Unsupported image type")
         # Run send_photo (coroutine)
-        future = asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(int(to['id']), image), self.loop)
-        try:
-            result = future.result(DEFAULT_TIMEOUT)
-        except Exception as e:
-            print(f'The send photo coroutine raised an exception: {e}')
+        for i in range(RETRIES):
+            try:
+                asyncio.run_coroutine_threadsafe(self.application.bot.send_photo(int(to['id']), image), self.loop).result()
+                break
+            except TimedOut:
+                print("Timeout. Resending Telegram image...")
 
     # Commands
     async def start(self, update: Update, context: CallbackContext):
@@ -151,13 +162,13 @@ class TelegramClient(KtextClient): # Text Messaging Client
         await self.application.initialize()
         await self.application.updater.start_polling(
             poll_interval=0.0,
-            timeout=10,
+            timeout=TIMEOUT,
             bootstrap_retries=-1,
-            read_timeout=2,
+            read_timeout=TIMEOUT,
             allowed_updates=None,
             drop_pending_updates=None
         )
-        asyncio.create_task(self.application.start())
+        self.task = asyncio.create_task(self.application.start())
 
     def run_coro(self, coro):
         # Two cases: asyncio event loop is running
@@ -176,14 +187,23 @@ class TelegramClient(KtextClient): # Text Messaging Client
         # loop in the current thread.  
         asyncio.set_event_loop(self.loop)
         # Clean up server (if needed)
-        self.run_coro(self.stop_server_coro)
+        self.close()
         self.application = Application.builder().token(self._config['token']).build() 
         # Command Handlers
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("help", self.help))
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.recv)) 
         # Start server
-        self.run_coro(self.start_server_coro)
+        for i in range(RETRIES):
+            try:
+                self.run_coro(self.start_server_coro)
+                break
+            except TimedOut:
+                print("Timeout. Attempting to reconnect to Telegram server...")
+
 
     def running(self):
         return bool(self.application)
+
+    def close(self):
+        self.run_coro(self.stop_server_coro)

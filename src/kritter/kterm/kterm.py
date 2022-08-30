@@ -204,6 +204,7 @@ class Kterm:
                 # asyncio queue isn't threadsafe, so run it this way from thread-land
                 asyncio.run_coroutine_threadsafe(client.queue.put({"id": "output", "data": data}), self.loop)
             self.buffer += data
+            # Trim least-recent part of buffer
             if len(self.buffer)>self.buffer_max_size:
                 self.buffer = self.buffer[int(0.2*self.buffer_max_size):]
 
