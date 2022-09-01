@@ -60,7 +60,7 @@ class KimageDetectorThread(KimageDetector):
 def _hash(string):
     val = 7
     for c in string:
-        val += val*31 + ord(c)
+        val += val*7 + ord(c)
     return val 
 
 def render_detected_box(overlay, color, label, box, font, font_size, line_width):
