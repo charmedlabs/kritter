@@ -12,15 +12,13 @@ import os
 import json
 from time import sleep
 from threading import Thread
-from collections import defaultdict
-import cv2
 import datetime
 from .kstoremedia import KstoreMedia
 from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name
 
-UPLOADED = "U"
+UPLOADED_KEY = "_uploaded"
 KEEP_UPLOADED = 100
-KEEP = 100
+KEEP = 500
 
 class SaveMediaQueue(KstoreMedia):
 
@@ -48,41 +46,41 @@ class SaveMediaQueue(KstoreMedia):
             files = os.listdir(self.path)
             files = sorted(files)
             for file in files:
-                if not valid_media_name(file):
-                    continue
                 if not self.run_thread:
                     break
-                parts = file.split('.')
-                # if file looks legit and it doesn't have the uploaded string, upload
-                if len(parts)>=2:
-                    if parts[0][-1]==UPLOADED:
+                if not valid_media_name(file):
+                    continue
+                fullfile = os.path.join(self.path, file)                        
+                metadata = self.load_metadata(fullfile)
+                try:
+                    if metadata[UPLOADED_KEY]:
                         uploaded.append(file)
-                    else:
-                        preuploaded.append(file)
-                        if self.store_media is not None:
-                            print('Uploading', file)
-                            file = os.path.join(self.path, file)                        
-                            try:
-                                metadata = self._load_metadata(file)
-                                if self.store_media.store_image_file(file, metadata['album'], metadata['desc']):
-                                    # if uploaded successfully, add uploaded string before extension
-                                    parts[0] += UPLOADED
-                                    new_filename = '.'.join(parts)
-                                    new_filename = os.path.join(self.path, new_filename)
-                                    os.rename(file, new_filename)
-                                    print('Done uploading ', file)
-                                    preupload.remove(file)
-                                else:
-                                    print(f"Error uploading {file} to {metadata['album']}")
-                            except Exception as e:
-                                print('Exception uploading', file, e)
+                        continue
+                except:
+                    preuploaded.append(file)
+                if self.store_media is not None:
+                    print('Uploading', file)
+                    try:
+                        album = metadata['album'] if 'album' in metadata else ""
+                        desc = metadata['desc'] if 'desc' in metadata else json.dumps(metadata) 
+                        if self.store_media.store_image_file(fullfile, album, desc):
+                            print('Done uploading ', file)
+                            # preuploaded file becomes uploaded filed
+                            metadata[UPLOADED_KEY] = True
+                            self.save_metadata(fullfile, metadata)
+                            preuploaded.remove(file)
+                            uploaded.append(file)
+                        else:
+                            print(f"Error uploading {file} to {metadata['album']}")
+                    except Exception as e:
+                        print('Exception uploading', file, e)
             # clean up preuploaded and uploaded files
             for files, keep in ((preuploaded, self.keep), (uploaded, self.keep_uploaded)):
                 if len(files)>keep:
                     files = sorted(files)
                     for i in range(len(files)-keep):
                         file = os.path.join(self.path, files[i])
-                        for f in (file, file_basename(file)+".json", file_basename(file)[0:-len(UPLOADED)]+".json"):
+                        for f in (file, file_basename(file)+".json"):
                             try:
                                 os.remove(f)
                             except:
@@ -93,24 +91,23 @@ class SaveMediaQueue(KstoreMedia):
     def _get_filename(self, ext):
         return os.path.join(self.path, datetime.datetime.now().strftime(f"%Y_%m_%d_%H_%M_%S_%f.{ext}"))
 
-    def _save_metadata(self, filename, data):
+    def save_metadata(self, filename, data):
         with open(f'{file_basename(filename)}.json', 'w') as file:
             json.dump(data, file)   
 
-    def _load_metadata(self, filename):
-        # return defaultdict because we don't want lookup exceptions
+    def load_metadata(self, filename):
         try:
             with open(f'{file_basename(filename)}.json') as file:
-                return defaultdict(str, json.load(file))
+                return json.load(file)
         except:
-            return defaultdict(str)  
+            return {}
 
     def store_image_file(self, filename, album="", desc="", data={}):
         if not valid_image_name(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(file_extension(filename))
         if album or desc or data:
-            self._save_metadata(new_filename, {**data, "album": album, "desc": desc})
+            self.save_metadata(new_filename, {**data, "album": album})
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
@@ -119,6 +116,6 @@ class SaveMediaQueue(KstoreMedia):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(file_extension(filename))
         if album or desc or data:
-            self._save_metadata(new_filename, {**data, "album": album, "desc": desc})
+            self.save_metadata(new_filename, {**data, "album": album, "desc": desc})
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)

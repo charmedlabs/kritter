@@ -63,8 +63,8 @@ class Gcloud(KdataClient):
                 return GtextClient(self)
             elif interface=='KtabularClient':
                 return GtabularClient(self)
-            else:
-                return None
+        # Return None if nothing matches
+        return None
 
     def _save_creds(self):
         with open(self.auth_file, 'wb') as token:

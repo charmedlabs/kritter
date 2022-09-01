@@ -42,6 +42,7 @@ from .kimagedetector import KimageDetector, render_detected, render_detected_box
 from .processify import Processify
 from .kimageclassifier import KimageClassifier
 from .detectiontracker import DetectionTracker
+from .detectionpicker import DetectionPicker
 from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue

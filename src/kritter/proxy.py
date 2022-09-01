@@ -13,7 +13,7 @@ import asyncio
 from quart import Response, Blueprint, request, websocket
 import aiohttp
 
-ERROR_400 = "Not ready...", 400
+ERROR_400 = "", 400
 
 # This web proxy receives on quart and sends on aiohttp
 class Proxy:
@@ -33,7 +33,7 @@ class Proxy:
                     try:
                         async with session.get(path) as resp:
                             return Response(await resp.read(), mimetype=resp.content_type)
-                    except aiohttp.client_exceptions.ClientConnectorError:
+                    except (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exceptions.ClientOSError):
                         return ERROR_400
             else: # POST
                 data = await request.get_data()
@@ -41,7 +41,7 @@ class Proxy:
                     try:
                         async with session.post(path, data=data, headers=dict(request.headers)) as resp:
                             return Response(await resp.read(), mimetype=resp.content_type)
-                    except aiohttp.client_exceptions.ClientConnectorError:
+                    except (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exceptions.ClientOSError):
                         return ERROR_400
 
         # Set up websocket handlers
@@ -74,7 +74,7 @@ class Proxy:
                     except asyncio.CancelledError:
                         pass
                     await ws.close()
-            except aiohttp.client_exceptions.ClientConnectorError:
+            except (aiohttp.client_exceptions.ClientConnectorError, aiohttp.client_exceptions.ClientOSError):
                 pass
 
         return func

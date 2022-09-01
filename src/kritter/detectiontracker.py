@@ -63,20 +63,6 @@ class DetectionTracker:
             self.maxClassHistory = 1
 
     def register(self, box, classScore):
-        # First see that it doesn't overlap with any other objects in the table.
-        # If it does and len(classHistory)>1, return/ignore.
-        # It it does and len(classHistory)==1 and score is greater than score in history, replace.
-        # This results in a history-aware non-max suppression.
-        ious = {k: iou(box, v) for k, v in self.objects.items()} 
-        if len(ious)>0:
-            # Find index of max iou
-            maxi = max(ious, key=lambda i: ious[i])
-            # Only consider if iou is greater than threshold
-            if ious[maxi]>=self.iouEquiv:
-                if len(self.classHistory[maxi])==1 and self.classHistory[maxi][0][1]>classScore[1]:
-                        self.objects[maxi] = box
-                        self.classHistory[maxi] = [classScore]
-                return # includes case where len(classHistory)>=1
         # Create new entry in object tables.
         # when registering an object we use the next available object
         # ID to store the box
@@ -102,6 +88,38 @@ class DetectionTracker:
                 max_ = v 
                 class_ = k 
         return class_, max_[0]/max_[1] 
+
+    def removeOverlaps(self):
+        ious = {}
+        deregs = set()
+        for i in self.objects:
+            for j in self.objects:
+                if i==j:
+                    break
+                ious[(i, j)] = iou(self.objects[i], self.objects[j])
+            if i==j:
+                continue
+        ious = {k: v for k, v in sorted(ious.items(), key=lambda item: item[1], reverse=True)}
+        for k, v in ious.items():
+            if v>=self.iouEquiv:
+                i, j = k
+                if self.classSwitch:
+                    if len(self.classHistory[i])>len(self.classHistory[j]):
+                        deregs.add(j)
+                    else:
+                        deregs.add(i)
+                else:
+                    if self.classHistory[i][0][0]==self.classHistory[j][0][0]:
+                        if self.classHistory[i][0][1]>self.classHistory[j][0][1]:
+                            print("*** remove j", self.classHistory[i][0][1], self.classHistory[j][0][1])
+                            deregs.add(j)
+                        else:
+                            print("*** remove i", self.classHistory[i][0][1], self.classHistory[j][0][1])
+                            deregs.add(i)
+            else: # v<self.iouEquiv, which means no more left
+                break
+        for d in deregs:
+            self.deregister(d)
 
     def mostLikelyState(self, showDisappeared):
         objects = {}
@@ -256,6 +274,8 @@ class DetectionTracker:
                 if classScores[col][1]>=self.threshold:
                     self.register(inputBoxes[col], classScores[col])
 
+
+        self.removeOverlaps()
         # return the set of trackable objects
         return self.mostLikelyState(showDisappeared)
 

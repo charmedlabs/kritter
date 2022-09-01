@@ -27,10 +27,10 @@ class Kchecklist(Kcomponent):
 
         button = dbc.Button(Kritter.icon("chevron-right", padding=0), disabled=self.disabled, size="sm")
         options = [{'label': option, 'value': option} for option in options]
-        self.checklist = dbc.Checklist(options=options, value=value, id=self.kapp.new_id())
+        self.checklist = dbc.Checklist(options=options, value=value, id=self.id+"-checklist")
         if clear_check_all:
-            check_all = html.Button(Kritter.icon("check-square", padding=0), id=self.kapp.new_id(), style={"margin": "2px 2px 2px 0", "border-width": "0"})
-            clear_all = html.Button(Kritter.icon("square-o", padding=0), id=self.kapp.new_id(), style={"margin": "2px", "border-width": "0"})
+            check_all = html.Button(Kritter.icon("check-square", padding=0), id=self.id+"-checkall", style={"margin": "2px 2px 2px 0", "border-width": "0"})
+            clear_all = html.Button(Kritter.icon("square-o", padding=0), id=self.id+"-clearall", style={"margin": "2px", "border-width": "0"})
             po_children = [
                 html.Div([check_all, clear_all]),
                 html.Div(self.checklist)]
@@ -61,7 +61,6 @@ class Kchecklist(Kcomponent):
             icon = "chevron-left" if _open else "chevron-right"
             return Output(button.id, "children", Kritter.icon(icon, padding=0))
 
-
     def callback(self, state=()):
         def wrap_func(func):
             @wraps(func)
@@ -70,3 +69,10 @@ class Kchecklist(Kcomponent):
             def _func(*args):
                 return func(*args)
         return wrap_func
+
+    def out_options(self, options):
+        options = [{'label': option, 'value': option} for option in options]
+        return [Output(self.checklist.id, "options", options)]
+
+    def out_value(self, value):
+        return [Output(self.checklist.id, "value", value)]
