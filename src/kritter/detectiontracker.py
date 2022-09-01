@@ -161,15 +161,21 @@ class DetectionTracker:
 
         classScores = []
         # initialize an array of input centroids for the current frame
-        inputBoxes = np.zeros((len(dets), 5), dtype=int)
+        if self.classSwitch:
+            inputBoxes = np.zeros((len(dets), 4), dtype=int)
+        else:
+            inputBoxes = np.zeros((len(dets), 5), dtype=int)
 
         # loop over the bounding box rectangles
         for i, det in enumerate(dets):
-            # use the bounding box coordinates to derive the centroid
-            # Add class index so we can use the class index to match between images.
-            # Use 10000 multiplier because this exceeds all likely image resolutions 
-            # and distances within the image.  
-            inputBoxes[i] = det['box'] + [det['index']*10000]
+            if self.classSwitch:
+                inputBoxes[i] = det['box']
+            else:
+                # use the bounding box coordinates to derive the centroid
+                # Add class index so we can use the class index to match between images.
+                # Use 10000 multiplier because this exceeds all likely image resolutions 
+                # and distances within the image.  
+                inputBoxes[i] = det['box'] + [det['index']*10000]
             classScores.append((det['class'], det['score']))
         # if we are currently not tracking any objects take the input
         # centroids and register each of them
