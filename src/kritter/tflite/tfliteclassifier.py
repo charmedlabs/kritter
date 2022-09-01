@@ -8,6 +8,10 @@
 # support@charmedlabs.com. 
 #
 
+import cv2
+from tflite_support.task import core
+from tflite_support.task import processor
+from tflite_support.task import vision
 from kritter import KimageClassifier
 
 class TFliteClassifier(KimageClassifier):

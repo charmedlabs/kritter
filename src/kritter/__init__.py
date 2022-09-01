@@ -38,7 +38,7 @@ from .koverlay import Koverlay, OVERLAY_WIDTH_HEIGHT
 from .kimage import Kimage
 from .klogin import Klogin, PMASK_MAX, PMASK_MIN
 from .execterm import ExecTerm
-from .kimagedetector import KimageDetector, render_detected, render_detected_box, KimageDetectorThread
+from .kimagedetector import KimageDetector, render_detected, render_detected_box, render_detected_image, render_detected_box_image, KimageDetectorThread
 from .processify import Processify
 from .kimageclassifier import KimageClassifier
 from .detectiontracker import DetectionTracker

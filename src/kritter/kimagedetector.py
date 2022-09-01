@@ -82,20 +82,30 @@ def render_detected_box(overlay, color, label, box, font, font_size, line_width)
 
     overlay.draw_text(box[0]+xoffset, box[1]+yoffset, label, font=dict(family=font, size=font_size, color=text_color), fillcolor=html_color, xanchor="left", yanchor=yanchor, id='render_detected_box')
 
-def render_detected(overlay, detected, disp_score=True, font="sans-serif", font_size=12, line_width=2):
+def render_detected(overlay, detected, label_format=None, font="sans-serif", font_size=12, line_width=2):
     overlay.draw_clear(id='render_detected_box')
-    _detected = detected.values() if isinstance(detected, dict) else detected
-    for i in _detected:
-        if disp_score:
-            txt = f"{i['class']} {i['score']*100:.0f}%"
-        else:
-            txt = i['class']
-        try:
-            index = i['index']
-        except:
-            index = _hash(i['class'])
-        color = get_color(index)
-        render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width)
+    if label_format is None:
+        label_format = lambda key, det : f"{det['class']} {det['score']*100:.0f}%" 
+
+    if isinstance(detected, list):
+        for i in detected:
+            txt = label_format(None, i)
+            try:
+                index = i['index']
+            except:
+                index = _hash(i['class'])
+            color = get_color(index)
+            render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width)
+
+    if isinstance(detected, dict):
+        for i, v in detected.items():
+            txt = label_format(i, v)
+            try:
+                index = v['index']
+            except:
+                index = _hash(v['class'])
+            color = get_color(index)
+            render_detected_box(overlay, color, txt, v['box'], font, font_size, line_width)
 
     return overlay.out_draw()
 
@@ -148,19 +158,29 @@ def render_detected_box_image(image, color, label, box, x_offset=0, y_offset=0, 
             cv2.putText(image, label, (box[0]+x_offset+padding+bg_3d, box[1]+y_offset+hoffs+bg_3d), font, font_size, bg_color, font_width*bg_outline)
         cv2.putText(image, label, (int(box[0]+x_offset+padding), int(box[1]+y_offset+hoffs)), font, font_size, (255, 255, 255), font_width)
 
-def render_detected_image(image, detected, disp_score=True, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
+def render_detected_image(image, detected, label_format=None, x_offset=0, y_offset=0, font=cv2.FONT_HERSHEY_SIMPLEX, font_size=1.0, font_width=0, line_width=0, padding=0, center=False, label_on_top=True, bg=True, bg_outline=4, bg_color=(0, 0, 0), bg_3d=False):
 
+    if label_format is None:
+        label_format = lambda key, det : f"{det['class']} {det['score']*100:.0f}%" 
     _detected = detected.values() if isinstance(detected, dict) else detected
-    for i in _detected:
-        if disp_score:
-            txt = f"{i['class']} {i['score']*100:.0f}%"
-        else:
-            txt = i['class']
-        try:
-            index = i['index']
-        except:
-            index = _hash(i['class'])
-        color = get_color(index, bgr=True)
-        render_detected_box_image(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+    if isinstance(detected, list):
+        for i in detected:
+            txt = label_format(None, i)
+            try:
+                index = i['index']
+            except:
+                index = _hash(i['class'])
+            color = get_color(index, bgr=True)
+            render_detected_box_image(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+
+    if isinstance(detected, dict):
+        for i, v in detected.items():
+            txt = label_format(i, v)
+            try:
+                index = v['index']
+            except:
+                index = _hash(v['class'])
+            color = get_color(index, bgr=True)
+            render_detected_box_image(image, color, txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
 
 
