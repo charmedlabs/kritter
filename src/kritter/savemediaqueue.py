@@ -17,12 +17,11 @@ from .kstoremedia import KstoreMedia
 from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name
 
 UPLOADED_KEY = "_uploaded"
-KEEP_UPLOADED = 100
-KEEP = 500
+KEEP = 100
 
 class SaveMediaQueue(KstoreMedia):
 
-    def __init__(self, store_media=None, path="", keep=KEEP, keep_uploaded=KEEP_UPLOADED):
+    def __init__(self, store_media=None, path="", keep=KEEP, keep_uploaded=KEEP):
         super().__init__()
         self.store_media = store_media
         self.path = path
@@ -64,7 +63,7 @@ class SaveMediaQueue(KstoreMedia):
                         album = metadata['album'] if 'album' in metadata else ""
                         desc = metadata['desc'] if 'desc' in metadata else json.dumps(metadata) 
                         if self.store_media.store_image_file(fullfile, album, desc):
-                            print('Done uploading ', file)
+                            print('done')
                             # preuploaded file becomes uploaded filed
                             metadata[UPLOADED_KEY] = True
                             self.save_metadata(fullfile, metadata)
