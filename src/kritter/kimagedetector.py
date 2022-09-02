@@ -63,26 +63,25 @@ def _hash(string):
         val += val*7 + ord(c)
     return val 
 
-def render_detected_box(overlay, color, label, box, font, font_size, line_width):
+def render_detected_box(overlay, color, label, box, font="sans-serif", font_size=12, line_width=2, scale=1):
     html_color = f'rgb({color[0]},{color[1]},{color[2]}' 
     overlay.draw_rect(*box[0:4], fillcolor="rgba(0,0,0,0)", line=dict(color=html_color, width=line_width), id='render_detected_box')
 
     offset = int(line_width/2)
     xoffset = 0 if box[0]<offset else -offset
-    if box[1]<font_size*3:
+    if box[1]<font_size*2/scale:
         yoffset = 0 if box[1]<offset else -offset
         yanchor = "top"
     else:
         yoffset = offset
         yanchor = "bottom"
-
     # Perform an elaborate calculation to determine if we should have white or black text
     color_calc = color[0]*0.8+color[1]*1.4+color[2]*0.5
     text_color = "white" if color_calc<350 else "black"
 
     overlay.draw_text(box[0]+xoffset, box[1]+yoffset, label, font=dict(family=font, size=font_size, color=text_color), fillcolor=html_color, xanchor="left", yanchor=yanchor, id='render_detected_box')
 
-def render_detected(overlay, detected, label_format=None, font="sans-serif", font_size=12, line_width=2):
+def render_detected(overlay, detected, label_format=None, font="sans-serif", font_size=12, line_width=2, scale=1):
     overlay.draw_clear(id='render_detected_box')
     if label_format is None:
         label_format = lambda key, det : f"{det['class']} {det['score']*100:.0f}%" 
@@ -95,7 +94,7 @@ def render_detected(overlay, detected, label_format=None, font="sans-serif", fon
             except:
                 index = _hash(i['class'])
             color = get_color(index)
-            render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width)
+            render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width, scale)
 
     if isinstance(detected, dict):
         for i, v in detected.items():
@@ -105,7 +104,7 @@ def render_detected(overlay, detected, label_format=None, font="sans-serif", fon
             except:
                 index = _hash(v['class'])
             color = get_color(index)
-            render_detected_box(overlay, color, txt, v['box'], font, font_size, line_width)
+            render_detected_box(overlay, color, txt, v['box'], font, font_size, line_width, scale)
 
     return overlay.out_draw()
 
