@@ -10,6 +10,11 @@
 
 class KimageClassifier:
 
+    def __init__(self):
+        self._classes = []
+        
     def classify(self, image):
         pass
 
+    def classes(self):
+        return self._classes

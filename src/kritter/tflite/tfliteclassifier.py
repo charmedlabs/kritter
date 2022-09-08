@@ -9,6 +9,7 @@
 #
 
 import cv2
+from pydoc import importfile
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
@@ -16,6 +17,8 @@ from kritter import KimageClassifier
 
 class TFliteClassifier(KimageClassifier):
     def __init__(self, model):
+        super().__init__()
+        self.get_consts(model)
         base_options = core.BaseOptions(file_name=model, use_coral=False, num_threads=4)
         classification_options = processor.ClassificationOptions(max_results=3, score_threshold=0)
         options = vision.ImageClassifierOptions(base_options=base_options, classification_options=classification_options)
@@ -31,3 +34,13 @@ class TFliteClassifier(KimageClassifier):
             _class = {"class": c.class_name, "score": c.score}
             res.append(_class)
         return res
+
+    def get_consts(self, model):
+        assert(model.endswith("tflite"))
+        consts_file = model[0:-6]+"py"
+        try:
+            consts = importfile(consts_file)
+            self._classes = consts.CLASSES
+            self._classes.sort(key=lambda c: c.lower())
+        except:
+            pass
