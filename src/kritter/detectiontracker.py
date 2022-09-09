@@ -33,7 +33,8 @@ def iou(boxA, boxB):
     # return the intersection over union value
     return iou  
 
-
+# Todo: make classSwitch a list of classes that are switchable.  This will require lots of changes
+# because we want to be able track unswitchable classes differently than switchable classes. 
 class DetectionTracker:
     def __init__(self, maxDisappeared=1, maxDistance=250, maxClassHistory=100, threshold=0.5, iouEquiv=0.4, classSwitch=False):
         # initialize the next unique object ID along with two ordered
@@ -111,10 +112,8 @@ class DetectionTracker:
                 else:
                     if self.classHistory[i][0][0]==self.classHistory[j][0][0]:
                         if self.classHistory[i][0][1]>self.classHistory[j][0][1]:
-                            print("*** remove j", self.classHistory[i][0][1], self.classHistory[j][0][1])
                             deregs.add(j)
                         else:
-                            print("*** remove i", self.classHistory[i][0][1], self.classHistory[j][0][1])
                             deregs.add(i)
             else: # v<self.iouEquiv, which means no more left
                 break
