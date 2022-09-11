@@ -9,6 +9,7 @@
 #
 
 import os
+from functools import wraps
 from dash_devices.dependencies import Input, Output
 import dash_html_components as html
 from kritter import Kcomponent, Koverlay, file_in_path, MEDIA_DIR
@@ -68,6 +69,17 @@ class Kimage(Kcomponent):
             return f"data:image/jpeg;charset=utf-8;base64,{image.decode('utf-8')}" 
         else:
             raise RuntimeError("Unsupported image type")
+
+    def callback(self, state=()):
+        def wrap_func(func):
+            @wraps(func)
+            @self.kapp.callback(None,
+                [Input(self.id_div, "n_clicks")], state, self.service)
+            def _func(*args):
+                # Toss out n_clicks argument
+                args = args[1:]
+                return func(*args)
+        return wrap_func
 
     def out_src(self, src):
         return [Output(self.id, "src", self._build_src(src))]

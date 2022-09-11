@@ -110,11 +110,15 @@ class SaveMediaQueue(KstoreMedia):
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
-    def store_video_file(self, filename, album="", desc="", data={}):
+    def store_video_file(self, filename, album="", desc="", data={}, thumbnail=None):
         if not valid_video_name(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(file_extension(filename))
-        if album or desc or data:
-            self.save_metadata(new_filename, {**data, "album": album, "desc": desc})
+        if thumbnail:
+            new_thumbnail = f"{file_basename(new_filename)}.{file_extension(thumbnail)}.thumb"
+            os.rename(thumbnail, new_thumbnail)
+            thumbnail = os.path.basename(new_thumbnail)
+        if album or desc or data or thumbnail:
+            self.save_metadata(new_filename, {**data, "album": album, "desc": desc, "thumbnail": thumbnail})
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)

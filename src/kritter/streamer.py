@@ -405,7 +405,7 @@ class Streamer:
             Streamer.encoder = Encoder()
             self.register_encoder()
         else:
-            raise runtimeError("only one instance of Streamer is allowed")
+            raise RuntimeError("only one instance of Streamer is allowed")
 
         if server is None:
             self.server = Quart("Streamer") 

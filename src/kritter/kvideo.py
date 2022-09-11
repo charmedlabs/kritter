@@ -68,13 +68,14 @@ class Kvideo(Kcomponent):
 
         self.hist_update_period = kwargs['hist_update_period'] if 'hist_update_period' in kwargs else 0.25
         self.hist_update_time = 0
-        self.streamer = Streamer(server=self.kapp.server, html=None, js=None)
 
         self.hist = html.Div(dcc.Graph(id=self.hist_graph_id, style=self._hist_style(), config={'displayModeBar': False}), id=self.hist_id, style={"display": "block" if self.hist_disp else "none"})
         if src is None:           
             self.video = KvideoComp(id=self.id, style=self._video_style())
+            self.streamer = Streamer(server=self.kapp.server, html=None, js=None)
         else:
             self.video = html.Video(id=self.id, src=self._build_src(src), controls=controls, muted=True, autoPlay=autoplay, loop=loop, style=self._video_style())
+            self.streamer = None
 
         if overlay:
             self.overlay = Koverlay(self.video, self.kapp, self.service)
