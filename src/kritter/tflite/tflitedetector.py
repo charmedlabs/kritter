@@ -37,9 +37,12 @@ class TFliteDetector(KimageDetector):
             threshold = self.threshold
         res = []
         orig_resolution = (image.shape[1], image.shape[0])
-        new_resolution = (640, 480)
-        scale = (orig_resolution[0]/new_resolution[0], orig_resolution[1]/new_resolution[1])
-        image = cv2.resize(image, new_resolution)
+        # Efficientdet can handle full-res frames without much slowdown, but there's an 
+        # improvement in accuracy, so there's little need to downscale
+        #new_resolution = (640, 480)
+        #scale = (orig_resolution[0]/new_resolution[0], orig_resolution[1]/new_resolution[1])
+        #image = cv2.resize(image, new_resolution)
+        scale = (1, 1)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         input_tensor = vision.TensorImage.create_from_array(image)
         # Run object detection estimation using the model.

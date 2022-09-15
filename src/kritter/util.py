@@ -79,6 +79,14 @@ def valid_media_name(filename):
     return valid_image_name(filename) or valid_video_name(filename)
 
 
+def temp_file(extension=""):
+    tempfile = os.path.join("/tmp/", os.urandom(8).hex().upper())
+    if extension:
+        return f"{tempfile}.{extension}"
+    else:
+        return tempfile
+
+
 class JSONEncodeFromNumpy(json.JSONEncoder):
     """
     - Serializes python/Numpy objects via customizing json encoder.
