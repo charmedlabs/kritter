@@ -22,7 +22,7 @@ class Kcheckbox(Kcomponent):
         value = kwargs['value'] if 'value' in kwargs else False
         value = ['True'] if value else []
 
-        checkbox = dcc.Checklist(options=[{'label': '', 'value': 'True'}], value=value)
+        checkbox = dcc.Checklist(options=[{'label': '', 'value': 'True', 'disabled': self.disabled}], value=value)
         self.set_layout(checkbox)
         if self.spinner:
             self.row.children.append(self.comp_spinner)
@@ -40,3 +40,7 @@ class Kcheckbox(Kcomponent):
 
     def out_value(self, value):
         return [Output(self.id, "value", ['True'] if value else [])]
+
+    def out_disabled(self, value):
+        self.disabled = value
+        return [Output(self.id, "options", [{'label': '', 'value': 'True', 'disabled': self.disabled}])]
