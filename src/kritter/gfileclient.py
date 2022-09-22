@@ -55,7 +55,14 @@ class GfileClient(KfileClient):
         file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
         file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
-        return(True) 
+        
+        permissions = {
+        'type': 'anyone',
+        'role': 'writer',
+        }
+        self.drive_client.permissions().create(fileId=file["id"], body=permissions).execute()
+        
+        return(file["id"])
         
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
@@ -155,7 +162,7 @@ class GfileClient(KfileClient):
         _close_orig = f.close
         def _close():
             if(mode == 'w'):
-                self.copy_to(r'/tmp/tempfile', r"/test")
+                self.copy_to(r'/tmp/tempfile', path)
             _close_orig()
         f.close = _close
         return f

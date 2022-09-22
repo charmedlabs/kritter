@@ -2,9 +2,9 @@ class KfileClient:
 
     def __init__(self):
         pass
-
     '''
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
+    optional arg specifies wether or not to create the requested dir
     '''
     def copy_to(self, location, destination, create=False): 
         pass
