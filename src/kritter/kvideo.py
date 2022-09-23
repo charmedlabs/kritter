@@ -201,7 +201,7 @@ class Kvideo(Kcomponent):
                 return "" 
             # If the file is in our media_path, just add the MEDIA_DIR (we can load directly)
             if file_in_path(self.kapp.media_path, src):
-                return os.path.join("/"+MEDIA_DIR, src)
+                return os.path.join(MEDIA_DIR, src)
             # Otherwise the best way to send the image is to load it, encode it, and send as base64 string
             else: 
                 encoded = base64.b64encode(open(src, 'rb').read())

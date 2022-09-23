@@ -13,6 +13,10 @@ class Image:
     def __init__(self, image):
         self.image = image
 
+class Video:
+    def __init__(self, video):
+        self.video = video
+
 class KtextClient:
     def __init__(self):
         self.receive_callback = None

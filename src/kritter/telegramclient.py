@@ -17,7 +17,7 @@ from telegram import ForceReply, Update
 from telegram.ext import Application, CallbackContext, CommandHandler, MessageHandler, filters
 import asyncio
 # local imports
-from .ktextclient import KtextClient, Image
+from .ktextclient import KtextClient, Image, Video
 
 """
 References:
@@ -73,6 +73,8 @@ class TelegramClient(KtextClient): # Text Messaging Client
             self.text(msg, to)
         elif isinstance(msg, Image):
             self.image(msg.image, to)
+        elif isinstance(msg, Video):
+            self.video(msg.video, to)            
         elif isinstance(msg, (tuple, list)):
             for m in msg:
                 self.send(m, to)
@@ -99,13 +101,12 @@ class TelegramClient(KtextClient): # Text Messaging Client
                     print("Timeout. Resending Telegram text...")
     
     def image(self, image, to) -> None:
+        """Sends an image given a file location, local or URL; also sending numpy array directly"""
         if not self.application:
             raise RuntimeError("Telegram doesn't have a token")
-        """Sends an image given a file location, local or URL; also sending numpy array directly"""
         if isinstance(image, str):
             if os.path.exists(image):
-                with open(image, 'rb') as image:
-                    image = image.read()
+                image = open(image, 'rb') # Telegram bot can take file object
             elif image.lower().startswith("http"):
                 pass # We can pass http url's as-is.
             else:
@@ -124,6 +125,27 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 break
             except TimedOut:
                 print("Timeout. Resending Telegram image...")
+
+    def video(self, video, to) -> None:
+        """Sends a video given a file location, local or URL; also sending numpy array directly"""
+        if not self.application:
+            raise RuntimeError("Telegram doesn't have a token")
+        if isinstance(video, str):
+            if os.path.exists(video):
+                video = open(video, 'rb') # Telegram bot can take file object
+            elif video.lower().startswith("http"):
+                pass # We can pass http url's as-is.
+            else:
+                raise RuntimeError(f"Unknown video type: {video}")
+        else:
+            raise RuntimeError("Unsupported video type")
+        # Run send_photo (coroutine)
+        for i in range(RETRIES):
+            try:
+                asyncio.run_coroutine_threadsafe(self.application.bot.send_video(int(to['id']), video), self.loop).result()
+                break
+            except TimedOut:
+                print("Timeout. Resending Telegram video...")
 
     # Commands
     async def start(self, update: Update, context: CallbackContext):

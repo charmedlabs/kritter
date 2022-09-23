@@ -15,7 +15,7 @@ from types import MethodType
 from threading import Thread, Lock
 from multiprocessing.managers import BaseManager
 import fnmatch
-from .ktextclient import Image
+from .ktextclient import Image, Video
 from .configfile import ConfigFile
 
 CONFIG_FILE = "textvisor.json"
@@ -104,7 +104,7 @@ def KtextVisor(text_client="", etcdir=""):
         return tv
 
 def format_content(content):
-    if isinstance(content, (str, Image, dict)):
+    if isinstance(content, (str, Image, Video, dict)):
         return [content] 
     elif isinstance(content, (list, tuple)):
         res = []
@@ -121,7 +121,7 @@ def format_content(content):
                 res += r 
         return res 
     else:
-        raise RuntimeError(f"Can only process Image, str, dict, tuple, and list -- not {type(content)}.")
+        raise RuntimeError(f"Can only process Image, Video, str, dict, tuple, and list -- not {type(content)}.")
 
 def format_dict(content):
     justify = max([len(k) for k, v in content.items()]) + 2
