@@ -217,3 +217,27 @@ def acquire_timeout(lock, timeout):
         lock.release()
     else:
         raise TimeoutError
+
+
+class CalcDaytime:
+    def __init__(self, threshold=20, poll_period=60, hysteresis=5):
+        self.threshold = threshold
+        self.hysteresis = hysteresis
+        self.poll_period = poll_period
+        self.t0 = 0 
+        self.daytime = True
+
+    def is_daytime(self, frame):
+        t = time.time()
+        if t-self.t0 > self.poll_period:
+            avg = np.average(frame[:, :, 1]) # only look at green channel
+            if self.daytime:
+                if avg<self.threshold - self.hysteresis:
+                    self.daytime = False
+                    print("Nighttime")
+            else:
+                if avg>self.threshold:
+                    self.daytime = True            
+                    print("Daytime")
+            self.t0 = t 
+        return self.daytime

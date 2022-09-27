@@ -53,7 +53,7 @@ class KstoreMedia:
             Timer(PROGRESS_TIMEOUT, progress).start()
 
         while frame:
-            percent = round(frame[2]/stream.len()*100)
+            percent = int((frame[2]+1)/stream.len()*100-.1) # max-out at 99
             print(f"{frame[2]+1} of {stream.len()} ({percent}%)")
             writer.write(frame[0])
             frame = stream.frame()

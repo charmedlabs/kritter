@@ -32,9 +32,7 @@ class KimageDetectorThread(KimageDetector):
         self.result = None
 
     def detect(self, image, threshold=None):
-        # Use a copy of the image to make sure any changes outside of the thread
-        # to the image don't affect our classification.
-        self.image = image.copy()
+        self.image = image
         self.threshold = threshold
         if not self.thread:
             self.run_thread = True
