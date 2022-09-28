@@ -90,11 +90,13 @@ class SaveMediaQueue(KstoreMedia):
     def _get_filename(self, ext):
         return os.path.join(self.path, datetime.datetime.now().strftime(f"%Y_%m_%d_%H_%M_%S_%f.{ext}"))
 
-    def save_metadata(self, filename, data):
+    @staticmethod
+    def save_metadata(filename, data):
         with open(f'{file_basename(filename)}.json', 'w') as file:
             json.dump(data, file)   
 
-    def load_metadata(self, filename):
+    @staticmethod
+    def load_metadata(filename):
         try:
             with open(f'{file_basename(filename)}.json') as file:
                 return json.load(file)
