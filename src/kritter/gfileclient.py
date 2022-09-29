@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.http import MediaIoBaseDownload
 import io
+import os
 
 class GfileClient(KfileClient):
 
@@ -17,7 +18,10 @@ class GfileClient(KfileClient):
     optional arg specifies wether or not to create the requested dir
     '''
     def copy_to(self, location, destination, create=False):
-        dirs = destination.split('/')[1:]
+        #if dest is empty throw exception
+        if not destination:
+            raise Exception("must privide a destination path")
+        dirs = destination.split('/')
         if not dirs[-1]:
             dirs[-1] = location.split('/')[-1]
         # get the id of the users root directory
@@ -26,14 +30,15 @@ class GfileClient(KfileClient):
         parent_id = None
         # follow the detination path
         for dir in dirs[:-1]:
-            parent_id = id
-            id = self._search_file(self.drive_client,id,dir)
-            if(id == None):
-                # if create is true, creates the missing directories
-                if create:
-                    id = self._create_folder(self.drive_client, dir, parent_id)
-                else:
-                    return(False)
+            if dir:
+                parent_id = id
+                id = self._search_file(self.drive_client,id,dir)
+                if(id == None):
+                    # if create is true, creates the missing directories
+                    if create:
+                        id = self._create_folder(self.drive_client, dir, parent_id)
+                    else:
+                        return(False)
         check = self._search_file(self.drive_client,id,dirs[-1])
         if check:   # something with that name exists
             # if id is a folder:
@@ -43,14 +48,9 @@ class GfileClient(KfileClient):
             # if id is a file
             else:
                 # delete old file
-                rm = '/'
-                name = dirs[-1]
-                for dir in dirs[:-1]:
-                    rm = rm + dir + '/'
-                rm = rm + name
-                self.delete(rm) 
-        else: # file does not exist
-            name = dirs[-1]
+                self.drive_client.files().delete(fileId=check).execute()
+        # file does not already exist
+        name = dirs[-1]
         # upload the file from 'location' path
         file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
@@ -68,15 +68,19 @@ class GfileClient(KfileClient):
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
     def copy_from(self, location, destination):
-        dirs = location.split('/')[1:]
+        #if location is empty throw exception
+        if not location:
+            raise Exception("must privide a location path")
+        dirs = location.split('/')
         # get the id of the users root directory in google
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
-            id = self._search_file(self.drive_client,id,dir)
-            if(id == None):
-                raise Exception(f"the location '{location}' could not be found in google drive")
+            if dir:
+                id = self._search_file(self.drive_client,id,dir)
+                if(id == None):
+                    raise Exception(f"the location '{location}' could not be found in google drive")
         # download file to memory using google drive api
         file_id = id
         request = self.drive_client.files().get_media(fileId=file_id)
@@ -95,15 +99,16 @@ class GfileClient(KfileClient):
     returns a list of files at a specific path in google drive
     '''
     def list(self, path):
-        dirs = path.split('/')[1:]
+        dirs = path.split('/')
         # get the id of the users root directory in google
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
-            id = self._search_file(self.drive_client,id,dir)
-            if(id == None):
-                raise Exception(f"the location '{path}' could not be found in google drive")
+            if dir:
+                id = self._search_file(self.drive_client,id,dir)
+                if(id == None):
+                    raise Exception(f"the location '{path}' could not be found in google drive")
         parent_id = id
 
         files = []
@@ -139,15 +144,18 @@ class GfileClient(KfileClient):
     deletes the folder or file at the path provided
     '''
     def delete(self, path):
-        dirs = path.split('/')[1:]
+        dirs = path.split('/')
         # get the id of the users root directory in google
         root = self.drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
-            id = self._search_file(self.drive_client,id,dir)
-            if(id == None):
-                raise Exception(f"the location '{path}' could not be found in google drive")
+            if dir:
+                id = self._search_file(self.drive_client,id,dir)
+                if(id == None):
+                    raise Exception(f"the location '{path}' could not be found in google drive")
+        if id == root:
+            raise Exception(f"cannot delete users root directory")
         self.drive_client.files().delete(fileId=id).execute()
 
     '''
@@ -157,13 +165,18 @@ class GfileClient(KfileClient):
     def open(self, path, mode):
         if not (mode == 'r' or mode == 'w'):
             raiseExceptions(f"{mode}: is not a valid mode")
-        self.copy_from(path, r'/tmp/tempfile')
-        f = open(path, "w")
+        tempfile = os.path.join("/tmp/", os.urandom(8).hex().upper())
+        self.copy_from(path, tempfile)
+
+        if(mode == 'w'): f = open(tempfile, "r+")
+        if(mode == 'r'): f = open(tempfile, "r")
+        
         _close_orig = f.close
         def _close():
-            if(mode == 'w'):
-                self.copy_to(r'/tmp/tempfile', path)
             _close_orig()
+            if(mode == 'w'):
+                self.copy_to(tempfile, path)
+            os.remove(tempfile)
         f.close = _close
         return f
 
