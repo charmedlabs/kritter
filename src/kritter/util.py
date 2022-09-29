@@ -229,15 +229,16 @@ class CalcDaytime:
 
     def is_daytime(self, frame):
         t = time.time()
+        change = False
         if t-self.t0 > self.poll_period:
             avg = np.average(frame[:, :, 1]) # only look at green channel
             if self.daytime:
                 if avg<self.threshold - self.hysteresis:
                     self.daytime = False
-                    print("Nighttime")
+                    change = True
             else:
                 if avg>self.threshold:
                     self.daytime = True            
-                    print("Daytime")
+                    change = True
             self.t0 = t 
-        return self.daytime
+        return self.daytime, change

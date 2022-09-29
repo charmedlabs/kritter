@@ -61,7 +61,7 @@ class SaveMediaQueue(KstoreMedia):
                     print('Uploading', file)
                     try:
                         album = metadata['album'] if 'album' in metadata else ""
-                        desc = metadata['desc'] if 'desc' in metadata else json.dumps(metadata) 
+                        desc =  json.dumps(metadata) if metadata else ""
                         if self.store_media.store_image_file(fullfile, album, desc):
                             print('done')
                             # preuploaded file becomes uploaded filed
