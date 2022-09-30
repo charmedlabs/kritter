@@ -34,8 +34,22 @@ class DetectionPicker:
         else:
             return 0
 
+    def get_regs_deregs(self):
+        return self.regs, self.deregs
+
     def update(self, image, dets):
         t = time.time()
+
+        # Calculate registrations and deregistrations
+        ikeys = set(self.info.keys())
+        dkeys = set(dets.keys())
+        # Determine new objects
+        regs = dkeys-ikeys
+        self.regs = {i: dets[i] for i in regs}
+        # Determine which object(s) we deregistered, if any.
+        deregs = ikeys-dkeys
+        self.deregs = {i: self.info[i][1] for i in deregs}
+
         for k, v in dets.items():
             try:
                 if self.info[k][3]==0:
@@ -52,9 +66,6 @@ class DetectionPicker:
                     self.info[k][0:3] = [value, v, image]
             except:
                 self.info[k] = [value, v, image, t]
-
-        # Determine which object(s) we deregistered, if any.
-        deregs = set(self.info.keys())-set(dets.keys())
 
         # Determine which objects have timed-out, if any.
         timeouts = []
