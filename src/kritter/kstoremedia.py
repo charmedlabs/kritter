@@ -63,3 +63,6 @@ class KstoreMedia:
 
     def store_video_file(self, filename, album="", desc="", data={}, thumbnail=None):
         pass
+
+    def get_share_url(self, album):
+        pass

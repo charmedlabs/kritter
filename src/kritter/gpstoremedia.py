@@ -99,3 +99,28 @@ class GPstoreMedia(KstoreMedia):
     def store_video_file(self, filename, album="", desc="", data={}):
         # Google Photos accepts videos through the same API path as images.
         return self.store_image_file(filename, album, desc)
+
+    def get_share_url(self, album):
+        service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
+        album_id = None
+        try:
+            albums = service.albums().list().execute()
+            albums = albums['albums']
+            for a in albums:
+                if 'title' in a and a['title'] == album:
+                    album_id = a['id']
+                    request_body = {
+                        'sharedAlbumOptions': {
+                            'isCollaborative': True,
+                            'isCommentable': True
+                        }  
+                    }
+                    try: # try sharing album
+                        response = service.albums().share(albumId=album_id,body=request_body).execute()
+                        return response['shareInfo']['shareableUrl']
+                    except:
+                        # if album is already shared, just get url
+                        return service.albums().get(albumId = album_id).execute()['productUrl']
+        # if album by that name not found return none
+        except: 
+            return None
