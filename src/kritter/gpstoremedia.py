@@ -120,7 +120,7 @@ class GPstoreMedia(KstoreMedia):
                         return response['shareInfo']['shareableUrl']
                     except:
                         # if album is already shared, just get url
-                        return service.albums().get(albumId = album_id).execute()['productUrl']
+                        return service.albums().get(albumId = album_id).execute()['shareInfo']['shareableUrl']
         # if album by that name not found return none
         except: 
             return None
