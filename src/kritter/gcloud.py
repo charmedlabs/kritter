@@ -64,6 +64,8 @@ class Gcloud(KdataClient):
                 return GtextClient(self)
             elif interface=='KtabularClient':
                 return GtabularClient(self)
+            elif interface=='KfileClient':
+                return GfileClient(self)
 
         # Return None if nothing matches
         return None
