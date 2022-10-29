@@ -34,7 +34,7 @@ class Kdialog:
         self.service = dash_devices.Services.SHARED if shared else None
         self.id = kwargs['id'] if 'id' in kwargs else Kritter.new_id('dialog')
         close_button = dbc.Button([Kritter.icon("close"), "Close"], id=self.id+"-cb", className="ml-auto")
-        fc = [html.Div(close_button)]
+        fc = [html.Div(close_button, className="ml-auto")]
         if 'close_button' in kwargs:
             if kwargs['close_button']==False:
                 close_button = None
@@ -43,7 +43,7 @@ class Kdialog:
                 # Specify contents of close button
                 close_button.children = kwargs['close_button']
         if right_footer:
-            fc.insert(0, html.Div(right_footer, className="ml-auto"))             
+            fc.append(html.Div(right_footer, className="_nopadding"))             
         if left_footer:
             fc.insert(0, html.Div(left_footer, className="mr-auto")) 
         self.footer = dbc.ModalFooter(fc) if fc else None   
