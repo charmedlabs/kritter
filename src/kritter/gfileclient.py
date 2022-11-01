@@ -168,7 +168,7 @@ class GfileClient(KfileClient):
         tempfile = os.path.join("/tmp/", os.urandom(8).hex().upper())
         self.copy_from(path, tempfile)
 
-        if(mode == 'w'): f = open(tempfile, "r+")
+        if(mode == 'w'): f = open(tempfile, "w")
         if(mode == 'r'): f = open(tempfile, "r")
         
         _close_orig = f.close
