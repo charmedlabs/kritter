@@ -8,6 +8,7 @@
 # support@charmedlabs.com. 
 #
 
+from logging import raiseExceptions
 import os
 import json
 import pickle
@@ -124,3 +125,47 @@ class GPstoreMedia(KstoreMedia):
         # if album by that name not found return none
         except: 
             return None
+
+    def list_media(self, album):
+        #"albumId": album_id
+        service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
+        album_id = None
+        media = []
+        
+        # get the album id using name
+        albums = service.albums().list().execute()
+        albums = albums['albums']
+        for a in albums:
+            if 'title' in a and a['title'] == album:
+                album_id = a['id']
+
+        # check if id was found
+        if not album_id:
+            raise Exception(f"album {album} could not be found")
+
+        # get id of all items in album
+        page_token = None
+        body = {
+        "albumId": album_id,
+        "pageSize": 10
+        }
+        while True:
+            results = service.mediaItems().search(body=body).execute()
+            for photo in results['mediaItems']:
+                id = photo['id']
+                media.append(id)
+
+            try:
+                page_token = results['nextPageToken']
+            except:
+                break # no more results
+            body = {
+            "albumId": album_id,
+            "pageSize": 1,
+            "pageToken": page_token
+            }
+        return media
+
+
+    def delete_media(self, id):
+        pass

@@ -66,3 +66,9 @@ class KstoreMedia:
 
     def get_share_url(self, album):
         pass
+
+    def list_media(self, album):
+        pass
+
+    def delete_media(self, id): # there is not yet deletion supported by the API
+        pass
