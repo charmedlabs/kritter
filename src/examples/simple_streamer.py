@@ -9,9 +9,6 @@
 #
 
 
-# TODO: inspect this example
-
-
 from threading import Thread
 from kritter import Camera, Streamer
 
