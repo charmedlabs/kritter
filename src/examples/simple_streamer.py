@@ -31,6 +31,6 @@ if __name__ == "__main__":
 
     # Run streamer until we get interrupted while frame grabber runs 
     # in its own thread.
-    streamer.run()
+    streamer.run()  # default port 5000 --> vizy.local:5000/
     # Exit grab thread
     run_grab = False
