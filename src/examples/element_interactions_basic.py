@@ -26,32 +26,38 @@ if __name__ == "__main__":
     dropdown = kritter.Kdropdown()
     slider = kritter.Kslider()
     textBox = kritter.KtextBox()
-    text = kritter.Ktext()
+    text = kritter.Ktext()  # no callback to be defined
 
     # Define Callbacks
-    checkbox.callback()
+    @checkbox.callback()
     def func():
-        pass
+        message = "print from checkbox"
+        print(message)
 
-    checklist.callback()
+    @checklist.callback()
     def func():
-        pass
+        message = "print from checklist"
+        print(message)
 
-    dropdownMenu.callback()
+    @dropdownMenu.callback()
     def func():
-        pass
+        message = "print from dropdownMenu"
+        print(message)
 
-    dropdown.callback()
+    @dropdown.callback()
     def func():
-        pass
+        message = "print from dropdown"
+        print(message)
 
-    slider.callback()
+    @slider.callback()
     def func():
-        pass
+        message = "print from slider"
+        print(message)
 
-    textBox.callback()
+    @textBox.callback()
     def func():
-        pass
+        message = "print from textBox"
+        print(message)
 
 
     kapp.layout = []    # define interface layout
