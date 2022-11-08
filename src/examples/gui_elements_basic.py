@@ -20,14 +20,18 @@ if __name__ == "__main__":
 
     # Contents/Components of Application
 
-    options = [dbc.DropdownMenuItem(k, id=kapp.new_id(), href="export/"+v[0], target="_blank", external_link=True) for k, v in self.export_map.items()]
-    # We don't want the export funcionality to be shared! (service=None)
-    export = kritter.KdropdownMenu(name="Export data", options=options, service=None)
+    # options = [dbc.DropdownMenuItem(k, id=kapp.new_id(), href="export/"+v[0], target="_blank", external_link=True) for k, v in self.export_map.items()]
+    # # We don't want the export funcionality to be shared! (service=None)
+    # export = kritter.KdropdownMenu(name="Export data", options=options, service=None)
 
-    dropdown_menu_main = kritter.KdropdownMenu()
-    # dropdown_menu = kritter.KdropdownMenu()
-    # dropdown_menu = kritter.KdropdownMenu()
+    dropdown_button_visiblity = kritter.Kdropdown(options=['visible', 'invisible'])
+    dropdown_button_enabler = kritter.Kdropdown(options=['enable', 'disable'])
+    dropdown_menu_main = kritter.KdropdownMenu(
+        options=[dropdown_button_visiblity, dropdown_button_enabler]
+    )
     textbox = kritter.KtextBox(placeholder="Type Here!")
+    button_icon = kritter.Kritter.icon("window")
+    button = kritter.Kbutton()
 
     kapp.layout = [dropdown_menu_main]    # define interface layout
     kapp.run()  # Run Server - vizy.local:5000/
