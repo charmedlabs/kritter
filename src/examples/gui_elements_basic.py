@@ -16,7 +16,7 @@ if __name__ == "__main__":
     kapp = kritter.Kritter()
 
     # Application Styles
-    main_style = {"label_width": 3, "control_width": 6}
+    main_style = {"label_width": 12, "control_width": 12}
 
     # Contents/Components of Application
 
@@ -24,40 +24,64 @@ if __name__ == "__main__":
     # # We don't want the export funcionality to be shared! (service=None)
     # export = kritter.KdropdownMenu(name="Export data", options=options, service=None)
 
-    dropdown_button_visiblity = kritter.Kdropdown(options=['visible', 'invisible'])
-    dropdown_button_enabler = kritter.Kdropdown(options=['enable', 'disable'])
-    dropdown_button_spinner = kritter.Kdropdown(options=['spinner', 'no spinner'])
-    dropdown_menu_main = kritter.KdropdownMenu(
-        options=[dropdown_button_visiblity, dropdown_button_enabler, dropdown_button_spinner]
-    )
-    textbox = kritter.KtextBox(placeholder="Type Here!")
-    button_icon = kritter.Kritter.icon("window")
-    button_spinner = False
-    button = kritter.Kbutton(name=[button_icon, 'Open URL'], spinner=button_spinner)
+    header = kritter.Ktext(
+        value="Button Controls From Other Elements\n- Visibility, Enabled, Spinner Activation",
+        style=main_style)
+
+    # Button Controls
+    dropdown_button_visiblity = kritter.KdropdownMenu(options=['invisible', 'visible'])
+    dropdown_button_enabler = kritter.KdropdownMenu(options=['enable', 'disable', ])
+    dropdown_button_spinner = kritter.KdropdownMenu(options=['no spinner', 'spinner'])
+    button_spinner_flag = False
+    # Textbox and Button 
+    textbox = kritter.KtextBox(placeholder="Placeholder! Will not open URL")
+    button_icon = kritter.Kritter.icon("external-link")
+    button = kritter.Kbutton(
+        name=[button_icon, 'Open URL'], 
+        spinner=True,   # spinner exists
+        disabled=True,  # start unable to click
+        disp=False,     # start invisible
+        href="https://www.google.com", 
+        external_link=True, 
+        target="_blank")     
 
     @dropdown_button_visiblity.callback()
-    def func():
+    def func(value):
         '''shows or hides button'''
-        pass
+        # TODO: how to access string values? 
+        #       these 'value' variables return integers 0..n
+        kapp.push_mods(button.out_disp(bool(value)))
 
     @dropdown_button_enabler.callback()
-    def func():
+    def func(value):
         '''enables or disables button click'''
-        pass
+        kapp.push_mods(button.out_disabled(bool(value)))
 
     @dropdown_button_spinner.callback()
-    def func():
+    def func(value):
         '''shows or hides spinner when button is clicked'''
-        pass
+        # global button_spinner_flag
+        # button_spinner_flag = bool(value)
+        # print(f"{value} - {button_spinner_flag}")
+        kapp.push_mods(button.out_spinner_disp(bool(value)))
 
-    @button.callback()
-    def func():
+    # @textbox.callback()
+    # def func():
+    #     pass
+
+    @button.callback(textbox.state_value())
+    def func(value):
         '''if the textbox not empty, will create a 
         new browser tab with the URL from the textbox value.'''
-        # button.out_spinner_disp()
-        # button.out_url()
-        pass
-
+        global button_spinner_flag
+        if button_spinner_flag:
+            kapp.push_mods(button.out_spinner_disp(True))
+        mods = [button.out_spinner_disp(False)]
+        # open link
+        url = f"http://vizy.local:5000/{value}"
+        mods.append(button.out_url(url))
+        kapp.push_mods(mods)
+        
     # define interface layout
-    kapp.layout = [dropdown_menu_main, dropdown_button_visiblity, dropdown_button_enabler, button]    
+    kapp.layout = [header, dropdown_button_visiblity, dropdown_button_enabler, dropdown_button_spinner, textbox, button] #, dropdown_button_visiblity, dropdown_button_enabler, button]    
     kapp.run()  # Run Server - vizy.local:5000/
