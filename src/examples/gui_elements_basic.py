@@ -35,17 +35,17 @@ if __name__ == "__main__":
     button_spinner = False
     button = kritter.Kbutton(name=[button_icon, 'Open URL'], spinner=button_spinner)
 
-    @dropdown_button_visiblity
+    @dropdown_button_visiblity.callback()
     def func():
         '''shows or hides button'''
         pass
 
-    @dropdown_button_enabler
+    @dropdown_button_enabler.callback()
     def func():
         '''enables or disables button click'''
         pass
 
-    @dropdown_button_spinner
+    @dropdown_button_spinner.callback()
     def func():
         '''shows or hides spinner when button is clicked'''
         pass
