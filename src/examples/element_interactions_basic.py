@@ -59,7 +59,8 @@ if __name__ == "__main__":
         message = "print from textBox"
         print(message)
 
-
-    kapp.layout = []    # define interface layout
+    # define interface layout
+    kapp.layout = [checkbox, checklist, dropdownMenu, dropdown, slider, textBox, text]
     kapp.run()  # Run Server - vizy.local:5000/
+
 
