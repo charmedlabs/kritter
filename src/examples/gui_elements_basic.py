@@ -51,9 +51,8 @@ if __name__ == "__main__":
 
     @button.callback()
     def func():
-        '''when clicked, opens a new url tab 
-        with contents of textbox as the url.
-        Does not open a new tab if textbox is blank'''
+        '''if the textbox not empty, will create a 
+        new browser tab with the URL from the textbox value.'''
         pass
 
     # define interface layout
