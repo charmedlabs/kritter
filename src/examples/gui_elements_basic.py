@@ -32,7 +32,8 @@ if __name__ == "__main__":
     )
     textbox = kritter.KtextBox(placeholder="Type Here!")
     button_icon = kritter.Kritter.icon("window")
-    button = kritter.Kbutton()
+    button_spinner = False
+    button = kritter.Kbutton(name=[button_icon, 'Open URL'], spinner=button_spinner)
 
     @dropdown_button_visiblity
     def func():
@@ -53,6 +54,8 @@ if __name__ == "__main__":
     def func():
         '''if the textbox not empty, will create a 
         new browser tab with the URL from the textbox value.'''
+        # button.out_spinner_disp()
+        # button.out_url()
         pass
 
     # define interface layout
