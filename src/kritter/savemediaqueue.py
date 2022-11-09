@@ -12,9 +12,8 @@ import os
 import json
 from time import sleep
 from threading import Thread
-import datetime
 from .kstoremedia import KstoreMedia
-from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name
+from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name, date_stamped_file
 
 UPLOADED_KEY = "_uploaded"
 KEEP = 100
@@ -88,7 +87,7 @@ class SaveMediaQueue(KstoreMedia):
             sleep(1)
 
     def _get_filename(self, ext):
-        return os.path.join(self.path, datetime.datetime.now().strftime(f"%Y_%m_%d_%H_%M_%S_%f.{ext}"))
+        return os.path.join(self.path, date_stamped_file(ext))
 
     @staticmethod
     def save_metadata(filename, data):

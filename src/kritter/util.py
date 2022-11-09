@@ -13,6 +13,7 @@ import time
 import logging
 import json
 import numpy as np
+import datetime
 from contextlib import contextmanager
 
 def set_logger_level(logger, level):
@@ -62,8 +63,7 @@ def file_extension(filename):
     return filename.split(".")[-1]
 
 def file_basename(filename):
-    return filename.split(".")[0]
-
+    return '.'.join(filename.split('.')[0:-1])  
 
 def valid_image_name(filename):
     ext = file_extension(filename)
@@ -86,6 +86,22 @@ def temp_file(extension=""):
     else:
         return tempfile
 
+def date_stamped_file(extension, prefix=""):
+    return datetime.datetime.now().strftime(f"{prefix}%Y_%m_%d_%H_%M_%S_%f.{extension}")
+
+def time_stamped_file(extension, prefix=""):
+    return f"{prefix}{int(time.time()*10000000):X}.{extension}"
+
+def save_metadata(filename, data):
+    with open(f'{file_basename(filename)}.json', 'w') as file:
+        json.dump(data, file)   
+
+def load_metadata(filename):
+    try:
+        with open(f'{file_basename(filename)}.json') as file:
+            return json.load(file)
+    except:
+        return {}
 
 class JSONEncodeFromNumpy(json.JSONEncoder):
     """
