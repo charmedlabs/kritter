@@ -65,10 +65,6 @@ if __name__ == "__main__":
         # print(f"{value} - {button_spinner_flag}")
         kapp.push_mods(button.out_spinner_disp(bool(value)))
 
-    # @textbox.callback()
-    # def func():
-    #     pass
-
     @button.callback(textbox.state_value())
     def func(value):
         '''if the textbox not empty, will create a 
@@ -76,10 +72,10 @@ if __name__ == "__main__":
         global button_spinner_flag
         if button_spinner_flag:
             kapp.push_mods(button.out_spinner_disp(True))
-        mods = [button.out_spinner_disp(False)]
-        # open link
-        url = f"http://vizy.local:5000/{value}"
-        mods.append(button.out_url(url))
+        mods = []
+        # mods += button.out_spinner_disp(True)
+        url = f"{value}"
+        mods += button.out_url(url) # open URL in another tab
         kapp.push_mods(mods)
         
     # define interface layout
