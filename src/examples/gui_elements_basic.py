@@ -26,12 +26,36 @@ if __name__ == "__main__":
 
     dropdown_button_visiblity = kritter.Kdropdown(options=['visible', 'invisible'])
     dropdown_button_enabler = kritter.Kdropdown(options=['enable', 'disable'])
+    dropdown_button_spinner = kritter.Kdropdown(options=['spinner', 'no spinner'])
     dropdown_menu_main = kritter.KdropdownMenu(
-        options=[dropdown_button_visiblity, dropdown_button_enabler]
+        options=[dropdown_button_visiblity, dropdown_button_enabler, dropdown_button_spinner]
     )
     textbox = kritter.KtextBox(placeholder="Type Here!")
     button_icon = kritter.Kritter.icon("window")
     button = kritter.Kbutton()
 
-    kapp.layout = [dropdown_menu_main]    # define interface layout
+    @dropdown_button_visiblity
+    def func():
+        '''shows or hides button'''
+        pass
+
+    @dropdown_button_enabler
+    def func():
+        '''enables or disables button click'''
+        pass
+
+    @dropdown_button_spinner
+    def func():
+        '''shows or hides spinner when button is clicked'''
+        pass
+
+    @button.callback()
+    def func():
+        '''when clicked, opens a new url tab 
+        with contents of textbox as the url.
+        Does not open a new tab if textbox is blank'''
+        pass
+
+    # define interface layout
+    kapp.layout = [dropdown_menu_main, dropdown_button_visiblity, dropdown_button_enabler, button]    
     kapp.run()  # Run Server - vizy.local:5000/
