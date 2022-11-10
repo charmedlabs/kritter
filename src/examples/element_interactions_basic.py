@@ -20,13 +20,14 @@ if __name__ == "__main__":
     main_style = {"label_width": 3, "control_width": 6}
 
     # Contents/Components of Application
-    checkbox = kritter.Kcheckbox(value="Is this box checked?")
+    checkbox = kritter.Kcheckbox(value=False)
     checklist = kritter.Kchecklist(options=['First', 'Last', 'Wingdings'])
     dropdownMenu = kritter.KdropdownMenu(options=['Burgundy', 'Magenta', 'Teal'])
-    dropdown = kritter.Kdropdown()
-    slider = kritter.Kslider()
-    textBox = kritter.KtextBox()
-    text = kritter.Ktext(placeholder='No callback available, but type here!')  # no callback to be defined
+    slider = kritter.Kslider(format=lambda val: f"{val}%")
+    slider_range = kritter.Kslider(range=True)
+    dropdown = kritter.Kdropdown(options=['', 'Excalibur', 'Gramr', 'The Pen'])
+    textBox = kritter.KtextBox(placeholder='Placeholder! Disappears when text is entered', max=150)
+    text = kritter.Ktext(value='This is a basic Text Element. No Callback for kText')  # no callback to be defined
 
     # Define Callbacks
     @checkbox.callback()
@@ -44,26 +45,29 @@ if __name__ == "__main__":
         message = f"print from dropdownMenu - value = {value}"
         print(message)
 
-    @dropdown.callback()
-    def func(value):
-        message = f"print from dropdown - value = {value}"
-        print(message)
-
     @slider.callback()
     def func(value):
         message = f"print from slider - value = {value}"
         print(message)
 
+    @slider_range.callback()
+    def func(value):
+        message = f"print from slider_range - value = {value}"
+        print(message)
+
+    @dropdown.callback()
+    def func(value):
+        message = f"print from dropdown - value = {value}"
+        print(message)
+
     @textBox.callback()
     def func(value):
-        message = '\n'.join([
-            "print from textBox",
-            f"- value = {value}",
-            "- testing - abcdefghijklmnopqrstuvwxyz"])    # TODO: j,x,z did not appear in my console
+        message = f"print from textBox - value = {value}"
+        # TODO: j,x,z did not appear in my console but now works..
         print(message)
 
     # define interface layout
-    kapp.layout = [checkbox, checklist, dropdownMenu, dropdown, slider, textBox, text]
+    kapp.layout = [checkbox, checklist, dropdownMenu, slider, dropdown, slider_range, textBox, text]
     kapp.run()  # Run Server - vizy.local:5000/
 
 
