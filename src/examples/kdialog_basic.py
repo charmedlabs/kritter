@@ -9,7 +9,7 @@ Button causes kdialog to come up.
 import kritter
 
 slider_min, slider_max = 1, 100
-slider_incrememnt = 1   # TODO: what is the third element of mxs with a slider?
+slider_step = 1
 slider_mean_value = lambda: int(sum([slider_min, slider_max]) // 2)
 slider_start_value = slider_mean_value()
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     ### Contents/Components of Application
     # Dialog
     # format=lambda x: f"{x}T", 
-    slider = kritter.Kslider(name="Slider", value=slider_start_value, mxs=(slider_min, slider_max, slider_incrememnt), style=main_style)
+    slider = kritter.Kslider(name="Slider", value=slider_start_value, mxs=(slider_min, slider_max, slider_step), style=main_style)
     reset_button_icon = kritter.Kritter.icon("bomb")
     reset_button = kritter.Kbutton(name=[reset_button_icon, "Reset Slider"])
     dialog = kritter.Kdialog(title="Example Dialog", layout=[slider, reset_button])
