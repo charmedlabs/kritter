@@ -8,13 +8,6 @@ kapp.layout = [“hello world”, button]
 # imports
 import kritter
 
-html_index = f'''
-<html>
-    <h4>Hello World!</h4>
-    <p>Button has been clicked _x_ times</p>
-</html>
-'''
-
 counter = 0
 
 if __name__ == "__main__":
