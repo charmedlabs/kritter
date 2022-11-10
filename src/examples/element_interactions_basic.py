@@ -20,43 +20,46 @@ if __name__ == "__main__":
     main_style = {"label_width": 3, "control_width": 6}
 
     # Contents/Components of Application
-    checkbox = kritter.Kcheckbox()
-    checklist = kritter.Kchecklist()
-    dropdownMenu = kritter.KdropdownMenu()
+    checkbox = kritter.Kcheckbox(value="Is this box checked?")
+    checklist = kritter.Kchecklist(options=['First', 'Last', 'Wingdings'])
+    dropdownMenu = kritter.KdropdownMenu(options=['Burgundy', 'Magenta', 'Teal'])
     dropdown = kritter.Kdropdown()
     slider = kritter.Kslider()
     textBox = kritter.KtextBox()
-    text = kritter.Ktext()  # no callback to be defined
+    text = kritter.Ktext(placeholder='No callback available, but type here!')  # no callback to be defined
 
     # Define Callbacks
     @checkbox.callback()
-    def func():
-        message = "print from checkbox"
+    def func(value):
+        message = f"print from checkbox - value = {value}"
         print(message)
 
     @checklist.callback()
-    def func():
-        message = "print from checklist"
+    def func(value):
+        message = f"print from checklist - value = {value}"
         print(message)
 
     @dropdownMenu.callback()
-    def func():
-        message = "print from dropdownMenu"
+    def func(value):
+        message = f"print from dropdownMenu - value = {value}"
         print(message)
 
     @dropdown.callback()
-    def func():
-        message = "print from dropdown"
+    def func(value):
+        message = f"print from dropdown - value = {value}"
         print(message)
 
     @slider.callback()
-    def func():
-        message = "print from slider"
+    def func(value):
+        message = f"print from slider - value = {value}"
         print(message)
 
     @textBox.callback()
-    def func():
-        message = "print from textBox"
+    def func(value):
+        message = '\n'.join([
+            "print from textBox",
+            f"- value = {value}",
+            "- testing - abcdefghijklmnopqrstuvwxyz"])    # TODO: j,x,z did not appear in my console
         print(message)
 
     # define interface layout
