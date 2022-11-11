@@ -80,7 +80,7 @@ class Gcloud(KdataClient):
         return self._creds  
 
     def remove_creds(self):
-        os.remove(self.auth_file)
+        os.rename(self.auth_file, self.auth_file+".bak")
         self._creds = None
 
     def connect(self):

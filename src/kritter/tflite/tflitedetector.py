@@ -66,7 +66,7 @@ class TFliteDetector(KimageDetector):
 
     def get_consts(self, model):
         assert(model.endswith("tflite"))
-        consts_file = model[0:-6]+"py"
+        consts_file = model[0:-7]+"_consts.py"
         try:
             consts = importfile(consts_file)
             self._classes = consts.CLASSES
