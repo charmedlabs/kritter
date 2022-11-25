@@ -13,7 +13,7 @@ import json
 from time import sleep
 from threading import Thread
 from .kstoremedia import KstoreMedia
-from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name, date_stamped_file
+from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name, date_stamped_file, load_metadata, save_metadata
 
 UPLOADED_KEY = "_uploaded"
 KEEP = 100
@@ -49,7 +49,7 @@ class SaveMediaQueue(KstoreMedia):
                 if not valid_media_name(file):
                     continue
                 fullfile = os.path.join(self.path, file)                        
-                metadata = self.load_metadata(fullfile)
+                metadata = load_metadata(fullfile)
                 try:
                     if metadata[UPLOADED_KEY]:
                         uploaded.append(file)
@@ -65,7 +65,7 @@ class SaveMediaQueue(KstoreMedia):
                             print('done')
                             # preuploaded file becomes uploaded filed
                             metadata[UPLOADED_KEY] = True
-                            self.save_metadata(fullfile, metadata)
+                            save_metadata(fullfile, metadata)
                             preuploaded.remove(file)
                             uploaded.append(file)
                         else:
@@ -89,25 +89,13 @@ class SaveMediaQueue(KstoreMedia):
     def _get_filename(self, ext):
         return os.path.join(self.path, date_stamped_file(ext))
 
-    @staticmethod
-    def save_metadata(filename, data):
-        with open(f'{file_basename(filename)}.json', 'w') as file:
-            json.dump(data, file)   
-
-    @staticmethod
-    def load_metadata(filename):
-        try:
-            with open(f'{file_basename(filename)}.json') as file:
-                return json.load(file)
-        except:
-            return {}
 
     def store_image_file(self, filename, album="", desc="", data={}):
         if not valid_image_name(filename):
             raise RuntimeError(f"File {filename} isn't correct media type.")
         new_filename = self._get_filename(file_extension(filename))
         if album or desc or data:
-            self.save_metadata(new_filename, {**data, "album": album})
+            save_metadata(new_filename, {**data, "album": album})
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
 
@@ -120,6 +108,6 @@ class SaveMediaQueue(KstoreMedia):
             os.rename(thumbnail, new_thumbnail)
             thumbnail = os.path.basename(new_thumbnail)
         if album or desc or data or thumbnail:
-            self.save_metadata(new_filename, {**data, "album": album, "desc": desc, "thumbnail": thumbnail})
+            save_metadata(new_filename, {**data, "album": album, "desc": desc, "thumbnail": thumbnail})
         # perform rename so we don't accidentally try to upload a half-written file
         os.rename(filename, new_filename)
