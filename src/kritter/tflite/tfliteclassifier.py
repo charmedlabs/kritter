@@ -8,8 +8,8 @@
 # support@charmedlabs.com. 
 #
 
+import json
 import cv2
-from pydoc import importfile
 from tflite_support.task import core
 from tflite_support.task import processor
 from tflite_support.task import vision
@@ -18,7 +18,7 @@ from kritter import KimageClassifier
 class TFliteClassifier(KimageClassifier):
     def __init__(self, model):
         super().__init__()
-        self.get_consts(model)
+        self.get_info(model)
         base_options = core.BaseOptions(file_name=model, use_coral=False, num_threads=4)
         classification_options = processor.ClassificationOptions(max_results=3, score_threshold=0)
         options = vision.ImageClassifierOptions(base_options=base_options, classification_options=classification_options)
@@ -35,12 +35,14 @@ class TFliteClassifier(KimageClassifier):
             res.append(_class)
         return res
 
-    def get_consts(self, model):
+    def get_info(self, model):
         assert(model.endswith("tflite"))
-        consts_file = model[0:-6]+"py"
+        info_file = model[0:-7]+"_info.json"
         try:
-            consts = importfile(consts_file)
-            self._classes = consts.CLASSES
+            with open(info_file) as file:
+                info = json.load(file)
+            self._classes = info['classes']
             self._classes.sort(key=lambda c: c.lower())
         except:
             pass
+

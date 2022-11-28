@@ -93,12 +93,14 @@ def time_stamped_file(extension, prefix=""):
     return f"{prefix}{int(time.time()*10000000):X}.{extension}"
 
 def save_metadata(filename, data, dir=".meta"):
+    path = os.path.dirname(filename)
+    basename = os.path.basename(filename)
     try:
-        with open(f'{os.path.join(os.path.dirname(filename), dir, file_basename(os.path.basename(filename)))}.json', 'w') as file:
+        with open(f'{os.path.join(path, dir, file_basename(basename))}.json', 'w') as file:
             json.dump(data, file)   
     except FileNotFoundError:
-        os.makedirs(dir)
-        with open(f'{os.path.join(os.path.dirname(filename), dir, file_basename(os.path.basename(filename)))}.json', 'w') as file:
+        os.makedirs(os.path.join(path, dir))
+        with open(f'{os.path.join(path, dir, file_basename(basename))}.json', 'w') as file:
             json.dump(data, file)   
 
 def load_metadata(filename, dir=".meta"):

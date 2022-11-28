@@ -1,4 +1,4 @@
-CLASSES = ["person",
+{"classes": ["person",
 "bicycle",
 "car",
 "motorcycle",
@@ -78,4 +78,6 @@ CLASSES = ["person",
 "teddy bear",
 "hair drier",
 "toothbrush"
-]
+],
+"model": "efficientdet_lite0"
+}

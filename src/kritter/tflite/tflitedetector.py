@@ -8,8 +8,8 @@
 # support@charmedlabs.com. 
 #
 
+import json
 import os
-from pydoc import importfile
 from kritter import KimageDetector
 from tflite_support.task import core
 from tflite_support.task import processor
@@ -24,7 +24,7 @@ class TFliteDetector(KimageDetector):
         # If model isn't specified, use the common objects network
         if not model:
             model = os.path.join(BASEDIR, "efficientdet_lite0.tflite")
-        self.get_consts(model)
+        self.get_info(model)
         self.threshold = threshold
         base_options = core.BaseOptions(file_name=model, use_coral=False, num_threads=4)
         detection_options = processor.DetectionOptions(score_threshold=0.1)
@@ -64,12 +64,13 @@ class TFliteDetector(KimageDetector):
             res.append(obj)
         return res  
 
-    def get_consts(self, model):
+    def get_info(self, model):
         assert(model.endswith("tflite"))
-        consts_file = model[0:-7]+"_consts.py"
+        info_file = model[0:-7]+"_info.json"
         try:
-            consts = importfile(consts_file)
-            self._classes = consts.CLASSES
+            with open(info_file) as file:
+                info = json.load(file)
+            self._classes = info['classes']
             self._classes.sort(key=lambda c: c.lower())
         except:
             pass
