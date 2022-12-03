@@ -24,7 +24,7 @@ class KfileClient:
     '''
     returns the url in google drive of a file or folder at the provided path
     '''
-    def get_url(self, path):
+    def get_url(self, path, mode="RESRICTED"):
         pass
 
     '''
@@ -44,4 +44,10 @@ class KfileClient:
     closes the already opened file and pushes any updates to drive
     '''
     def close(self, path):
+        pass
+
+    '''
+    update the permisions for the specified file and mode
+    '''
+    def _update_permissions(self, fileId, mode):
         pass

@@ -7,6 +7,10 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 import os
 
+RESTRICTED = 0
+EVERYONE_READ_ONLY = 1
+EVERYONE_EDIT = 2
+
 class GfileClient(KfileClient):
 
     def __init__(self, gcloud):
@@ -55,13 +59,13 @@ class GfileClient(KfileClient):
         file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
         file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
-        
+        '''
         permissions = {
-        'type': 'anyone',
+        'type': 'owner',
         'role': 'writer',
         }
         self.drive_client.permissions().create(fileId=file["id"], body=permissions).execute()
-        
+        '''
         return(file["id"])
         
     '''
@@ -126,7 +130,7 @@ class GfileClient(KfileClient):
     '''
     returns the url in google drive of a file or folder at the provided path
     '''
-    def get_url(self, path):
+    def get_url(self, path, mode="RESTRICTED"):
         dirs = path.split('/')[1:]
         # get the id of the users root directory in google
         root = self.drive_client.files().get(fileId='root').execute()['id']
@@ -136,6 +140,12 @@ class GfileClient(KfileClient):
             id = self._search_file(self.drive_client,id,dir)
             if(id == None):
                 raise Exception(f"the location '{path}' could not be found in google drive")
+        if mode == "RESTRICTED":
+            self._change_permissions(self.drive_client,id,"RESTRICTED")
+        if mode == "EVERYONE_READ_ONLY":
+            self._change_permissions(self.drive_client,id,"EVERYONE_READ_ONLY")
+        if mode == "EVERYONE_EDIT":
+            self._change_permissions(self.drive_client,id,"EVERYONE_EDIT")
         if path[-6:]=='.ipynb':
             return f'https://colab.research.google.com/drive/{id}'
         return self.drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
@@ -202,3 +212,29 @@ class GfileClient(KfileClient):
         }
         folder = client.files().create(body = body).execute()
         return folder['id']
+
+    '''
+    update the permisions for the specified file and mode
+    '''
+    def _change_permissions(self, client, file_id, mode):
+        try:
+            permission_id = client.permissions().list(fileId=file_id).execute()['permissions'][0]['id']
+            client.permissions().delete(fileId=file_id, permissionId=permission_id).execute()
+        except:
+            pass # file is already private and extra permissions do not need to be removed
+
+        if mode == "RESTRICTED":
+            return
+        if mode == "EVERYONE_READ_ONLY":
+            permissions = {'type': 'anyone','role': 'reader'}
+            self.drive_client.permissions().create(fileId=file_id, body=permissions).execute()
+            return
+        if mode == "EVERYONE_EDIT":
+            permissions = {'type': 'anyone','role': 'writer'}
+            self.drive_client.permissions().create(fileId=file_id, body=permissions).execute()
+            return
+        else:
+            raiseExceptions(f"{mode}: is not a valid permission mode")
+
+        
+        
