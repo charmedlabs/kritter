@@ -103,9 +103,12 @@ def save_metadata(filename, data, dir=".meta"):
         with open(f'{os.path.join(path, dir, file_basename(basename))}.json', 'w') as file:
             json.dump(data, file)   
 
+def get_metadata_filename(filename, dir=".meta"):
+    return f'{os.path.join(os.path.dirname(filename), dir, file_basename(os.path.basename(filename)))}.json'
+
 def load_metadata(filename, dir=".meta"):
     try:
-        with open(f'{os.path.join(os.path.dirname(filename), dir, file_basename(os.path.basename(filename)))}.json') as file:
+        with open(get_metadata_filename(filename, dir)) as file:
             return json.load(file)
     except:
         return {}
