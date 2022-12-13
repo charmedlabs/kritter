@@ -76,6 +76,15 @@ class Koverlay:
                 return func(*args)
         return wrap_func
 
+    def callback_click(self, state=()):
+        def wrap_func(func):
+            @wraps(func)
+            @self.kapp.callback(None,
+                [Input(photo.overlay.id, "clickData")], state, self.service)
+            def func(data):
+                return func(data)
+        return wrap_func
+
     def draw_circle(self, x_center, y_center, radius, fillcolor="gray", line=None, editable=False, id=None):
         circle = dict(type="circle", xref="x", yref="y", x0=x_center-radius, x1=x_center+radius, y0=y_center-radius, y1=y_center+radius, fillcolor=fillcolor, editable=editable, id=id)
         if line:
