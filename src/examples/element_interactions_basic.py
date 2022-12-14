@@ -20,14 +20,16 @@ if __name__ == "__main__":
     main_style = {"label_width": 3, "control_width": 6}
 
     # Contents/Components of Application
-    checkbox = kritter.Kcheckbox(value=False)
-    checklist = kritter.Kchecklist(options=['First', 'Last', 'Wingdings'])
-    dropdownMenu = kritter.KdropdownMenu(options=['Burgundy', 'Magenta', 'Teal'])
-    slider = kritter.Kslider(format=lambda val: f"{val}%")
-    slider_range = kritter.Kslider(range=True)
-    dropdown = kritter.Kdropdown(options=['', 'Excalibur', 'Gramr', 'The Pen'])
-    textBox = kritter.KtextBox(placeholder='Placeholder! Disappears when text is entered', max=150)
-    text = kritter.Ktext(value='This is a basic Text Element. No Callback for kText')  # no callback to be defined
+    checkbox = kritter.Kcheckbox(name='Checkbox', value=False)
+    checklist = kritter.Kchecklist(name='Checklist', options=['First', 'Last', 'Wingdings'])
+    dropdownMenu = kritter.KdropdownMenu(name='DropdownMenu', options=['Burgundy', 'Magenta', 'Teal'])
+    slider = kritter.Kslider(name='Slider', format=lambda val: f"{val}%")
+    slider_range = kritter.Kslider(name='Range Slider', range=True)
+    dropdown = kritter.Kdropdown(name='Dropdown', options=['', 'Excalibur', 'Gramr', 'The Pen'])
+    textBox = kritter.KtextBox(name='TextBox', placeholder='Placeholder!', max=150) # arbitrary max given
+    text = kritter.Ktext(name='Text', value='\n'.join([
+        'This is a basic Text Element.',
+        'No Callback for kText'])
 
     # Define Callbacks
     @checkbox.callback()
@@ -63,7 +65,6 @@ if __name__ == "__main__":
     @textBox.callback()
     def func(value):
         message = f"print from textBox - value = {value}"
-        # TODO: j,x,z did not appear in my console but now works..
         print(message)
 
     # define interface layout
