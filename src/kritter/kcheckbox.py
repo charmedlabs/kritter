@@ -13,6 +13,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 from .kcomponent import Kcomponent
 from functools import wraps
+import dash_html_components as html
 
 
 class Kcheckbox(Kcomponent):
@@ -23,9 +24,10 @@ class Kcheckbox(Kcomponent):
         value = ['True'] if value else []
 
         checkbox = dcc.Checklist(options=[{'label': '', 'value': 'True', 'disabled': self.disabled}], value=value)
-        self.set_layout(checkbox)
         if self.spinner:
-            self.row.children.append(self.comp_spinner)
+             self.set_layout(checkbox, [self.label, html.Div(checkbox, style={"padding": f"{self.style['horizontal_padding']}px"}), self.comp_spinner])
+        else:
+            self.set_layout(checkbox)
 
     def callback(self, state=()):
         def wrap_func(func):

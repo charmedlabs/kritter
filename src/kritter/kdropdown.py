@@ -27,12 +27,11 @@ class Kdropdown(Kcomponent):
 
         dropdown = dcc.Dropdown(options=options, value=value, clearable=clearable, placeholder=placeholder)
 
+        if not self.grid:
+            self.col_style['width'] = f"{self.style['control_width']*30}px"
         self.set_layout(dropdown)
         if self.spinner:
-            self.row.children.append(self.comp_spinner)
-
-    def out_spinner_disp(self, state):
-        return super().out_spinner_disp(state, -5)
+            self.layout.children.append(self.comp_spinner)
 
     def out_options(self, options):
         options = [{'label': option, 'value': option} for option in options]

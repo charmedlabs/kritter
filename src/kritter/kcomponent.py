@@ -94,6 +94,10 @@ class Kcomponent:
         self.cols = scols + ccols
         self.layout.children = self.cols
 
+    @property
+    def value(self):
+        return self.control.value
+
     def out_spinner_disp(self, state, left_margin=5, disable=None):
         if state:
             return [Output(self.id_spinner, 'style', {'display': 'inline', 'margin-left': f'{left_margin}px'})] + self.out_disabled(disable if disable is not None else True)
