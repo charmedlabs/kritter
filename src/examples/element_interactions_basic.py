@@ -29,7 +29,7 @@ if __name__ == "__main__":
     textBox = kritter.KtextBox(name='TextBox', placeholder='Placeholder!', max=150) # arbitrary max given
     text = kritter.Ktext(name='Text', value='\n'.join([
         'This is a basic Text Element.',
-        'No Callback for kText'])
+        'No Callback for kText']))
 
     # Define Callbacks
     @checkbox.callback()
