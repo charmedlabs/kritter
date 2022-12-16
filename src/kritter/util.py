@@ -96,6 +96,11 @@ def save_metadata(filename, data, dir=".meta"):
     path = os.path.dirname(filename)
     basename = os.path.basename(filename)
     try:
+        # get rid of runtime tags
+        del data['tmp'] 
+    except: 
+        pass
+    try:
         with open(f'{os.path.join(path, dir, file_basename(basename))}.json', 'w') as file:
             json.dump(data, file)   
     except FileNotFoundError:

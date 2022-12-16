@@ -66,7 +66,7 @@ class TFliteDetector(KimageDetector):
 
     def get_info(self, model):
         assert(model.endswith("tflite"))
-        info_file = model[0:-7]+"_info.json"
+        info_file = model[0:-7]+".json"
         try:
             with open(info_file) as file:
                 info = json.load(file)
