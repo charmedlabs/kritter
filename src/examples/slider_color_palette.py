@@ -27,11 +27,11 @@ if __name__ == "__main__":
     box_r = html.P('Testing, but to be emptied', style=main_style)
     box_g = html.P('Testing, but to be emptied', style=background_style)
     box_b = html.P('Testing, but to be emptied', style=box_style)
-    display = [
+    display = html.Div([
         box_r,
         # box_g, # if uncommented, webpage will not load | stays on 'loading' page -- <div class="_dash-loading">Loading...</div>
         # box_b, # also stalls on loading page 
-    ]
+    ])
     # define controls
     overlap_slider = kritter.Kslider(name='Overlap', mxs=(0, 100, 1), format=lambda s: f'{s}%') # overlap 0% - 100%
     controls = html.Div([overlap_slider])
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     kapp.layout = [
         header, 
         display, 
-        controls
+        controls 
     ] 
 
     # Run Server - vizy.local:5000/
