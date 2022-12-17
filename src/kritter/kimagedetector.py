@@ -82,7 +82,7 @@ def render_detected_box(overlay, color, label, box, font="sans-serif", font_size
 
     overlay.draw_text(box[0]+xoffset, box[1]+yoffset, label, font=dict(family=font, size=font_size, color=text_color), fillcolor=html_color, xanchor="left", yanchor=yanchor, id='render_detected_box')
 
-def render_detected(overlay, detected, label_format=None, color=None, font="sans-serif", font_size=12, line_width=2, scale=1):
+def render_detected(overlay, detected, label_format=None, font="sans-serif", font_size=12, line_width=2, scale=1):
     overlay.draw_clear(id='render_detected_box')
     if label_format is None:
         label_format = lambda key, det : f"{det['class']} {det['score']*100:.0f}%" 
@@ -91,7 +91,9 @@ def render_detected(overlay, detected, label_format=None, color=None, font="sans
         for i in detected:
             try:
                 txt = label_format(None, i)
-                if color is None:
+                try:
+                    color = i['color']
+                except KeyError:
                     try:
                         index = i['index']
                     except KeyError:
