@@ -82,6 +82,17 @@ def render_detected_box(overlay, color, label, box, font="sans-serif", font_size
 
     overlay.draw_text(box[0]+xoffset, box[1]+yoffset, label, font=dict(family=font, size=font_size, color=text_color), fillcolor=html_color, xanchor="left", yanchor=yanchor, id='render_detected_box')
 
+def _get_det_color(det):
+    try:
+        color = det['color']
+    except KeyError:
+        try:
+            index = det['index']
+        except KeyError:
+            index = _hash(det['class'])
+        color = get_color(index)
+    return color
+
 def render_detected(overlay, detected, label_format=None, font="sans-serif", font_size=12, line_width=2, scale=1):
     overlay.draw_clear(id='render_detected_box')
     if label_format is None:
@@ -91,15 +102,7 @@ def render_detected(overlay, detected, label_format=None, font="sans-serif", fon
         for i in detected:
             try:
                 txt = label_format(None, i)
-                try:
-                    color = i['color']
-                except KeyError:
-                    try:
-                        index = i['index']
-                    except KeyError:
-                        index = _hash(i['class'])
-                    color = get_color(index)
-                render_detected_box(overlay, color, txt, i['box'], font, font_size, line_width, scale)
+                render_detected_box(overlay, _get_det_color(i), txt, i['box'], font, font_size, line_width, scale)
             except KeyError:
                 pass
 
@@ -108,13 +111,7 @@ def render_detected(overlay, detected, label_format=None, font="sans-serif", fon
         for i, v in detected.items():
             try:
                 txt = label_format(i, v)
-                if color is None:
-                    try:
-                        index = v['index']
-                    except KeyError:
-                        index = _hash(v['class'])
-                    color = get_color(index)
-                render_detected_box(overlay, color, txt, v['box'], font, font_size, line_width, scale)
+                render_detected_box(overlay, _get_det_color(v), txt, v['box'], font, font_size, line_width, scale)
             except KeyError:
                 pass
 
@@ -178,12 +175,7 @@ def render_detected_image(image, detected, label_format=None, x_offset=0, y_offs
         for i in detected:
             try:
                 txt = label_format(None, i)
-                try:
-                    index = i['index']
-                except KeyError:
-                    index = _hash(i['class'])
-                color = get_color(index, bgr=True)
-                render_detected_box_image(image, color, txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+                render_detected_box_image(image, _get_det_color(i), txt, i['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
             except KeyError:
                 pass
 
@@ -192,12 +184,7 @@ def render_detected_image(image, detected, label_format=None, x_offset=0, y_offs
         for i, v in detected.items():
             try:
                 txt = label_format(i, v)
-                try:
-                    index = v['index']
-                except KeyError:
-                    index = _hash(v['class'])
-                color = get_color(index, bgr=True)
-                render_detected_box_image(image, color, txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
+                render_detected_box_image(image, _get_det_color(v), txt, v['box'], x_offset, y_offset, font, font_size, font_width, line_width, padding, center, label_on_top, bg, bg_outline, bg_color, bg_3d)
             except KeyError:
                 pass
 
