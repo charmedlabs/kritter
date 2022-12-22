@@ -131,7 +131,9 @@ class Koverlay:
         if not shape:
             self.figure['layout']['dragmode'] = False
         else: 
-            self.figure['layout']['dragmode'] = f"draw{shape}" 
+            self.figure['layout']['dragmode'] = f"draw{shape}"
+            if not line:
+                line = dict(color="gray", width=2) 
         self.figure['layout']['newshape'] = dict(line=line, fillcolor=fillcolor)
 
     def draw_clear(self, id=None):
