@@ -83,7 +83,8 @@ class TelegramClient(KtextClient): # Text Messaging Client
 
     def text(self, text, to):
         if not self.application:
-            raise RuntimeError("Telegram doesn't have a token")
+            print("Telegram doesn't have a token")
+            return
         if text:
             text_ = text.strip().lower()
             # Handle URLs
@@ -99,11 +100,14 @@ class TelegramClient(KtextClient): # Text Messaging Client
                     break
                 except TimedOut:
                     print("Timeout. Resending Telegram text...")
+                except Exception as e:
+                    print("Unable to send text:", e)
     
     def image(self, image, to) -> None:
         """Sends an image given a file location, local or URL; also sending numpy array directly"""
         if not self.application:
-            raise RuntimeError("Telegram doesn't have a token")
+            print("Telegram doesn't have a token")
+            return
         if isinstance(image, str):
             if os.path.exists(image):
                 image = open(image, 'rb') # Telegram bot can take file object
@@ -125,11 +129,14 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 break
             except TimedOut:
                 print("Timeout. Resending Telegram image...")
+            except Exception as e:
+                print("Unable to send image:", e)
 
     def video(self, video, to) -> None:
         """Sends a video given a file location, local or URL; also sending numpy array directly"""
         if not self.application:
-            raise RuntimeError("Telegram doesn't have a token")
+            print("Telegram doesn't have a token")
+            return
         if isinstance(video, str):
             if os.path.exists(video):
                 video = open(video, 'rb') # Telegram bot can take file object
@@ -146,6 +153,8 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 break
             except TimedOut:
                 print("Timeout. Resending Telegram video...")
+            except Exception as e:
+                print("Unable to send video:", e)
 
     # Commands
     async def start(self, update: Update, context: CallbackContext):
@@ -222,10 +231,14 @@ class TelegramClient(KtextClient): # Text Messaging Client
                 break
             except TimedOut:
                 print("Timeout. Attempting to reconnect to Telegram server...")
-
+            except Exception as e:
+                print("Unable to run server:", e)
 
     def running(self):
         return bool(self.application)
 
     def close(self):
-        self.run_coro(self.stop_server_coro)
+        try:
+            self.run_coro(self.stop_server_coro)
+        except:
+            pass

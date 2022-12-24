@@ -47,7 +47,7 @@ class Kchecklist(Kcomponent):
             po_children = self.checklist
 
         if scrollable:
-            style = {"padding": "5px", "height": f"{HEIGHT}px", "overflow-y": "auto"}
+            style = {"padding": "5px", "max-height": f"{HEIGHT}px", "overflow-y": "auto"}
         else:
             style = {"padding": "5px"}
         po_body = html.Div(po_children, style=style)
