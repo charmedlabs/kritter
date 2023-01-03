@@ -22,17 +22,20 @@ class DetectionPicker:
         # We only want to consider pictures with detected object in it, not
         # pictures where object has disappeared (for example).
         if 'score0' in det:
-            box = det['box']
-            area = (box[2]-box[0])*(box[3]-box[1])
-            # Crop object out of image
-            box = image[box[1]:box[3], box[0]:box[2], :]
-            # Calculate sharpness of image by calculating edges on green channel
-            # and averaging.
-            c = cv2.Canny(box[:, :, 1], 50, 250)
-            sharpness = np.mean(c)
-            return area*sharpness
-        else:
-            return 0
+            try:
+                box = det['box']
+                area = (box[2]-box[0])*(box[3]-box[1])
+                # Crop object out of image
+                box = image[box[1]:box[3], box[0]:box[2], :]
+                # Calculate sharpness of image by calculating edges on green channel
+                # and averaging.
+                c = cv2.Canny(box[:, :, 1], 50, 250)
+                sharpness = np.mean(c)
+                return area*sharpness
+            except:
+                pass
+        
+        return 0
 
     def get_regs_deregs(self):
         return self.regs, self.deregs
