@@ -143,3 +143,34 @@ class Gcloud(KdataClient):
         return True
 
 
+def google_drive_download(id, dest_filename):
+    URL = "https://docs.google.com/uc?export=download"
+
+    session = requests.Session()
+
+    response = session.get(URL, params={'id': id}, stream=True)
+    if response.status_code>=400:
+        raise RuntimeError("This file is not available.")
+    token = get_confirm_token(response)
+
+    if token:
+        params = {'id': id, 'confirm': token}
+        response = session.get(URL, params=params, stream=True)
+
+    save_response_content(response, dest_filename)    
+
+def get_confirm_token(response):
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            return value
+
+    return None
+
+def save_response_content(response, dest_filename):
+    CHUNK_SIZE = 32768
+
+    with open(dest_filename, "wb") as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk: # filter out keep-alive new chunks
+                f.write(chunk)
+
