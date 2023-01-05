@@ -10,8 +10,7 @@ import os
 class GfileClient(KfileClient):
 
     def __init__(self, gcloud):
-        drive_creds = gcloud.creds()
-        self.drive_client = build('drive', 'v3', credentials=drive_creds)
+        self.gcloud = gcloud
 
     '''
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
@@ -24,43 +23,44 @@ class GfileClient(KfileClient):
         dirs = destination.split('/')
         if not dirs[-1]:
             dirs[-1] = location.split('/')[-1]
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         # get the id of the users root directory
-        root = self.drive_client.files().get(fileId='root').execute()['id']
+        root = drive_client.files().get(fileId='root').execute()['id']
         id = root
         parent_id = None
         # follow the detination path
         for dir in dirs[:-1]:
             if dir:
                 parent_id = id
-                id = self._search_file(self.drive_client,id,dir)
+                id = self._search_file(drive_client,id,dir)
                 if(id == None):
                     # if create is true, creates the missing directories
                     if create:
-                        id = self._create_folder(self.drive_client, dir, parent_id)
+                        id = self._create_folder(drive_client, dir, parent_id)
                     else:
                         return(False)
-        check = self._search_file(self.drive_client,id,dirs[-1])
+        check = self._search_file(drive_client,id,dirs[-1])
         if check:   # something with that name exists
             # if id is a folder:
-            if(self.drive_client.files().get(fileId=check).execute()['mimeType'] == 'application/vnd.google-apps.folder'):
+            if(drive_client.files().get(fileId=check).execute()['mimeType'] == 'application/vnd.google-apps.folder'):
                 name = location.split('/')[-1]
                 id = check
             # if id is a file
             else:
                 # delete old file
-                self.drive_client.files().delete(fileId=check).execute()
+                drive_client.files().delete(fileId=check).execute()
         # file does not already exist
         name = dirs[-1]
         # upload the file from 'location' path
         file_meta = {'name': name, 'parents': [id]}
         media = MediaFileUpload(location)
-        file = self.drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
+        file = drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
         
         permissions = {
         'type': 'anyone',
         'role': 'writer',
         }
-        self.drive_client.permissions().create(fileId=file["id"], body=permissions).execute()
+        drive_client.permissions().create(fileId=file["id"], body=permissions).execute()
         
         return(file["id"])
         
@@ -72,18 +72,19 @@ class GfileClient(KfileClient):
         if not location:
             raise Exception("must privide a location path")
         dirs = location.split('/')
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         # get the id of the users root directory in google
-        root = self.drive_client.files().get(fileId='root').execute()['id']
+        root = drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
             if dir:
-                id = self._search_file(self.drive_client,id,dir)
+                id = self._search_file(drive_client,id,dir)
                 if(id == None):
                     raise Exception(f"the location '{location}' could not be found in google drive")
         # download file to memory using google drive api
         file_id = id
-        request = self.drive_client.files().get_media(fileId=file_id)
+        request = drive_client.files().get_media(fileId=file_id)
         fh = io.BytesIO()
         downloader = MediaIoBaseDownload(fh, request)
         done = False
@@ -100,13 +101,14 @@ class GfileClient(KfileClient):
     '''
     def list(self, path):
         dirs = path.split('/')
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         # get the id of the users root directory in google
-        root = self.drive_client.files().get(fileId='root').execute()['id']
+        root = drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
             if dir:
-                id = self._search_file(self.drive_client,id,dir)
+                id = self._search_file(drive_client,id,dir)
                 if(id == None):
                     raise Exception(f"the location '{path}' could not be found in google drive")
         parent_id = id
@@ -114,7 +116,7 @@ class GfileClient(KfileClient):
         files = []
         page_token = None
         while True:
-            response = self.drive_client.files().list(q=f"parents  in '{parent_id}'",pageToken=page_token).execute()
+            response = drive_client.files().list(q=f"parents  in '{parent_id}'",pageToken=page_token).execute()
             for file in response.get('files', []):
                 files.append(file.get("name"))
             page_token = response.get('nextPageToken', None)
@@ -128,35 +130,37 @@ class GfileClient(KfileClient):
     '''
     def get_url(self, path):
         dirs = path.split('/')[1:]
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         # get the id of the users root directory in google
-        root = self.drive_client.files().get(fileId='root').execute()['id']
+        root = drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
-            id = self._search_file(self.drive_client,id,dir)
+            id = self._search_file(drive_client,id,dir)
             if(id == None):
                 raise Exception(f"the location '{path}' could not be found in google drive")
         if path[-6:]=='.ipynb':
             return f'https://colab.research.google.com/drive/{id}'
-        return self.drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
+        return drive_client.files().get(fileId=id,fields='webViewLink').execute()['webViewLink']
 
     '''
     deletes the folder or file at the path provided
     '''
     def delete(self, path):
         dirs = path.split('/')
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         # get the id of the users root directory in google
-        root = self.drive_client.files().get(fileId='root').execute()['id']
+        root = drive_client.files().get(fileId='root').execute()['id']
         id = root
         # follow the location path
         for dir in dirs:
             if dir:
-                id = self._search_file(self.drive_client,id,dir)
+                id = self._search_file(drive_client,id,dir)
                 if(id == None):
                     raise Exception(f"the location '{path}' could not be found in google drive")
         if id == root:
             raise Exception(f"cannot delete users root directory")
-        self.drive_client.files().delete(fileId=id).execute()
+        drive_client.files().delete(fileId=id).execute()
 
     '''
     opens and returns the file similar to the native python open(), for mode: the r option specifies read only

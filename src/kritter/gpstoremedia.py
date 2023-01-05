@@ -100,6 +100,50 @@ class GPstoreMedia(KstoreMedia):
         # Google Photos accepts videos through the same API path as images.
         return self.store_image_file(filename, album, desc)
 
+    def _retrieve_helper(self, id, count, dest_path, callback_func=None):
+        service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
+        token = None
+        body = {'albumId': id}
+        j = 1
+        while True:
+            body['pageToken'] = token
+            res = service.mediaItems().search(body=body).execute()
+            try:
+                for i in res['mediaItems']:
+                    response = requests.get(i['baseUrl'])
+                    filename = i['filename']
+                    with open(os.path.join(dest_path, filename), "wb") as file:
+                        file.write(response.content)
+                    if callback_func:
+                        callback_func(filename, j, int(count))
+                    j += 1
+            except:
+                pass
+            try:
+                token = res['nextPageToken']
+            except KeyError:
+                break
+
+
+    def retrieve_album(self, album, dest_path, callback_func=None):
+        service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
+        found = False
+        token = None
+        while True:
+            res = service.sharedAlbums().list(pageToken=token).execute()
+            try:
+                for i in res['sharedAlbums']:
+                    if i['title']==album:
+                        found = True
+                        self._retrieve_helper(i['id'], i['mediaItemsCount'], dest_path, callback_func)
+            except KeyError:
+                pass
+            try:
+                token = res['nextPageToken']
+            except KeyError:
+                break
+        return found
+                
     def get_share_url(self, album):
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
         album_id = None
