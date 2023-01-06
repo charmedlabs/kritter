@@ -143,6 +143,8 @@ class Gcloud(KdataClient):
         return True
 
 
+'''
+# This doesn't work for large files, so we've switched to gdown package for now.
 def google_drive_download(id, dest_filename):
     URL = "https://docs.google.com/uc?export=download"
 
@@ -174,3 +176,4 @@ def save_response_content(response, dest_filename):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
 
+'''
