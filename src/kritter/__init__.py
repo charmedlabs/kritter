@@ -43,7 +43,7 @@ from .processify import Processify
 from .kimageclassifier import KimageClassifier
 from .detectiontracker import DetectionTracker
 from .detectionpicker import DetectionPicker
-from .gcloud import Gcloud, google_drive_download
+from .gcloud import Gcloud
 from .gpstoremedia import GPstoreMedia
 from .savemediaqueue import SaveMediaQueue
 from .proxy import Proxy 
