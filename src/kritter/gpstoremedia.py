@@ -129,19 +129,20 @@ class GPstoreMedia(KstoreMedia):
         service = build('photoslibrary', 'v1', credentials=self.gcloud.creds(), static_discovery=False)
         found = False
         token = None
-        while True:
-            res = service.sharedAlbums().list(pageToken=token).execute()
-            try:
-                for i in res['sharedAlbums']:
-                    if i['title']==album:
-                        found = True
-                        self._retrieve_helper(i['id'], i['mediaItemsCount'], dest_path, callback_func)
-            except KeyError:
-                pass
-            try:
-                token = res['nextPageToken']
-            except KeyError:
-                break
+        for g_album, entry in [(service.sharedAlbums, 'sharedAlbums'), (service.albums, 'albums')]:
+            while True:
+                res = g_album().list(pageToken=token).execute()
+                try:
+                    for i in res[entry]:
+                        if i['title']==album:
+                            found = True
+                            self._retrieve_helper(i['id'], i['mediaItemsCount'], dest_path, callback_func)
+                except KeyError:
+                    pass
+                try:
+                    token = res['nextPageToken']
+                except KeyError:
+                    break
         return found
                 
     def get_share_url(self, album):
