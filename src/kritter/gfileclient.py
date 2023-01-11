@@ -7,6 +7,8 @@ from googleapiclient.http import MediaIoBaseDownload
 import io
 import os
 
+CHUNKSIZE = 1<<24
+
 class GfileClient(KfileClient):
 
     def __init__(self, gcloud):
@@ -16,7 +18,7 @@ class GfileClient(KfileClient):
     Copys a file of a given path from the vizy to google drive in the requested directory and returns the id
     optional arg specifies wether or not to create the requested dir
     '''
-    def copy_to(self, location, destination, create=False):
+    def copy_to(self, location, destination, create=False, status_func=None):
         #if dest is empty throw exception
         if not destination:
             raise Exception("must privide a destination path")
@@ -53,21 +55,29 @@ class GfileClient(KfileClient):
         name = dirs[-1]
         # upload the file from 'location' path
         file_meta = {'name': name, 'parents': [id]}
-        media = MediaFileUpload(location)
-        file = drive_client.files().create(body=file_meta, media_body=media, fields='id').execute()
+        media = MediaFileUpload(location, chunksize=CHUNKSIZE, resumable=True)
+        request = drive_client.files().create(body=file_meta, media_body=media, fields='id')
+        response = None
+        while response is None:
+            status, response = request.next_chunk()
+            if status:
+                percent = int(status.progress()*100) 
+                if status_func:
+                    status_func(percent)
+                print(f"Upload {location} {percent}%  complete.")
         
         permissions = {
         'type': 'anyone',
         'role': 'writer',
         }
-        drive_client.permissions().create(fileId=file["id"], body=permissions).execute()
+        drive_client.permissions().create(fileId=response["id"], body=permissions).execute()
         
-        return(file["id"])
+        return(response["id"])
         
     '''
     Copys a file from the desired location in google drive to the correct path on the vizy
     '''
-    def copy_from(self, location, destination):
+    def copy_from(self, location, destination, status_func=None):
         #if location is empty throw exception
         if not location:
             raise Exception("must privide a location path")
@@ -84,17 +94,21 @@ class GfileClient(KfileClient):
                     raise Exception(f"the location '{location}' could not be found in google drive")
         # download file to memory using google drive api
         file_id = id
+        self.download(file_id, destination, status_func)
+
+    def download(self, file_id, dest_path, status_func=None):
+        drive_client = build('drive', 'v3', credentials=self.gcloud.creds())
         request = drive_client.files().get_media(fileId=file_id)
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
+        fh = io.FileIO(dest_path, 'wb')
+        downloader = MediaIoBaseDownload(fh, request, chunksize=CHUNKSIZE)
         done = False
         while done is False:
             status, done = downloader.next_chunk()
-        # save file to drive
-        fh.seek(0)
-        with open(destination, 'wb') as f:
-            f.write(fh.read())
-            f.close
+            if status:
+                percent = int(status.progress()*100)
+                if status_func:
+                    status_func(percent)
+                print(f"Download {dest_path} {percent}%  complete.")
 
     '''
     returns a list of files at a specific path in google drive
