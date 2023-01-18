@@ -156,8 +156,8 @@ class GPstoreMedia(KstoreMedia):
                     album_id = a['id']
                     request_body = {
                         'sharedAlbumOptions': {
-                            'isCollaborative': True,
-                            'isCommentable': True
+                            'isCollaborative': False,
+                            'isCommentable': False
                         }  
                     }
                     try: # try sharing album

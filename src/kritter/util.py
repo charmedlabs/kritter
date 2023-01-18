@@ -56,7 +56,7 @@ def get_color(index=-1, html=False, alpha=None, name=False, bgr=False):
         return color
 
 get_color.index = 0
-get_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "blue"), ((255, 255, 0), "yellow"), ((255, 128, 255), "pink"), ((0, 255, 255), "cyan"), ((200, 0, 255), "purple"),  ((255, 200, 0), "orange"), ((50, 255, 128), "light green")
+get_color.colors = ((255, 0, 0), "red"), ((0, 255, 0), "green"), ((0, 0, 255), "blue"), ((255, 255, 0), "yellow"), ((255, 128, 255), "pink"), ((0, 255, 255), "cyan"), ((200, 0, 255), "purple"),  ((255, 140, 0), "orange"), ((128, 255, 10), "light green")
 
 
 def file_extension(filename):

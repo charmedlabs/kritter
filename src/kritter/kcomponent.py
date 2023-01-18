@@ -81,6 +81,8 @@ class Kcomponent:
         for c in cols:
             if not hasattr(c, "id"):
                 c.id = self.kapp.new_id()
+            if "spinner" in c.id: # spinner is displayed independently of component
+                continue
             if not hasattr(c, "style"):
                 c.style = {}
             c.style.update({'display': 'block'} if self.disp else {'display': 'none'})

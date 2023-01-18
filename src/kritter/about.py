@@ -9,7 +9,7 @@
 #
 
 __title__ = "kritter"
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __license__ = "GPL2"
 __author__ = "Charmed Labs LLC"
 __email__ = "support@charmedlabs.com"
