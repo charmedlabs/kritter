@@ -14,6 +14,7 @@ import logging
 import json
 import numpy as np
 import datetime
+import glob
 from contextlib import contextmanager
 
 def set_logger_level(logger, level):
@@ -91,6 +92,32 @@ def date_stamped_file(extension, prefix=""):
 
 def time_stamped_file(extension, prefix=""):
     return f"{prefix}{int(time.time()*10000000):X}.{extension}"
+
+
+def get_metadata_files(filename):
+    wildcard = file_basename(filename)+".*"
+    return glob.glob(wildcard) + glob.glob(os.path.join(os.path.dirname(filename), ".*", os.path.basename(wildcard)))
+
+def remove_metadata_file(filename):
+    for f in  get_metadata_files(filename):
+        try:
+            os.remove(f)
+        except:
+            pass
+
+def update_time_stamped_file(filename):
+    file = os.path.basename(filename)
+    basename = file_basename(file)
+    val = int(basename, 16)
+    val += 1
+    new_basename = f"{int(val):X}"
+    for f in get_metadata_files(filename):
+        try:
+            new_f = os.path.join(os.path.dirname(f), f"{new_basename}.{file_extension(f)}")
+            os.rename(f, new_f)
+        except:
+            pass
+    return os.path.join(os.path.dirname(filename), f"{new_basename}.{file_extension(filename)}")
 
 def save_metadata(filename, data, dir=".meta"):
     path = os.path.dirname(filename)

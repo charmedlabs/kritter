@@ -13,7 +13,7 @@ import json
 from time import sleep
 from threading import Thread
 from .kstoremedia import KstoreMedia
-from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name, date_stamped_file, load_metadata, save_metadata
+from .util import file_extension, file_basename, valid_image_name, valid_video_name, valid_media_name, date_stamped_file, load_metadata, save_metadata, remove_metadata_file
 
 UPLOADED_KEY = "_uploaded"
 KEEP = 100
@@ -72,17 +72,13 @@ class SaveMediaQueue(KstoreMedia):
                             print(f"Error uploading {file} to {metadata['album']}")
                     except Exception as e:
                         print('Exception uploading', file, e)
-            # clean up preuploaded and uploaded files
+            # clean up preuploaded and uploaded files and metadata
             for files, keep in ((preuploaded, self.keep), (uploaded, self.keep_uploaded)):
                 if len(files)>keep:
                     files = sorted(files)
                     for i in range(len(files)-keep):
                         file = os.path.join(self.path, files[i])
-                        for f in (file, file_basename(file)+".json"):
-                            try:
-                                os.remove(f)
-                            except:
-                                pass
+                        remove_metadata_file(file)
             # don't thrash
             sleep(1)
 

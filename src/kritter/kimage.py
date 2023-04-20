@@ -27,16 +27,16 @@ class Kimage(Kcomponent):
         # styling because we're being displayed as a single column (no label, etc.)
         self.style = kwargs['style'] if 'style' in kwargs else {}
         src = kwargs['src'] if 'src' in kwargs else ""
-        width = kwargs['width'] if 'width' in kwargs else None
-        height = kwargs['height'] if 'height' in kwargs else None
+        self.width = kwargs['width'] if 'width' in kwargs else None
+        self.height = kwargs['height'] if 'height' in kwargs else None
         overlay = kwargs['overlay'] if 'overlay' in kwargs else False
 
         # Img style
         style = {"width": "100%", "height": "100%"}
-        if width:
-            style["max-width"] = f"{width}px"
-        if height:
-            style["max-height"] = f"{height}px"
+        if self.width:
+            style["max-width"] = f"{self.width}px"
+        if self.height:
+            style["max-height"] = f"{self.height}px"
         image = html.Img(id=self.id, src=self._build_src(src), style=style)
 
         if overlay:
@@ -47,11 +47,14 @@ class Kimage(Kcomponent):
     def _build_src(self, src):
         if src is None:
             return ""
-        elif isinstance(src, str):
+        self.src = src
+        self.srcpath = None
+        if isinstance(src, str):
             if src=="":
                 return "" 
             # If the file is in our media_path, just add the MEDIA_DIR (we can load directly)
-            if file_in_path(self.kapp.media_path, src):
+            self.srcpath = file_in_path(self.kapp.media_path, src)
+            if self.srcpath:
                 return os.path.join(MEDIA_DIR, src)
             # Otherwise the best way to send the image is to load it, encode it, and send as base64 string
             else: 
